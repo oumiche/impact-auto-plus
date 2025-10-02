@@ -1,0 +1,316 @@
+/* Styles pour le composant galerie de pièces jointes */
+
+.attachment-gallery-container {
+    width: 100%;
+}
+
+/* Galerie des fichiers */
+.attachments-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--min-size, 280px), 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.attachment-gallery-item {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.attachment-gallery-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+/* Aperçu des images */
+.attachment-preview {
+    position: relative;
+    height: 180px;
+    overflow: hidden;
+    background: #f8f9fa;
+}
+
+.preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.preview-image:hover {
+    transform: scale(1.05);
+}
+
+.preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.attachment-preview:hover .preview-overlay {
+    opacity: 1;
+}
+
+.preview-btn {
+    background: rgba(255,255,255,0.9);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.preview-btn:hover {
+    background: #fff;
+    transform: scale(1.1);
+}
+
+.preview-btn i {
+    font-size: 18px;
+    color: #007bff;
+}
+
+/* Icônes pour fichiers non-images */
+.attachment-icon {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.attachment-icon i {
+    font-size: 48px;
+    color: #6c757d;
+}
+
+/* Détails du fichier */
+.attachment-details {
+    padding: 15px;
+}
+
+.attachment-details .file-name {
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.attachment-details .file-meta {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 12px;
+}
+
+/* Actions */
+.attachment-gallery-item .attachment-actions {
+    padding: 0 15px 15px 15px;
+    justify-content: flex-end;
+    display: flex;
+    gap: 8px;
+}
+
+.attachment-actions .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* Message si aucun fichier */
+.no-attachments {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px dashed #dee2e6;
+}
+
+.no-attachments i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.no-attachments p {
+    margin: 0;
+    font-size: 16px;
+}
+
+/* Modal d'aperçu */
+.preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.preview-modal-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.preview-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0,0,0,0.7);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+.preview-close:hover {
+    background: rgba(0,0,0,0.9);
+    transform: scale(1.1);
+}
+
+.preview-close i {
+    color: #fff;
+    font-size: 18px;
+}
+
+.preview-modal-image {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    display: block;
+}
+
+.preview-modal-info {
+    padding: 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+
+.preview-modal-info h3 {
+    margin: 0 0 8px 0;
+    color: #212529;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.preview-modal-info p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .attachments-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    
+    .attachment-preview {
+        height: 150px;
+    }
+    
+    .attachment-icon {
+        height: 100px;
+    }
+    
+    .preview-modal {
+        padding: 10px;
+    }
+    
+    .preview-modal-content {
+        max-width: 95vw;
+        max-height: 95vh;
+    }
+}
+
+@media (max-width: 480px) {
+    .attachments-gallery {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .attachment-preview {
+        height: 120px;
+    }
+    
+    .attachment-icon {
+        height: 80px;
+    }
+    
+    .attachment-icon i {
+        font-size: 36px;
+    }
+}
+
+/* Variantes de taille */
+.attachment-gallery-container.small {
+    --min-size: 200px;
+}
+
+.attachment-gallery-container.medium {
+    --min-size: 280px;
+}
+
+.attachment-gallery-container.large {
+    --min-size: 350px;
+}
+
+/* Thèmes */
+.attachment-gallery-container.theme-dark .attachment-gallery-item {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+}
+
+.attachment-gallery-container.theme-dark .attachment-details .file-name {
+    color: #e2e8f0;
+}
+
+.attachment-gallery-container.theme-dark .attachment-details .file-meta {
+    color: #a0aec0;
+}
+
+.attachment-gallery-container.theme-dark .attachment-icon {
+    background: #4a5568;
+    border-color: #718096;
+}
+
+.attachment-gallery-container.theme-dark .attachment-icon i {
+    color: #a0aec0;
+}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug User-Tenant</title>
+    <link rel="stylesheet" href="css/impact-auto.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Debug User-Tenant</h1>
+        
+        <div class="card">
+            <h2>Données localStorage</h2>
+            <div id="localStorageData"></div>
+        </div>
+        
+        <div class="card">
+            <h2>Test API</h2>
+            <button onclick="testCurrentTenant()">Tester /api/tenants/current</button>
+            <button onclick="testUserTenantPermissions()">Tester /api/user-tenant-permissions/admin</button>
+            <div id="apiResults"></div>
+        </div>
+        
+        <div class="card">
+            <h2>Actions</h2>
+            <button onclick="clearStorage()">Vider localStorage</button>
+            <button onclick="fixTenant()">Corriger le tenant (ID 10)</button>
+            <button onclick="goToLogin()">Aller au login</button>
+            <button onclick="goToTenantSelection()">Aller à la sélection de tenant</button>
+        </div>
+    </div>
+
+    <script src="js/services/ApiService.js"></script>
+    <script>
+        function displayLocalStorageData() {
+            const user = localStorage.getItem('current_user');
+            const tenant = localStorage.getItem('current_tenant');
+            const token = localStorage.getItem('auth_token');
+            
+            document.getElementById('localStorageData').innerHTML = `
+                <p><strong>User:</strong> ${user ? JSON.stringify(JSON.parse(user), null, 2) : 'null'}</p>
+                <p><strong>Tenant:</strong> ${tenant ? JSON.stringify(JSON.parse(tenant), null, 2) : 'null'}</p>
+                <p><strong>Token:</strong> ${token ? token.substring(0, 50) + '...' : 'null'}</p>
+            `;
+        }
+        
+        async function testCurrentTenant() {
+            try {
+                const result = await window.apiService.getCurrentTenantFromAPI();
+                document.getElementById('apiResults').innerHTML = `
+                    <h3>Current Tenant API:</h3>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('apiResults').innerHTML = `
+                    <h3>Current Tenant API Error:</h3>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+        
+        async function testUserTenantPermissions() {
+            try {
+                const result = await window.apiService.getUserTenantPermissions();
+                document.getElementById('apiResults').innerHTML = `
+                    <h3>User Tenant Permissions API:</h3>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('apiResults').innerHTML = `
+                    <h3>User Tenant Permissions API Error:</h3>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+        
+        function clearStorage() {
+            localStorage.clear();
+            displayLocalStorageData();
+        }
+        
+        function goToLogin() {
+            window.location.href = '/login-simple.html';
+        }
+        
+        function goToTenantSelection() {
+            window.location.href = '/tenant-selection.html';
+        }
+        
+        function fixTenant() {
+            const correctTenant = {
+                id: 10,
+                name: "Impact Auto Principal",
+                slug: "impact-auto-principal",
+                description: "Tenant principal pour Impact Auto",
+                is_primary: true,
+                permissions: ["admin"],
+                assigned_at: "2025-09-30 10:44:08",
+                is_active: true
+            };
+            
+            localStorage.setItem('current_tenant', JSON.stringify(correctTenant));
+            displayLocalStorageData();
+            
+            alert('Tenant corrigé ! Rechargez la page user-tenant-permissions.html');
+        }
+        
+        // Initialiser
+        displayLocalStorageData();
+    </script>
+</body>
+</html>

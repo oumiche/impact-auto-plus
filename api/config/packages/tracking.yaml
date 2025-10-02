@@ -1,0 +1,6 @@
+parameters:
+    tracking:
+        api_url: '%env(TRACKING_API_URL)%'
+        api_key: '%env(TRACKING_API_KEY)%'
+        timeout: 10
+        retry_attempts: 3

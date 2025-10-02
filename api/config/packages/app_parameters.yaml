@@ -1,0 +1,66 @@
+parameters:
+    # Configuration des chemins d'upload
+    app.upload.path: '%kernel.project_dir%/public/uploads'
+    app.tenant.upload.path: '%kernel.project_dir%/public/uploads/tenants'
+    app.logo.upload.path: '%kernel.project_dir%/public/uploads/tenants'
+    app.attachment.upload.path: '%kernel.project_dir%/public/uploads/attachments'
+    
+    # Configuration des tailles de fichiers
+    app.logo.max_file_size: 2097152 # 2MB
+    app.attachment.max_file_size: 10485760 # 10MB
+    app.document.max_file_size: 52428800 # 50MB
+    
+    # Configuration des extensions autorisées
+    app.logo.allowed_extensions: ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp']
+    app.attachment.allowed_extensions: ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt']
+    app.document.allowed_extensions: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'rtf']
+    
+    # Configuration des notifications
+    app.notification.email.from: 'noreply@impactauto.com'
+    app.notification.email.from_name: 'Impact Auto'
+    app.notification.sms.provider: 'twilio'
+    app.notification.sms.api_key: '%env(TWILIO_API_KEY)%'
+    app.notification.sms.api_secret: '%env(TWILIO_API_SECRET)%'
+    app.notification.push.firebase_server_key: '%env(FIREBASE_SERVER_KEY)%'
+    app.notification.push.vapid_public_key: '%env(VAPID_PUBLIC_KEY)%'
+    app.notification.push.vapid_private_key: '%env(VAPID_PRIVATE_KEY)%'
+    
+    # Configuration des limites
+    app.limits.max_logs_per_entity: 1000
+    app.limits.max_alerts_per_tenant: 1000
+    app.limits.max_attachments_per_entity: 50
+    app.limits.max_file_size_total: 1073741824 # 1GB
+    
+    # Configuration des délais
+    app.timeouts.session_timeout: 3600 # 1 heure
+    app.timeouts.api_timeout: 30 # 30 secondes
+    app.timeouts.upload_timeout: 300 # 5 minutes
+    
+    # Configuration des rétentions
+    app.retention.logs_days: 90
+    app.retention.alerts_days: 30
+    app.retention.sessions_days: 7
+    app.retention.temp_files_hours: 24
+    
+    # Configuration des séquences
+    app.sequences.default_length: 6
+    app.sequences.default_start: 1
+    app.sequences.default_prefix: 'IMP'
+    
+    # Configuration des caches
+    app.cache.parameters_timeout: 3600 # 1 heure
+    app.cache.tenants_timeout: 1800 # 30 minutes
+    app.cache.permissions_timeout: 900 # 15 minutes
+    
+    # Configuration des formats
+    app.formats.date: 'd-m-Y'
+    app.formats.datetime: 'd-m-Y H:i:s'
+    app.formats.time: 'H:i:s'
+    
+    # Configuration des locales
+    app.locales.default: 'fr'
+    app.locales.supported: ['fr', 'en']
+    
+    # Configuration des timezones
+    app.timezone.default: 'Africa/Abidjan'
+    app.timezone.supported: ['Africa/Abidjan', 'Africa/Lagos', 'Africa/Cairo']

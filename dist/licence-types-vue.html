@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Types de Permis - Impact Auto</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/impact-auto.css">
+    <link rel="stylesheet" href="css/parametres-vue.css">
+    <!-- Vue.js CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body>
+    <!-- Sidebar sera chargé dynamiquement -->
+    
+    <!-- Vue.js App Container -->
+    <div id="app">
+        <!-- Le composant sera monté ici -->
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/services/ApiService.js"></script>
+    <script src="js/sidebar-component.js"></script>
+    <script src="js/load-sidebar.js"></script>
+    <script src="js/licence-types-vue.js"></script>
+    
+    <script>
+        const { createApp } = Vue;
+        
+        const app = createApp({
+            components: {
+                LicenceTypeCrud
+            },
+            template: `
+                <div class="main-content">
+                    <LicenceTypeCrud />
+                </div>
+            `
+        });
+        
+        app.mount('#app');
+    </script>
+</body>
+</html>

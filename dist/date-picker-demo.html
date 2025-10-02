@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Picker Demo - Impact Auto</title>
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/date-picker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/vue@2/dist/vue.min.js"></script>
+    <script src="js/services/ApiService.js"></script>
+    <script src="js/components/DatePicker.js"></script>
+    <script src="js/components/DateTimePicker.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div class="main-content">
+            <div class="container">
+                <h1>Date Picker Demo</h1>
+                
+                <div class="demo-section">
+                    <h2>Date Picker Simple</h2>
+                    <div class="form-group">
+                        <label>Date de naissance :</label>
+                        <date-picker 
+                            v-model="birthDate"
+                            placeholder="Sélectionner une date ou taper (ex: 15/03/1990)"
+                            :min-date="minDate"
+                            :max-date="maxDate"
+                        ></date-picker>
+                        <p>Valeur sélectionnée : {{ birthDate || 'Aucune' }}</p>
+                        <p class="help-text">💡 Vous pouvez taper directement : 15/03/1990, 15-03-1990, 1990-03-15</p>
+                    </div>
+                </div>
+
+                <div class="demo-section">
+                    <h2>DateTime Picker</h2>
+                    <div class="form-group">
+                        <label>Date et heure de rendez-vous :</label>
+                        <date-time-picker 
+                            v-model="appointmentDateTime"
+                            placeholder="Sélectionner une date et heure ou taper (ex: 15/03/2024 14:30)"
+                            :min-date="minDate"
+                            :time-step="30"
+                        ></date-time-picker>
+                        <p>Valeur sélectionnée : {{ appointmentDateTime || 'Aucune' }}</p>
+                        <p class="help-text">💡 Vous pouvez taper directement : 15/03/2024 14:30, 15-03-2024 14:30, 2024-03-15T14:30</p>
+                    </div>
+                </div>
+
+                <div class="demo-section">
+                    <h2>Date Picker Désactivé</h2>
+                    <div class="form-group">
+                        <label>Date désactivée :</label>
+                        <date-picker 
+                            v-model="disabledDate"
+                            placeholder="Ce champ est désactivé"
+                            :disabled="true"
+                        ></date-picker>
+                    </div>
+                </div>
+
+                <div class="demo-section">
+                    <h2>Exemples avec validation</h2>
+                    <div class="form-group">
+                        <label>Date de début (min: aujourd'hui) :</label>
+                        <date-picker 
+                            v-model="startDate"
+                            placeholder="Date de début"
+                            :min-date="today"
+                        ></date-picker>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Date de fin (max: dans 1 an) :</label>
+                        <date-picker 
+                            v-model="endDate"
+                            placeholder="Date de fin"
+                            :max-date="maxDate"
+                        ></date-picker>
+                    </div>
+                </div>
+
+                <div class="demo-section">
+                    <h2>Test de saisie manuelle</h2>
+                    <div class="form-group">
+                        <label>Date historique (ex: 01/01/1900) :</label>
+                        <date-picker 
+                            v-model="historicalDate"
+                            placeholder="Tapez une date historique"
+                            :min-date="'1900-01-01'"
+                            :max-date="today"
+                        ></date-picker>
+                        <p>Valeur sélectionnée : {{ historicalDate || 'Aucune' }}</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Date future (ex: 31/12/2030) :</label>
+                        <date-picker 
+                            v-model="futureDate"
+                            placeholder="Tapez une date future"
+                            :min-date="today"
+                            :max-date="'2030-12-31'"
+                        ></date-picker>
+                        <p>Valeur sélectionnée : {{ futureDate || 'Aucune' }}</p>
+                    </div>
+                </div>
+
+                <div class="demo-section">
+                    <h2>Actions</h2>
+                    <button @click="clearAll" class="btn btn-secondary">Effacer tout</button>
+                    <button @click="setToday" class="btn btn-primary">Définir aujourd'hui</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            components: {
+                DatePicker,
+                DateTimePicker
+            },
+            data() {
+                return {
+                    birthDate: '',
+                    appointmentDateTime: '',
+                    disabledDate: '2024-01-15',
+                    startDate: '',
+                    endDate: '',
+                    historicalDate: '',
+                    futureDate: '',
+                    today: new Date().toISOString().split('T')[0],
+                    minDate: '1900-01-01',
+                    maxDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+                };
+            },
+            methods: {
+                clearAll() {
+                    this.birthDate = '';
+                    this.appointmentDateTime = '';
+                    this.startDate = '';
+                    this.endDate = '';
+                    this.historicalDate = '';
+                    this.futureDate = '';
+                },
+                setToday() {
+                    const today = new Date();
+                    this.birthDate = today.toISOString().split('T')[0];
+                    this.appointmentDateTime = today.toISOString().slice(0, 16);
+                    this.startDate = today.toISOString().split('T')[0];
+                    this.endDate = today.toISOString().split('T')[0];
+                }
+            }
+        });
+    </script>
+
+    <style>
+        .demo-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .demo-section h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group p {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            margin-right: 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .help-text {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.25rem;
+            font-style: italic;
+        }
+    </style>
+</body>
+</html>

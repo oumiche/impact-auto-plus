@@ -1,0 +1,149 @@
+<!-- Sidebar Template - Impact Auto -->
+<button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">IMPACT AUTO</div>
+    <div class="logo-subtitle">Gestion de Parc Automobile</div>
+  </div>
+  
+  <div class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-title">Tableau de Bord</div>
+            <a href="/dashboard-vue.html" class="nav-item" data-page="dashboard">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="/tenant-selection.html" class="nav-item" data-page="tenant-selection">
+                <i class="fas fa-building"></i> Changer d'Organisation
+            </a>
+    </div>
+    
+    <div class="nav-section">
+      <div class="nav-section-title">Données de base</div>
+      <a href="/marques.html" class="nav-item" data-page="marques">
+        <i class="fas fa-tags"></i> Marques Véhicules
+      </a>
+      <a href="/modeles.html" class="nav-item" data-page="modeles">
+        <i class="fas fa-car-side"></i> Modèles Véhicules
+      </a>
+      <a href="/vehicle-categories.html" class="nav-item" data-page="vehicle-categories">
+        <i class="fas fa-car"></i> Types Véhicules
+      </a>
+      <a href="/vehicle-colors.html" class="nav-item" data-page="vehicle-colors">
+        <i class="fas fa-palette"></i> Couleurs Véhicules
+      </a>
+      <a href="/fuel-types-vue.html" class="nav-item" data-page="fuel-types">
+        <i class="fas fa-gas-pump"></i> Types de énergie
+      </a>
+      <a href="/licence-types-vue.html" class="nav-item" data-page="licence-types">
+        <i class="fas fa-certificate"></i> Types de permis
+      </a>
+      
+      <a href="/supply-categories.html" class="nav-item" data-page="supply-categories">
+        <i class="fas fa-folder"></i> Types Fournitures
+      </a>
+      <a href="/supplies.html" class="nav-item" data-page="supplies">
+        <i class="fas fa-box"></i> Fournitures
+      </a>
+      <a href="/intervention-types.html" class="nav-item" data-page="intervention-types">
+        <i class="fas fa-tools"></i> Types d'Intervention
+      </a>
+      
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Gestion</div>
+      <a href="/garages.html" class="nav-item" data-page="garages">
+        <i class="fas fa-wrench"></i> Garages
+      </a>
+      <a href="/vehicles.html" class="nav-item" data-page="vehicles">
+        <i class="fas fa-car"></i> Véhicules
+      </a>
+      <a href="/drivers.html" class="nav-item" data-page="drivers">
+        <i class="fas fa-user"></i> Conducteurs
+      </a>
+      <a href="/vehicle-assignments.html" class="nav-item" data-page="vehicle-assignments">
+        <i class="fas fa-user-check"></i> Assignations
+      </a>
+      <a href="/vehicle-insurances.html" class="nav-item" data-page="vehicle-insurances">
+        <i class="fas fa-shield-alt"></i> Assurances
+      </a>
+      <a href="/vehicle-fuel-logs.html" class="nav-item" data-page="vehicle-fuel-logs">
+        <i class="fas fa-gas-pump"></i> Carnets de Carburant
+      </a>
+      <a href="/vehicle-maintenances.html" class="nav-item" data-page="vehicle-maintenances">
+        <i class="fas fa-tools"></i> Maintenances
+      </a>
+    </div>
+    
+    <div class="nav-section">
+      <div class="nav-section-title">Suivi</div>
+      <a href="/vehicle-interventions.html" class="nav-item" data-page="vehicle-interventions">
+        <i class="fas fa-tools"></i> Interventions
+      </a>
+      <a href="/intervention-prediagnostics.html" class="nav-item" data-page="intervention-prediagnostics">
+        <i class="fas fa-clipboard-check"></i> Prédiagnostics
+      </a>
+      <a href="/intervention-quotes.html" class="nav-item" data-page="intervention-quotes">
+        <i class="fas fa-file-invoice-dollar"></i> Devis
+      </a>
+      <a href="/intervention-invoices.html" class="nav-item" data-page="intervention-invoices">
+        <i class="fas fa-file-invoice"></i> Factures
+      </a>
+      <a href="/intervention-work-authorizations.html" class="nav-item" data-page="intervention-work-authorizations">
+        <i class="fas fa-clipboard-list"></i> Autorisations
+      </a>
+      <a href="/intervention-reception-reports.html" class="nav-item" data-page="intervention-reception-reports">
+        <i class="fas fa-clipboard-list-check"></i> Rapports
+      </a>
+    </div>
+    
+    <div class="nav-section">
+      <div class="nav-section-title">Rapports</div>
+      <a href="/reports.html" class="nav-item" data-page="reports">
+        <i class="fas fa-chart-bar"></i> Rapports
+      </a>
+      <a href="/analytics.html" class="nav-item" data-page="analytics">
+        <i class="fas fa-chart-line"></i> Analytics
+      </a>
+    </div>
+    
+    <div class="nav-section">
+      <div class="nav-section-title">Administration</div>
+          <a href="/parametres-vue.html" class="nav-item" data-page="parametres">
+              <i class="fas fa-cog"></i> Paramètres
+          </a>
+        <a href="/users-vue.html" class="nav-item" data-page="users">
+          <i class="fas fa-users"></i> Utilisateurs
+        </a>
+        <a href="/tenants.html" class="nav-item" data-page="tenants">
+          <i class="fas fa-building"></i> Tenants
+        </a>
+        <a href="/user-tenant-permissions.html" class="nav-item" data-page="user-tenant-permissions">
+          <i class="fas fa-users-cog"></i> Affectations
+        </a>
+        <a href="/code-formats-vue.html" class="nav-item" data-page="code-formats">
+          <i class="fas fa-barcode"></i> Formats de Code
+        </a>
+    </div>
+  </div>
+  
+  <!-- User Info -->
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="user-details">
+        <div class="user-name" id="user-display-name">Administrateur</div>
+        <div class="user-role" id="user-role">Super Admin</div>
+      </div>
+    </div>
+    <div class="tenant-info" id="tenant-info" style="display: none;">
+      <div class="tenant-name" id="tenant-name-display">Tenant Actuel</div>
+    </div>
+    <button class="logout-btn" id="logout-btn">
+      <i class="fas fa-sign-out-alt"></i> Déconnexion
+    </button>
+  </div>
+</nav>

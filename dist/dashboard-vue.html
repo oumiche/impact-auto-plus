@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Impact Auto</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/impact-auto.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body>
+    <!-- Sidebar sera chargé dynamiquement -->
+    
+    <div id="app">
+        <main class="main-content">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <h1 class="section-title">Tableau de Bord</h1>
+                <p class="dashboard-subtitle">
+                    Bienvenue dans votre espace de gestion de parc automobile
+                    <span v-if="tenantName">{{ tenantName }}</span>
+                </p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ stats.vehicles }}</div>
+                        <div class="stat-label">Véhicules</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-wrench"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ stats.interventions }}</div>
+                        <div class="stat-label">Interventions</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ stats.drivers }}</div>
+                        <div class="stat-label">Conducteurs</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ stats.maintenanceDue }}</div>
+                        <div class="stat-label">Maintenance Due</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Recent Activity -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-clock"></i> Activité Récente
+                        </h3>
+                    </div>
+                    <div class="recent-activity">
+                        <div v-for="activity in recentActivities" :key="activity.id" class="activity-item">
+                            <div class="activity-icon" :class="getActivityIconClass(activity.type)">
+                                <i :class="activity.icon"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">{{ activity.title }}</div>
+                                <div class="activity-time">{{ activity.time }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-bolt"></i> Actions Rapides
+                        </h3>
+                    </div>
+                    <div class="quick-actions">
+                        <a href="/vehicles.html?action=add" class="quick-action">
+                            <i class="fas fa-plus"></i>
+                            <span>Nouveau Véhicule</span>
+                        </a>
+                        <a href="/interventions.html?action=add" class="quick-action">
+                            <i class="fas fa-wrench"></i>
+                            <span>Nouvelle Intervention</span>
+                        </a>
+                        <a href="/drivers.html?action=add" class="quick-action">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Nouveau Conducteur</span>
+                        </a>
+                        <a href="/reports.html" class="quick-action">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Générer Rapport</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Dashboard Content -->
+            <div class="content-grid">
+                <!-- Vehicle Status Overview -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-pie"></i> État du Parc
+                        </h3>
+                    </div>
+                    <div class="vehicle-status-overview">
+                        <div class="status-item">
+                            <div class="status-indicator active"></div>
+                            <div class="status-info">
+                                <div class="status-count">{{ vehicleStatus.active }}</div>
+                                <div class="status-label">Véhicules Actifs</div>
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-indicator maintenance"></div>
+                            <div class="status-info">
+                                <div class="status-count">{{ vehicleStatus.maintenance }}</div>
+                                <div class="status-label">En Maintenance</div>
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-indicator inactive"></div>
+                            <div class="status-info">
+                                <div class="status-count">{{ vehicleStatus.inactive }}</div>
+                                <div class="status-label">Hors Service</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Maintenance -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-calendar-alt"></i> Maintenance à Venir
+                        </h3>
+                    </div>
+                    <div class="upcoming-maintenance">
+                        <div v-for="maintenance in upcomingMaintenance" :key="maintenance.id" class="maintenance-item">
+                            <div class="maintenance-date">{{ maintenance.date }}</div>
+                            <div class="maintenance-info">
+                                <div class="maintenance-vehicle">{{ maintenance.vehicle }}</div>
+                                <div class="maintenance-type">{{ maintenance.type }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/services/ApiService.js"></script>
+    <script src="js/sidebar-component.js"></script>
+    <script src="js/load-sidebar.js"></script>
+    <script src="js/pages/DashboardClassicPage.js"></script>
+</body>
+</html>

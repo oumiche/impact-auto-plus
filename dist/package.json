@@ -1,0 +1,17 @@
+{
+  "name": "filegator-frontend",
+  "version": "1.0.0",
+  "description": "Frontend pour le système de gestion de parc automobile",
+  "scripts": {
+    "dev": "live-server --port=8080 --open=/dashboard-vue.html --cors",
+    "start": "http-server -p 8080 -o -c-1 --cors",
+    "build": "echo 'Build process for production'"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2",
+    "http-server": "^14.1.1"
+  },
+  "keywords": ["vue", "frontend", "automobile", "management"],
+  "author": "Impact Auto",
+  "license": "MIT"
+}

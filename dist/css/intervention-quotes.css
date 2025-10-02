@@ -1,0 +1,415 @@
+/* Styles pour la gestion des devis */
+
+.intervention-quotes-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* En-tête de page */
+.page-header {
+    margin-bottom: 30px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 20px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-text {
+    flex: 1;
+}
+
+.header-text h1 {
+    margin: 0 0 5px 0;
+    color: #2c3e50;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.header-text p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Section des filtres */
+.filters-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.search-bar {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.search-input-container {
+    flex: 1;
+    position: relative;
+}
+
+.search-input-container i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 12px 10px 40px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.filters-panel {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding-top: 15px;
+    border-top: 1px solid #dee2e6;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-group label {
+    font-weight: 500;
+    color: #495057;
+    white-space: nowrap;
+}
+
+.filter-select {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background: #fff;
+    min-width: 150px;
+}
+
+/* Actions en masse */
+.bulk-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 6px;
+    padding: 12px 20px;
+    margin-bottom: 20px;
+}
+
+.bulk-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1976d2;
+    font-weight: 500;
+}
+
+.bulk-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+/* Liste des devis */
+.quotes-list {
+    min-height: 400px;
+}
+
+.loading-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    color: #6c757d;
+    font-size: 16px;
+}
+
+.loading-state i {
+    margin-right: 10px;
+    font-size: 20px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    margin: 0 0 10px 0;
+    color: #495057;
+}
+
+.empty-state p {
+    margin: 0 0 20px 0;
+}
+
+/* Grille des devis */
+.quotes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 20px;
+}
+
+/* Carte de devis */
+.quote-card {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.quote-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.quote-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.quote-number {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quote-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.quote-number .number {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 16px;
+}
+
+.quote-status {
+    display: flex;
+    align-items: center;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-approved {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-expired {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.quote-content {
+    padding: 20px;
+}
+
+.quote-info {
+    margin-bottom: 15px;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #495057;
+}
+
+.info-row i {
+    width: 16px;
+    color: #6c757d;
+}
+
+.info-row .expired {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+.info-row .warning {
+    color: #fd7e14;
+    font-weight: 500;
+}
+
+.info-row .info {
+    color: #17a2b8;
+    font-weight: 500;
+}
+
+.quote-amounts {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.amount-total {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.amount-detail {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 4px;
+}
+
+.quote-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 0 20px 20px 20px;
+}
+
+.quote-actions .btn {
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .intervention-quotes-container {
+        padding: 15px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .header-left {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .search-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filters-panel {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .quotes-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .quote-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .quote-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .bulk-actions {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    
+    .bulk-buttons {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-text h1 {
+        font-size: 24px;
+    }
+    
+    .quote-card {
+        margin: 0 -5px;
+    }
+    
+    .quote-content {
+        padding: 15px;
+    }
+    
+    .quote-actions {
+        padding: 0 15px 15px 15px;
+    }
+}

@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation Technique - Impact Auto</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 300;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .nav {
+            background: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .nav a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .nav a:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        main {
+            padding: 2rem 0;
+        }
+
+        .section {
+            background: white;
+            margin: 2rem 0;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #667eea;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .section h3 {
+            color: #764ba2;
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .section h4 {
+            color: #333;
+            font-size: 1.2rem;
+            margin: 1rem 0 0.5rem 0;
+        }
+
+        .toc {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+        }
+
+        .toc h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding-left: 1rem;
+        }
+
+        .toc li {
+            margin: 0.5rem 0;
+        }
+
+        .toc a {
+            color: #333;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .toc a:hover {
+            color: #667eea;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .code-inline {
+            background: #e2e8f0;
+            color: #2d3748;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 1rem;
+            border-left: 4px solid #ffc107;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            padding: 1rem;
+            border-left: 4px solid #17a2b8;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning-box {
+            background: #f8d7da;
+            padding: 1rem;
+            border-left: 4px solid #dc3545;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .success-box {
+            background: #d4edda;
+            padding: 1rem;
+            border-left: 4px solid #28a745;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .entity-diagram {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .workflow-step {
+            background: #e3f2fd;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .workflow-step h4 {
+            color: #1976d2;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-top: 4px solid #667eea;
+        }
+
+        .feature-card h4 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .tech-item {
+            background: #667eea;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav ul {
+                flex-direction: column;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .section {
+                padding: 1rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Documentation Technique</h1>
+            <p>Impact Auto - Système de Gestion de Parc Automobile Multi-Tenant</p>
+        </div>
+    </header>
+
+    <nav class="nav">
+        <div class="container">
+            <ul>
+                <li><a href="#overview">Vue d'ensemble</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#data-model">Modèle de données</a></li>
+                <li><a href="#attachments">Pièces jointes</a></li>
+                <li><a href="#workflow">Workflow</a></li>
+                <li><a href="#api">API</a></li>
+                <li><a href="#security">Sécurité</a></li>
+                <li><a href="#database">Base de données</a></li>
+                <li><a href="#installation">Installation</a></li>
+                <li><a href="#examples">Exemples</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="toc">
+            <h3>📋 Table des matières</h3>
+            <ul>
+                <li><a href="#overview">1. Vue d'ensemble</a></li>
+                <li><a href="#architecture">2. Architecture du système</a></li>
+                <li><a href="#data-model">3. Modèle de données</a></li>
+                <li><a href="#attachments">4. Système de pièces jointes</a></li>
+                <li><a href="#workflow">5. Workflow d'intervention</a></li>
+                <li><a href="#api">6. API et services</a></li>
+                <li><a href="#security">7. Sécurité et authentification</a></li>
+                <li><a href="#database">8. Base de données</a></li>
+                <li><a href="#installation">9. Installation et configuration</a></li>
+                <li><a href="#examples">10. Exemples d'utilisation</a></li>
+            </ul>
+        </div>
+
+        <section id="overview" class="section">
+            <h2>Vue d'ensemble</h2>
+            
+            <div class="info-box">
+                <h4>Description du projet</h4>
+                <p>Ce projet transforme FileGator en une application complète de gestion de parc automobile multi-tenant. Il permet aux gestionnaires de parc de suivre leurs véhicules, conducteurs, interventions techniques et maintenance de manière centralisée et sécurisée.</p>
+            </div>
+
+            <h3>Fonctionnalités principales</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🏢 Gestion multi-tenant</h4>
+                    <p>Isolation complète des données par client avec configuration personnalisée par tenant.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🚗 Gestion de parc automobile</h4>
+                    <p>Suivi complet des véhicules, conducteurs, affectations et maintenance.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔧 Workflow d'intervention</h4>
+                    <p>Suivi complet des réparations et maintenance avec workflow structuré.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📎 Système de pièces jointes</h4>
+                    <p>Gestion des documents, photos, rapports avec validation et sécurité.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📦 Gestion des fournitures</h4>
+                    <p>Pièces détachées, stock, fournisseurs avec suivi des coûts.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📊 Rapports et statistiques</h4>
+                    <p>Tableaux de bord et analyses avec vues de reporting optimisées.</p>
+                </div>
+            </div>
+
+            <h3>Technologies utilisées</h3>
+            <div class="tech-stack">
+                <span class="tech-item">PHP 8.1+</span>
+                <span class="tech-item">Symfony 6.4</span>
+                <span class="tech-item">Doctrine ORM 3.5</span>
+                <span class="tech-item">Vue.js 2.6</span>
+                <span class="tech-item">Buefy UI</span>
+                <span class="tech-item">MySQL/MariaDB</span>
+                <span class="tech-item">JWT Authentication</span>
+                <span class="tech-item">Symfony Serializer</span>
+                <span class="tech-item">CORS</span>
+                <span class="tech-item">Multi-tenant</span>
+                <span class="tech-item">REST API</span>
+            </div>
+        </section>
+
+        <section id="architecture" class="section">
+            <h2>Architecture du système</h2>
+            
+            <h3>Structure des dossiers</h3>
+            <div class="code-block">
+filegator/
+├── api/                       # Backend Symfony
+│   ├── src/
+│   │   ├── Entity/            # Entités Doctrine ORM
+│   │   ├── Controller/        # Contrôleurs API REST
+│   │   ├── Service/           # Services métier
+│   │   ├── Repository/        # Repositories Doctrine
+│   │   ├── Security/          # Sécurité et authentification
+│   │   ├── Middleware/        # Middlewares personnalisés
+│   │   ├── Trait/             # Traits réutilisables
+│   │   └── Command/           # Commandes console
+│   ├── config/                # Configuration Symfony
+│   ├── migrations/            # Migrations Doctrine
+│   ├── public/                # Point d'entrée web
+│   └── composer.json          # Dépendances PHP
+├── dist/                      # Frontend compilé
+├── src/                       # Sources frontend Vue.js
+└── index.php                  # Point d'entrée principal
+            </div>
+
+            <h3>Architecture multi-tenant</h3>
+            <div class="highlight">
+                <p><strong>Approche utilisée :</strong> Shared database, shared schema avec isolation par <code class="code-inline">tenant_id</code></p>
+                <ul>
+                    <li>Chaque entité contient un <code class="code-inline">tenant_id</code></li>
+                    <li>Isolation des données au niveau application</li>
+                    <li>Configuration par tenant possible</li>
+                    <li>Sécurité renforcée par middleware</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="data-model" class="section">
+            <h2>Modèle de données</h2>
+            
+            <h3>Entités principales</h3>
+            
+            <h4>1. Tenant (Client)</h4>
+            <div class="code-block">
+#[ORM\Entity]
+#[ORM\Table(name: 'tenants')]
+class Tenant
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private ?int $id = null;
+
+    #[ORM\Column(type: 'string', length: 255)]
+    private string $name;           // Nom de l'entreprise
+
+    #[ORM\Column(type: 'string', length: 255, unique: true)]
+    private string $slug;           // Identifiant unique
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $description = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $logoPath = null;
+
+    #[ORM\Column(type: 'boolean')]
+    private bool $isActive = true;
+
+    #[ORM\Column(type: 'datetime_immutable')]
+    private \DateTimeImmutable $createdAt;
+}
+            </div>
+
+            <h4>2. Vehicle (Véhicule)</h4>
+            <div class="code-block">
+class Vehicle
+{
+    protected $id;
+    protected $tenant_id;
+    protected $plate_number;   // Numéro d'immatriculation
+    protected $brand_id;       // Relation vers Brand
+    protected $model_id;       // Relation vers Model
+    protected $color_id;       // Relation vers VehicleColor
+    protected $year;           // Année de fabrication
+    protected $vin;            // Numéro de série
+    protected $mileage;        // Kilométrage
+    protected $status;         // Statut du véhicule
+    protected $last_maintenance;
+    protected $next_service;
+    protected $purchase_date;
+    protected $purchase_price;
+    protected $insurance_expiry;
+    protected $technical_inspection_expiry;
+}
+            </div>
+
+            <h4>3. Driver (Conducteur)</h4>
+            <div class="code-block">
+class Driver
+{
+    protected $id;
+    protected $tenant_id;
+    protected $first_name;
+    protected $last_name;
+    protected $email;
+    protected $phone;
+    protected $license_number;     // Numéro de permis
+    protected $license_type_id;    // Relation vers LicenseType
+    protected $license_expiry_date;
+    protected $date_of_birth;
+    protected $address;
+    protected $emergency_contact_name;
+    protected $emergency_contact_phone;
+    protected $status;             // active, inactive, suspended, terminated
+}
+            </div>
+
+            <h4>4. VehicleIntervention (Intervention véhicule)</h4>
+            <div class="code-block">
+class VehicleIntervention
+{
+    protected $id;
+    protected $tenant_id;
+    protected $vehicle_id;         // Véhicule concerné
+    protected $driver_id;          // Conducteur (optionnel)
+    protected $garage_id;          // Garage (optionnel)
+    protected $intervention_number;
+    protected $title;
+    protected $description;
+    protected $problem_type;       // breakdown, maintenance, accident, inspection
+    protected $priority;           // low, medium, high, urgent
+    protected $current_status_id;  // Statut actuel
+    protected $reported_by;        // Qui a signalé
+    protected $assigned_to;        // À qui c'est assigné
+    protected $estimated_cost;
+    protected $final_cost;
+    protected $estimated_duration_days;
+    protected $actual_duration_days;
+    protected $reported_date;
+    protected $started_date;
+    protected $completed_date;
+    protected $closed_date;
+}
+            </div>
+
+            <h3>Entités de référence</h3>
+            
+            <h4>Brand (Marque)</h4>
+            <div class="code-block">
+class Brand
+{
+    protected $id;
+    protected $name;           // Peugeot, Renault, etc.
+    protected $logo_url;       // URL du logo
+    protected $country;        // Pays d'origine
+    protected $created_at;
+}
+            </div>
+
+            <h4>Model (Modèle)</h4>
+            <div class="code-block">
+class Model
+{
+    protected $id;
+    protected $brand_id;       // Relation vers Brand
+    protected $category_id;    // Relation vers VehicleCategory
+    protected $fuel_type_id;   // Relation vers FuelType
+    protected $name;           // 308, Clio, etc.
+    protected $engine_size;    // 1.6L
+    protected $power_hp;       // Puissance en CV
+    protected $created_at;
+}
+            </div>
+
+            <h4>LicenseType (Type de permis)</h4>
+            <div class="code-block">
+class LicenseType
+{
+    protected $id;
+    protected $tenant_id;
+    protected $code;               // B, C, D, etc.
+    protected $name;               // Permis B, Permis C, etc.
+    protected $description;
+    protected $category;           // standard, professional, specialized, international
+    protected $min_age;           // Âge minimum
+    protected $max_age;           // Âge maximum
+    protected $validity_years;    // Durée de validité
+    protected $is_required_for_vehicles;
+    protected $vehicle_categories; // JSON des catégories autorisées
+}
+            </div>
+
+            <h3>Nouvelles entités découvertes</h3>
+            
+            <h4>VehicleMaintenance (Maintenance véhicule)</h4>
+            <div class="code-block">
+#[ORM\Entity]
+#[ORM\Table(name: 'vehicle_maintenances')]
+class VehicleMaintenance
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private ?int $id = null;
+
+    #[ORM\ManyToOne(targetEntity: Vehicle::class, inversedBy: 'maintenances')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Vehicle $vehicle = null;
+
+    #[ORM\Column(type: 'date')]
+    private ?\DateTimeInterface $maintenanceDate = null;
+
+    #[ORM\Column(type: 'string', length: 255)]
+    private string $type;           // Type de maintenance
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $description = null;
+
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
+    private ?string $cost = null;
+
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $mileageAtMaintenance = null;
+
+    #[ORM\ManyToOne(targetEntity: Garage::class)]
+    private ?Garage $garage = null;
+}
+            </div>
+
+            <h4>VehicleInsurance (Assurance véhicule)</h4>
+            <div class="code-block">
+#[ORM\Entity]
+#[ORM\Table(name: 'vehicle_insurances')]
+class VehicleInsurance
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private ?int $id = null;
+
+    #[ORM\ManyToOne(targetEntity: Vehicle::class, inversedBy: 'insurances')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Vehicle $vehicle = null;
+
+    #[ORM\Column(type: 'string', length: 255)]
+    private string $insuranceCompany;
+
+    #[ORM\Column(type: 'string', length: 100)]
+    private string $policyNumber;
+
+    #[ORM\Column(type: 'date')]
+    private ?\DateTimeInterface $startDate = null;
+
+    #[ORM\Column(type: 'date')]
+    private ?\DateTimeInterface $endDate = null;
+
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
+    private ?string $premium = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $coverage = null;
+}
+            </div>
+
+            <h4>VehicleFuelLog (Carnet de carburant)</h4>
+            <div class="code-block">
+#[ORM\Entity]
+#[ORM\Table(name: 'vehicle_fuel_logs')]
+class VehicleFuelLog
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private ?int $id = null;
+
+    #[ORM\ManyToOne(targetEntity: Vehicle::class, inversedBy: 'fuelLogs')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Vehicle $vehicle = null;
+
+    #[ORM\Column(type: 'date')]
+    private ?\DateTimeInterface $fuelDate = null;
+
+    #[ORM\Column(type: 'decimal', precision: 8, scale: 2)]
+    private string $quantity;       // Quantité en litres
+
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    private string $pricePerLiter;  // Prix au litre
+
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    private string $totalCost;      // Coût total
+
+    #[ORM\Column(type: 'integer')]
+    private int $mileage;           // Kilométrage au moment du plein
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $station = null; // Station-service
+}
+            </div>
+        </section>
+
+        <section id="attachments" class="section">
+            <h2>Système de pièces jointes</h2>
+            
+            <h3>Entité Attachment</h3>
+            <div class="code-block">
+class Attachment
+{
+    protected $id;
+    protected $tenant_id;
+    protected $entity_type;        // intervention, prediagnostic, vehicle, driver
+    protected $entity_id;          // ID de l'entité parente
+    protected $file_name;          // Nom du fichier stocké
+    protected $original_name;      // Nom original
+    protected $file_path;          // Chemin complet
+    protected $file_size;          // Taille en octets
+    protected $mime_type;          // Type MIME
+    protected $file_extension;     // Extension
+    protected $description;        // Description
+    protected $uploaded_by;        // Utilisateur qui a uploadé
+    protected $uploaded_at;
+    protected $is_public;          // Fichier public/privé
+    protected $download_count;     // Nombre de téléchargements
+    protected $last_downloaded_at;
+    protected $metadata;           // Métadonnées JSON
+    protected $is_active;
+}
+            </div>
+
+            <h3>Trait HasAttachments</h3>
+            <div class="info-box">
+                <p>Trait réutilisable pour toutes les entités supportant les pièces jointes :</p>
+            </div>
+            <div class="code-block">
+trait HasAttachments
+{
+    public function canHaveAttachments(): bool
+    public function getAttachmentsEntityType(): string
+    public function getAttachmentsEntityId(): int
+    public function createAttachment(array $fileData, int $uploadedBy, string $description = null): Attachment
+    public function validateAttachment(array $fileData): array
+    public function getAttachmentConfig(): array
+}
+            </div>
+
+            <h3>Configuration par entité</h3>
+            <div class="code-block">
+// VehicleIntervention
+public function getAttachmentCategories(): array
+{
+    return [
+        'photos' => 'Photos de l\'intervention',
+        'documents' => 'Documents officiels',
+        'reports' => 'Rapports techniques',
+        'invoices' => 'Factures et devis',
+        'other' => 'Autres fichiers'
+    ];
+}
+
+public function getMaxAttachmentSize(): int
+{
+    return 10 * 1024 * 1024; // 10 MB
+}
+            </div>
+        </section>
+
+        <section id="workflow" class="section">
+            <h2>Workflow d'intervention</h2>
+            
+            <h3>Étapes du workflow</h3>
+            <div class="workflow-step">
+                <h4>1. Déclaration</h4>
+                <p>Signalement du problème par le conducteur ou le gestionnaire</p>
+            </div>
+            <div class="workflow-step">
+                <h4>2. Prédiagnostic</h4>
+                <p>Évaluation technique initiale par un expert</p>
+            </div>
+            <div class="workflow-step">
+                <h4>3. Devis</h4>
+                <p>Proposition de prix par le garage partenaire</p>
+            </div>
+            <div class="workflow-step">
+                <h4>4. Autorisation de travaux</h4>
+                <p>Validation du devis et autorisation des travaux</p>
+            </div>
+            <div class="workflow-step">
+                <h4>5. Vérification terrain</h4>
+                <p>Contrôle sur site par un vérificateur</p>
+            </div>
+            <div class="workflow-step">
+                <h4>6. Rapport de réception</h4>
+                <p>Livraison du véhicule et rapport de réception</p>
+            </div>
+            <div class="workflow-step">
+                <h4>7. Facturation</h4>
+                <p>Facture finale et clôture de l'intervention</p>
+            </div>
+
+            <h3>Entités du workflow</h3>
+            
+            <h4>InterventionPrediagnostic</h4>
+            <div class="code-block">
+class InterventionPrediagnostic
+{
+    protected $id;
+    protected $intervention_id;
+    protected $garage_id;
+    protected $collaborateur_id;   // Expert qui a fait le prédiagnostic
+    protected $technician_name;
+    protected $prediagnostic_date;
+    protected $problem_description;
+    protected $proposed_solution;
+    protected $estimated_cost;
+    protected $estimated_duration_days;
+    protected $is_urgent;
+    protected $vehicle_plate;
+    protected $vehicle_model;
+    protected $expert_name;
+    protected $quote_required;
+    protected $signature_expert;
+    protected $signature_repairer;
+    protected $signature_insured;
+}
+            </div>
+
+            <h4>InterventionQuote</h4>
+            <div class="code-block">
+class InterventionQuote
+{
+    protected $id;
+    protected $intervention_id;
+    protected $garage_id;
+    protected $quote_number;
+    protected $quote_date;
+    protected $valid_until;
+    protected $total_amount;
+    protected $tax_rate;
+    protected $discount_amount;
+    protected $final_amount;
+    protected $status;             // draft, sent, approved, rejected
+    protected $notes;
+}
+            </div>
+
+            <h4>InterventionWorkAuthorization</h4>
+            <div class="code-block">
+class InterventionWorkAuthorization
+{
+    protected $id;
+    protected $intervention_id;
+    protected $quote_id;
+    protected $authorization_number;
+    protected $authorization_date;
+    protected $max_amount;
+    protected $authorized_by;
+    protected $valid_until;
+    protected $status;             // pending, approved, rejected, expired
+    protected $notes;
+}
+            </div>
+        </section>
+
+        <section id="api" class="section">
+            <h2>API et services</h2>
+            
+            <h3>Contrôleurs principaux</h3>
+            
+            <h4>AttachmentController</h4>
+            <p>Gestion des fichiers et pièces jointes :</p>
+            <ul>
+                <li><code class="code-inline">POST /api/attachments/upload</code> - Upload de fichier</li>
+                <li><code class="code-inline">GET /api/attachments/{id}/download</code> - Téléchargement</li>
+                <li><code class="code-inline">GET /api/attachments/{id}/preview</code> - Prévisualisation</li>
+                <li><code class="code-inline">DELETE /api/attachments/{id}</code> - Suppression</li>
+                <li><code class="code-inline">GET /api/attachments</code> - Liste des pièces jointes</li>
+            </ul>
+
+            <h4>AuthController</h4>
+            <p>Authentification et autorisation :</p>
+            <ul>
+                <li><code class="code-inline">POST /api/auth/login</code> - Connexion</li>
+                <li><code class="code-inline">POST /api/auth/logout</code> - Déconnexion</li>
+                <li><code class="code-inline">GET /api/auth/user</code> - Informations utilisateur</li>
+                <li><code class="code-inline">PUT /api/auth/password</code> - Changement de mot de passe</li>
+            </ul>
+
+            <h4>VehicleController</h4>
+            <p>Gestion des véhicules :</p>
+            <ul>
+                <li><code class="code-inline">GET /api/vehicles</code> - Liste des véhicules</li>
+                <li><code class="code-inline">POST /api/vehicles</code> - Création d'un véhicule</li>
+                <li><code class="code-inline">GET /api/vehicles/{id}</code> - Détails d'un véhicule</li>
+                <li><code class="code-inline">PUT /api/vehicles/{id}</code> - Modification d'un véhicule</li>
+                <li><code class="code-inline">DELETE /api/vehicles/{id}</code> - Suppression d'un véhicule</li>
+            </ul>
+
+            <h4>DriverController</h4>
+            <p>Gestion des conducteurs :</p>
+            <ul>
+                <li><code class="code-inline">GET /api/drivers</code> - Liste des conducteurs</li>
+                <li><code class="code-inline">POST /api/drivers</code> - Création d'un conducteur</li>
+                <li><code class="code-inline">GET /api/drivers/{id}</code> - Détails d'un conducteur</li>
+                <li><code class="code-inline">PUT /api/drivers/{id}</code> - Modification d'un conducteur</li>
+                <li><code class="code-inline">DELETE /api/drivers/{id}</code> - Suppression d'un conducteur</li>
+            </ul>
+
+            <h4>InterventionController</h4>
+            <p>Gestion des interventions :</p>
+            <ul>
+                <li><code class="code-inline">GET /api/interventions</code> - Liste des interventions</li>
+                <li><code class="code-inline">POST /api/interventions</code> - Création d'une intervention</li>
+                <li><code class="code-inline">GET /api/interventions/{id}</code> - Détails d'une intervention</li>
+                <li><code class="code-inline">PUT /api/interventions/{id}</code> - Modification d'une intervention</li>
+                <li><code class="code-inline">DELETE /api/interventions/{id}</code> - Suppression d'une intervention</li>
+            </ul>
+
+            <h4>TenantController</h4>
+            <p>Gestion des tenants :</p>
+            <ul>
+                <li><code class="code-inline">GET /api/tenants</code> - Liste des tenants</li>
+                <li><code class="code-inline">POST /api/tenants</code> - Création d'un tenant</li>
+                <li><code class="code-inline">GET /api/tenants/{id}</code> - Détails d'un tenant</li>
+                <li><code class="code-inline">PUT /api/tenants/{id}</code> - Modification d'un tenant</li>
+                <li><code class="code-inline">DELETE /api/tenants/{id}</code> - Suppression d'un tenant</li>
+            </ul>
+
+            <h4>ParameterController</h4>
+            <p>Gestion des paramètres système :</p>
+            <ul>
+                <li><code class="code-inline">GET /api/parameters</code> - Liste des paramètres</li>
+                <li><code class="code-inline">POST /api/parameters</code> - Création d'un paramètre</li>
+                <li><code class="code-inline">PUT /api/parameters/{id}</code> - Modification d'un paramètre</li>
+                <li><code class="code-inline">DELETE /api/parameters/{id}</code> - Suppression d'un paramètre</li>
+            </ul>
+
+            <h3>Services métier</h3>
+            
+            <h4>TenantContextService</h4>
+            <div class="code-block">
+class TenantContextService
+{
+    public function getCurrentTenant(): ?Tenant
+    public function setCurrentTenant(Tenant $tenant): void
+    public function hasAccessToTenant(User $user, Tenant $tenant): bool
+    public function getTenantFromRequest(Request $request): ?Tenant
+}
+            </div>
+
+            <h4>TenantAccessService</h4>
+            <div class="code-block">
+class TenantAccessService
+{
+    public function canAccessResource(User $user, string $resourceType, int $resourceId): bool
+    public function filterByTenant(QueryBuilder $qb, Tenant $tenant): QueryBuilder
+    public function validateTenantAccess(array $data, Tenant $tenant): array
+}
+            </div>
+
+            <h4>ActionLogService</h4>
+            <div class="code-block">
+class ActionLogService
+{
+    public function logAction(User $user, string $action, array $context = []): void
+    public function getActionLogs(Tenant $tenant, array $filters = []): array
+    public function getActionLogsForUser(User $user, array $filters = []): array
+}
+            </div>
+
+            <h4>AlertService</h4>
+            <div class="code-block">
+class AlertService
+{
+    public function createAlert(Tenant $tenant, string $type, string $message, array $context = []): Alert
+    public function getActiveAlerts(Tenant $tenant): array
+    public function markAlertAsRead(int $alertId, User $user): void
+    public function getAlertsForUser(User $user): array
+}
+            </div>
+
+            <h4>CodeGenerationService</h4>
+            <div class="code-block">
+class CodeGenerationService
+{
+    public function generateInterventionNumber(Tenant $tenant): string
+    public function generateQuoteNumber(Tenant $tenant): string
+    public function generateAuthorizationNumber(Tenant $tenant): string
+    public function generateInvoiceNumber(Tenant $tenant): string
+}
+            </div>
+
+            <h4>LogoService</h4>
+            <div class="code-block">
+class LogoService
+{
+    public function uploadLogo(Tenant $tenant, UploadedFile $file): string
+    public function getLogoUrl(Tenant $tenant): ?string
+    public function deleteLogo(Tenant $tenant): bool
+    public function resizeLogo(string $logoPath, int $width, int $height): string
+}
+            </div>
+
+            <h4>ParameterService</h4>
+            <div class="code-block">
+class ParameterService
+{
+    public function getParameter(string $key, Tenant $tenant = null): ?string
+    public function setParameter(string $key, string $value, Tenant $tenant = null): void
+    public function getParametersByCategory(string $category, Tenant $tenant = null): array
+    public function deleteParameter(string $key, Tenant $tenant = null): bool
+}
+            </div>
+        </section>
+
+        <section id="security" class="section">
+            <h2>Sécurité et authentification</h2>
+            
+            <h3>Système multi-tenant</h3>
+            
+            <h4>Isolation des données</h4>
+            <ul>
+                <li>Chaque requête vérifie le <code class="code-inline">tenant_id</code></li>
+                <li>Middleware d'authentification par tenant</li>
+                <li>Configuration séparée par client</li>
+            </ul>
+
+            <h4>Rôles et permissions</h4>
+            <div class="code-block">
+class Collaborateur
+{
+    protected $position;           // administrateur, gestionnaire, secretaire_technique, 
+                                  // expert, reparateur, verificateur_terrain, conducteur
+    
+    // Méthodes de permissions
+    public function canManageUsers(): bool
+    public function canManageSystem(): bool
+    public function canCreateInterventions(): bool
+    public function canApproveWork(): bool
+    public function canPerformRepairs(): bool
+    public function canAccessReports(): bool
+    public function canDriveVehicles(): bool
+    public function canAccessVehicleInfo(): bool
+    public function canReportIncidents(): bool
+}
+            </div>
+
+            <h3>Contrôle d'accès aux pièces jointes</h3>
+            <ul>
+                <li><strong>Fichiers privés :</strong> Accès restreint aux utilisateurs autorisés</li>
+                <li><strong>Fichiers publics :</strong> Accès libre</li>
+                <li><strong>Validation stricte :</strong> Type MIME, taille, extension</li>
+                <li><strong>Stockage sécurisé :</strong> Fichiers hors web root</li>
+            </ul>
+        </section>
+
+        <section id="database" class="section">
+            <h2>Base de données</h2>
+            
+            <h3>Schémas principaux</h3>
+            
+            <h4>Table des tenants</h4>
+            <div class="code-block">
+CREATE TABLE tenants (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(100) UNIQUE NOT NULL,
+    settings JSON,
+    storage_quota BIGINT DEFAULT 1073741824, -- 1GB
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+            </div>
+
+            <h4>Table des véhicules</h4>
+            <div class="code-block">
+CREATE TABLE vehicles (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id INT NOT NULL,
+    plate_number VARCHAR(20) NOT NULL,
+    brand_id INT NOT NULL,
+    model_id INT NOT NULL,
+    color_id INT NOT NULL,
+    year INT NOT NULL,
+    vin VARCHAR(17),
+    mileage INT DEFAULT 0,
+    status ENUM('active', 'maintenance', 'out_of_service', 'sold') DEFAULT 'active',
+    last_maintenance DATE,
+    next_service DATE,
+    purchase_date DATE,
+    purchase_price DECIMAL(10,2),
+    insurance_expiry DATE,
+    technical_inspection_expiry DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+    FOREIGN KEY (brand_id) REFERENCES brands(id),
+    FOREIGN KEY (model_id) REFERENCES models(id),
+    FOREIGN KEY (color_id) REFERENCES vehicle_colors(id)
+);
+            </div>
+
+            <h4>Table des pièces jointes</h4>
+            <div class="code-block">
+CREATE TABLE attachments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id INT NOT NULL,
+    entity_type VARCHAR(50) NOT NULL,
+    entity_id INT NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_size INT NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    file_extension VARCHAR(10) NOT NULL,
+    description TEXT,
+    uploaded_by INT NOT NULL,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_public BOOLEAN DEFAULT FALSE,
+    download_count INT DEFAULT 0,
+    last_downloaded_at TIMESTAMP NULL,
+    metadata JSON,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+    FOREIGN KEY (uploaded_by) REFERENCES users(id)
+);
+            </div>
+
+            <h3>Index et performances</h3>
+            
+            <h4>Index principaux</h4>
+            <div class="code-block">
+-- Index pour les requêtes multi-tenant
+CREATE INDEX idx_vehicles_tenant_id ON vehicles(tenant_id);
+CREATE INDEX idx_drivers_tenant_id ON drivers(tenant_id);
+CREATE INDEX idx_interventions_tenant_id ON vehicle_interventions(tenant_id);
+
+-- Index pour les pièces jointes
+CREATE INDEX idx_attachments_entity ON attachments(entity_type, entity_id);
+CREATE INDEX idx_attachments_tenant_id ON attachments(tenant_id);
+CREATE INDEX idx_attachments_uploaded_by ON attachments(uploaded_by);
+
+-- Index pour les performances
+CREATE INDEX idx_vehicles_plate_number ON vehicles(plate_number);
+CREATE INDEX idx_drivers_license_number ON drivers(license_number);
+CREATE INDEX idx_interventions_status ON vehicle_interventions(current_status_id);
+            </div>
+
+            <h3>Vues de reporting</h3>
+            
+            <h4>Vue des interventions actives</h4>
+            <div class="code-block">
+CREATE VIEW v_active_interventions AS
+SELECT 
+    vi.*,
+    v.plate_number,
+    d.first_name as driver_first_name,
+    d.last_name as driver_last_name,
+    g.name as garage_name,
+    is.name as status_name
+FROM vehicle_interventions vi
+LEFT JOIN vehicles v ON vi.vehicle_id = v.id
+LEFT JOIN drivers d ON vi.driver_id = d.id
+LEFT JOIN garages g ON vi.garage_id = g.id
+LEFT JOIN intervention_statuses is ON vi.current_status_id = is.id
+WHERE vi.closed_date IS NULL;
+            </div>
+
+            <h4>Vue des pièces jointes par entité</h4>
+            <div class="code-block">
+CREATE VIEW v_attachments_by_entity AS
+SELECT 
+    a.entity_type,
+    a.entity_id,
+    COUNT(*) as total_attachments,
+    SUM(a.file_size) as total_size,
+    COUNT(CASE WHEN a.is_public = TRUE THEN 1 END) as public_attachments
+FROM attachments a
+GROUP BY a.entity_type, a.entity_id;
+            </div>
+        </section>
+
+        <section id="installation" class="section">
+            <h2>Installation et configuration</h2>
+            
+            <h3>Prérequis</h3>
+            <ul>
+                <li>PHP 8.1 ou supérieur</li>
+                <li>MySQL 5.7 ou MariaDB 10.3+</li>
+                <li>Composer 2.0+</li>
+                <li>Node.js 14+ et npm</li>
+                <li>Symfony CLI (optionnel)</li>
+                <li>Serveur web (Apache/Nginx)</li>
+            </ul>
+
+            <h3>Installation</h3>
+            
+            <h4>1. Cloner le projet FileGator</h4>
+            <div class="code-block">
+git clone &lt;repository-url&gt;
+cd filegator
+            </div>
+
+            <h4>2. Installer les dépendances PHP</h4>
+            <div class="code-block">
+cd api
+composer install
+            </div>
+
+            <h4>3. Installer les dépendances frontend</h4>
+            <div class="code-block">
+cd ..
+npm install
+            </div>
+
+            <h4>4. Compiler le frontend</h4>
+            <div class="code-block">
+npm run build
+            </div>
+
+            <h4>5. Configuration Symfony</h4>
+            <div class="code-block">
+cd api
+cp .env.example .env
+# Éditer .env avec vos paramètres de base de données
+            </div>
+
+            <h4>6. Base de données</h4>
+            <div class="code-block">
+# Créer la base de données
+php bin/console doctrine:database:create
+
+# Exécuter les migrations
+php bin/console doctrine:migrations:migrate
+            </div>
+
+            <h4>7. Données de base (optionnel)</h4>
+            <div class="code-block">
+# Charger les données de test
+php bin/console doctrine:fixtures:load
+            </div>
+
+            <h4>8. Générer les clés JWT</h4>
+            <div class="code-block">
+# Générer les clés pour l'authentification JWT
+php bin/console lexik:jwt:generate-keypair
+            </div>
+
+            <h4>9. Démarrer le serveur Symfony</h4>
+            <div class="code-block">
+# Avec Symfony CLI
+symfony serve
+
+# Ou avec le serveur PHP intégré
+php -S localhost:8000 -t public
+            </div>
+
+            <h4>10. Démarrer le serveur frontend</h4>
+            <div class="code-block">
+# Dans un autre terminal
+cd dist
+python -m http.server 8080
+# Ou utiliser un serveur web configuré
+            </div>
+
+            <h3>Configuration</h3>
+            
+            <h4>.env (Configuration Symfony)</h4>
+            <div class="code-block">
+# Configuration de l'application
+APP_ENV=prod
+APP_SECRET=your-secret-key-here
+
+# Configuration de la base de données
+DATABASE_URL="mysql://user:password@localhost:3306/filegator?serverVersion=8.0&charset=utf8mb4"
+
+# Configuration JWT
+JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
+JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
+JWT_PASSPHRASE=your-jwt-passphrase
+
+# Configuration des uploads
+UPLOAD_MAX_SIZE=10485760
+UPLOAD_ALLOWED_TYPES="image/jpeg,image/png,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+UPLOAD_PATH="%kernel.project_dir%/var/uploads"
+
+# Configuration CORS
+CORS_ALLOW_ORIGIN="http://localhost:8080"
+CORS_ALLOW_HEADERS="Content-Type,Authorization,X-Requested-With"
+CORS_ALLOW_METHODS="GET,POST,PUT,DELETE,OPTIONS"
+            </div>
+
+            <h4>services.yaml (Configuration des services)</h4>
+            <div class="code-block">
+parameters:
+    app.upload.max_size: '%env(int:UPLOAD_MAX_SIZE)%'
+    app.upload.allowed_types: '%env(csv:UPLOAD_ALLOWED_TYPES)%'
+    app.upload.path: '%env(UPLOAD_PATH)%'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    # Configuration des services personnalisés
+    App\Service\TenantContextService:
+        arguments:
+            $requestStack: '@request_stack'
+
+    App\Service\LogoService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $uploadPath: '%app.upload.path%'
+            </div>
+        </section>
+
+        <section id="examples" class="section">
+            <h2>Exemples d'utilisation</h2>
+            
+            <h3>Créer une intervention</h3>
+            <div class="code-block">
+use Filegator\Models\VehicleIntervention;
+use Filegator\Models\InterventionPrediagnostic;
+
+// Créer l'intervention
+$intervention = new VehicleIntervention();
+$intervention->setTenantId(1);
+$intervention->setVehicleId(1);
+$intervention->setInterventionNumber('INT-2024-001');
+$intervention->setTitle('Problème moteur');
+$intervention->setDescription('Moteur qui tousse, perte de puissance');
+$intervention->setProblemType('breakdown');
+$intervention->setPriority('high');
+$intervention->setReportedBy(1);
+$intervention->setReportedDate(new DateTime());
+
+// Créer le prédiagnostic
+$prediagnostic = new InterventionPrediagnostic();
+$prediagnostic->setInterventionId($intervention->getId());
+$prediagnostic->setGarageId(1);
+$prediagnostic->setCollaborateurId(2);
+$prediagnostic->setPrediagnosticDate(new DateTime());
+$prediagnostic->setProblemDescription('Bougie d\'allumage défectueuse');
+$prediagnostic->setProposedSolution('Remplacement des bougies');
+$prediagnostic->setEstimatedCost(150.00);
+$prediagnostic->setEstimatedDurationDays(1);
+$prediagnostic->setIsUrgent(false);
+$prediagnostic->setQuoteRequired(true);
+            </div>
+
+            <h3>Gérer les pièces jointes</h3>
+            <div class="code-block">
+use Filegator\Models\Attachment;
+
+// Créer une pièce jointe
+$attachment = new Attachment();
+$attachment->setTenantId(1);
+$attachment->setEntityType('intervention');
+$attachment->setEntityId($intervention->getId());
+$attachment->setFileName('intervention_1_photo.jpg');
+$attachment->setOriginalName('photo_probleme_moteur.jpg');
+$attachment->setFilePath('/uploads/interventions/1/photo.jpg');
+$attachment->setFileSize(2048576);
+$attachment->setMimeType('image/jpeg');
+$attachment->setFileExtension('jpg');
+$attachment->setDescription('Photo du problème moteur');
+$attachment->setUploadedBy(1);
+$attachment->setUploadedAt(new DateTime());
+$attachment->setIsPublic(false);
+$attachment->setIsActive(true);
+
+// Valider le fichier
+$errors = $intervention->validateAttachment([
+    'file_name' => 'photo.jpg',
+    'original_name' => 'photo_probleme.jpg',
+    'file_path' => '/uploads/photo.jpg',
+    'file_size' => 2048576,
+    'mime_type' => 'image/jpeg',
+    'file_extension' => 'jpg'
+]);
+
+if (empty($errors)) {
+    // Fichier valide, procéder à l'upload
+    $attachment = $intervention->createAttachment($fileData, 1, 'Photo du problème');
+}
+            </div>
+
+            <h3>Gérer les fournitures</h3>
+            <div class="code-block">
+use Filegator\Models\Supply;
+use Filegator\Models\InterventionSupply;
+
+// Créer une fourniture
+$supply = new Supply();
+$supply->setTenantId(1);
+$supply->setCategoryId(1);
+$supply->setSupplierId(1);
+$supply->setName('Bougie d\'allumage NGK');
+$supply->setPartNumber('NGK-1234');
+$supply->setUnitPrice(25.50);
+$supply->setStockQuantity(50);
+$supply->setMinStockLevel(10);
+$supply->setIsActive(true);
+
+// Utiliser la fourniture dans une intervention
+$interventionSupply = new InterventionSupply();
+$interventionSupply->setInterventionId($intervention->getId());
+$interventionSupply->setSupplyId($supply->getId());
+$interventionSupply->setModelId(1);
+$interventionSupply->setQuantityUsed(4);
+$interventionSupply->setUnitPrice(25.50);
+$interventionSupply->setYear(2024);
+$interventionSupply->setUsedBy(1);
+$interventionSupply->setUsedAt(new DateTime());
+$interventionSupply->updateTotalCost();
+            </div>
+
+            <h3>Générer un rapport de prédiagnostic</h3>
+            <div class="code-block">
+use Filegator\Services\PrediagnosticReportGenerator;
+
+$generator = new PrediagnosticReportGenerator();
+$items = [
+    // Items du prédiagnostic
+];
+
+$html = $generator->generateReport($prediagnostic, $items);
+file_put_contents('rapport_prediagnostic.html', $html);
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Conclusion</h2>
+            
+            <div class="success-box">
+                <p>Cette documentation technique présente l'architecture complète du système de gestion de parc automobile multi-tenant basé sur FileGator et Symfony 6.4. Le système offre :</p>
+                <ul>
+                    <li><strong>Flexibilité :</strong> Architecture modulaire Symfony avec Doctrine ORM</li>
+                    <li><strong>Sécurité :</strong> Isolation multi-tenant, authentification JWT et contrôle d'accès granulaire</li>
+                    <li><strong>Performance :</strong> Index optimisés, requêtes Doctrine efficaces et cache Symfony</li>
+                    <li><strong>Maintenabilité :</strong> Code structuré avec services Symfony, traits réutilisables et migrations Doctrine</li>
+                    <li><strong>Évolutivité :</strong> Support des pièces jointes, métadonnées extensibles et API REST complète</li>
+                    <li><strong>Modernité :</strong> Utilisation des dernières versions de Symfony, Doctrine ORM et des bonnes pratiques PHP 8.1+</li>
+                </ul>
+                
+                <h4>Technologies clés utilisées</h4>
+                <ul>
+                    <li><strong>Backend :</strong> Symfony 6.4, Doctrine ORM 3.5, JWT Authentication</li>
+                    <li><strong>Frontend :</strong> Vue.js 2.6, Buefy UI</li>
+                    <li><strong>Base de données :</strong> MySQL/MariaDB avec migrations Doctrine</li>
+                    <li><strong>Sécurité :</strong> LexikJWTAuthenticationBundle, CORS, validation Symfony</li>
+                    <li><strong>Développement :</strong> Composer, Symfony CLI, migrations automatiques</li>
+                </ul>
+                
+                <p>Le système est prêt pour la production et peut être étendu selon les besoins spécifiques de chaque client grâce à l'architecture modulaire de Symfony et aux fonctionnalités multi-tenant intégrées.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Impact Auto - Système de Gestion de Parc Automobile Multi-Tenant. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Navigation smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Highlight active section in navigation
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('.section');
+            const navLinks = document.querySelectorAll('.nav a');
+            
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (scrollY >= (sectionTop - 200)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

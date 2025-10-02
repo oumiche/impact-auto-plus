@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interventions - Impact Auto</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/impact-auto.css">
+</head>
+<body>
+    <!-- Sidebar sera chargé dynamiquement -->
+    
+    <main class="main-content">
+        <!-- Page Header -->
+        <div class="dashboard-header">
+            <h1 class="section-title">Gestion des Interventions</h1>
+            <p class="dashboard-subtitle">Suivez les interventions sur vos véhicules</p>
+        </div>
+
+        <!-- Search and Filter Bar -->
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="Rechercher une intervention...">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">Toutes</button>
+                <button class="filter-btn" data-filter="pending">En attente</button>
+                <button class="filter-btn" data-filter="in-progress">En cours</button>
+                <button class="filter-btn" data-filter="completed">Terminées</button>
+            </div>
+            <button class="btn btn-primary" id="add-intervention-btn">
+                <i class="fas fa-plus"></i> Nouvelle Intervention
+            </button>
+        </div>
+
+        <!-- Interventions Grid -->
+        <div class="content-grid" id="interventions-list">
+            <!-- Exemple d'intervention -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-wrench"></i> INT-2024-001
+                    </h3>
+                    <div class="intervention-status status-in-progress">En cours</div>
+                </div>
+                <div class="card-body">
+                    <div class="intervention-info">
+                        <div class="info-item">
+                            <span class="info-label">Véhicule</span>
+                            <span class="info-value">Toyota Corolla (AB-123-CD)</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Conducteur</span>
+                            <span class="info-value">Jean Dupont</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Type</span>
+                            <span class="info-value">Réparation moteur</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Date</span>
+                            <span class="info-value">15/01/2024</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Garage</span>
+                            <span class="info-value">Garage Auto Plus</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Coût estimé</span>
+                            <span class="info-value">850,00 €</span>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye"></i> Détails
+                        </button>
+                        <button class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                        <button class="btn btn-success btn-sm">
+                            <i class="fas fa-check"></i> Valider
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-wrench"></i> INT-2024-002
+                    </h3>
+                    <div class="intervention-status status-pending">En attente</div>
+                </div>
+                <div class="card-body">
+                    <div class="intervention-info">
+                        <div class="info-item">
+                            <span class="info-label">Véhicule</span>
+                            <span class="info-value">Peugeot 308 (EF-456-GH)</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Conducteur</span>
+                            <span class="info-value">Marie Martin</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Type</span>
+                            <span class="info-value">Maintenance préventive</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Date</span>
+                            <span class="info-value">20/01/2024</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Garage</span>
+                            <span class="info-value">Auto Service</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Coût estimé</span>
+                            <span class="info-value">320,00 €</span>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye"></i> Détails
+                        </button>
+                        <button class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                        <button class="btn btn-success btn-sm">
+                            <i class="fas fa-check"></i> Valider
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="loading-indicator" id="loading-indicator" style="display: none;">
+            <i class="fas fa-spinner fa-spin"></i> Chargement des interventions...
+        </div>
+
+        <!-- No Data Message -->
+        <div class="no-data-message" id="no-data-message" style="display: none;">
+            <i class="fas fa-wrench"></i>
+            <p>Aucune intervention trouvée</p>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/sidebar-component.js"></script>
+    <script src="js/load-sidebar.js"></script>
+    <script>
+        // Script simple pour la gestion des interventions
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page interventions chargée');
+            
+            // Gestion de la recherche
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    console.log('Recherche:', e.target.value);
+                });
+            }
+            
+            // Gestion des filtres
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    console.log('Filtre:', this.dataset.filter);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

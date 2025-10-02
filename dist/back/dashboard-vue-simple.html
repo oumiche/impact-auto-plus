@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord - Impact Auto</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/impact-auto.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="js/services/ApiService.js"></script>
+    <script src="js/layout/VueLayout.js"></script>
+    <script src="js/pages/DashboardPage.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div class="vue-page">
+            <div class="vue-page-header">
+                <h1><i class="fas fa-tachometer-alt"></i> Tableau de Bord</h1>
+                <p>Vue d'ensemble de votre parc automobile</p>
+            </div>
+            
+            <div class="vue-content">
+                <!-- Loading State -->
+                <div v-if="isLoading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Chargement des données...</p>
+                </div>
+
+                <!-- Dashboard Content -->
+                <div v-else>
+                    <!-- Statistics Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card vehicles">
+                            <div class="stat-header">
+                                <span class="stat-title">Véhicules</span>
+                                <i class="fas fa-car stat-icon"></i>
+                            </div>
+                            <div class="stat-value">{{ stats.vehicles }}</div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +12% ce mois
+                            </div>
+                        </div>
+
+                        <div class="stat-card drivers">
+                            <div class="stat-header">
+                                <span class="stat-title">Conducteurs</span>
+                                <i class="fas fa-users stat-icon"></i>
+                            </div>
+                            <div class="stat-value">{{ stats.drivers }}</div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +5% ce mois
+                            </div>
+                        </div>
+
+                        <div class="stat-card maintenance">
+                            <div class="stat-header">
+                                <span class="stat-title">Maintenances</span>
+                                <i class="fas fa-wrench stat-icon"></i>
+                            </div>
+                            <div class="stat-value">{{ stats.maintenances }}</div>
+                            <div class="stat-change negative">
+                                <i class="fas fa-arrow-down"></i>
+                                -8% ce mois
+                            </div>
+                        </div>
+
+                        <div class="stat-card alerts">
+                            <div class="stat-header">
+                                <span class="stat-title">Alertes</span>
+                                <i class="fas fa-exclamation-triangle stat-icon"></i>
+                            </div>
+                            <div class="stat-value">{{ stats.alerts }}</div>
+                            <div class="stat-change" :class="stats.alerts > 5 ? 'negative' : 'positive'">
+                                <i :class="stats.alerts > 5 ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
+                                {{ stats.alerts > 5 ? '+3' : '-2' }} cette semaine
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <div class="action-card" @click="navigateTo('vehicles')">
+                            <div class="action-icon">
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="action-title">Gérer les Véhicules</div>
+                            <div class="action-desc">Ajouter, modifier, consulter</div>
+                        </div>
+
+                        <div class="action-card" @click="navigateTo('drivers')">
+                            <div class="action-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="action-title">Gérer les Conducteurs</div>
+                            <div class="action-desc">Profils et permissions</div>
+                        </div>
+
+                        <div class="action-card" @click="navigateTo('maintenance')">
+                            <div class="action-icon">
+                                <i class="fas fa-wrench"></i>
+                            </div>
+                            <div class="action-title">Planifier Maintenance</div>
+                            <div class="action-desc">Interventions et réparations</div>
+                        </div>
+
+                        <div class="action-card" @click="navigateTo('reports')">
+                            <div class="action-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="action-title">Rapports</div>
+                            <div class="action-desc">Analyses et statistiques</div>
+                        </div>
+
+                        <div class="action-card" @click="navigateTo('parameters')">
+                            <div class="action-icon">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            <div class="action-title">Paramètres</div>
+                            <div class="action-desc">Configuration système</div>
+                        </div>
+
+                        <div class="action-card" @click="navigateTo('alerts')">
+                            <div class="action-icon">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <div class="action-title">Alertes</div>
+                            <div class="action-desc">Notifications importantes</div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Grid -->
+                    <div class="dashboard-grid">
+                        <!-- Chart Section -->
+                        <div class="chart-container">
+                            <div class="chart-title">
+                                <i class="fas fa-chart-line"></i> Évolution des Coûts
+                            </div>
+                            <div class="chart-placeholder">
+                                <div>
+                                    <i class="fas fa-chart-area" style="font-size: 3rem; color: #ddd; margin-bottom: 1rem;"></i>
+                                    <p>Graphique des coûts de maintenance</p>
+                                    <small>Données des 12 derniers mois</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="recent-activity">
+                            <div class="chart-title">
+                                <i class="fas fa-clock"></i> Activité Récente
+                            </div>
+                            <div v-for="activity in recentActivities" :key="activity.id" class="activity-item">
+                                <div class="activity-icon" :class="activity.type">
+                                    <i :class="activity.icon"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">{{ activity.title }}</div>
+                                    <div class="activity-time">{{ activity.time }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alerts Section -->
+                    <div class="alerts-section">
+                        <div class="chart-title">
+                            <i class="fas fa-exclamation-triangle"></i> Alertes Actives
+                        </div>
+                        <div v-for="alert in alerts" :key="alert.id" class="alert-item" :class="alert.level">
+                            <div class="alert-icon">
+                                <i :class="alert.icon"></i>
+                            </div>
+                            <div class="alert-content">
+                                <div class="alert-title">{{ alert.title }}</div>
+                                <div class="alert-desc">{{ alert.description }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

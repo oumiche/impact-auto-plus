@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Impact Auto</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/impact-auto.css">
+</head>
+<body>
+    <!-- Sidebar sera chargé dynamiquement -->
+    
+    <main class="main-content">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <h1 class="section-title">Tableau de Bord</h1>
+            <p class="dashboard-subtitle">
+                Bienvenue dans votre espace de gestion de parc automobile
+                <span id="tenant-name-display-header"></span>
+            </p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="vehicles-count">0</div>
+                    <div class="stat-label">Véhicules</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-wrench"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="interventions-count">0</div>
+                    <div class="stat-label">Interventions</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="drivers-count">0</div>
+                    <div class="stat-label">Conducteurs</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="maintenance-due">0</div>
+                    <div class="stat-label">Maintenance Due</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Recent Activity -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-clock"></i> Activité Récente
+                    </h3>
+                </div>
+                <div class="recent-activity" id="recent-activity">
+                    <div class="activity-item">
+                        <div class="activity-icon vehicle">
+                            <i class="fas fa-car"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">Nouveau véhicule ajouté</div>
+                            <div class="activity-time">Il y a 2 heures</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon intervention">
+                            <i class="fas fa-wrench"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">Intervention terminée</div>
+                            <div class="activity-time">Il y a 4 heures</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon maintenance">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">Maintenance programmée</div>
+                            <div class="activity-time">Il y a 1 jour</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-bolt"></i> Actions Rapides
+                    </h3>
+                </div>
+                <div class="quick-actions">
+                    <a href="/vehicles.html?action=add" class="quick-action">
+                        <i class="fas fa-plus"></i>
+                        <span>Nouveau Véhicule</span>
+                    </a>
+                    <a href="/interventions.html?action=add" class="quick-action">
+                        <i class="fas fa-wrench"></i>
+                        <span>Nouvelle Intervention</span>
+                    </a>
+                    <a href="/drivers.html?action=add" class="quick-action">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Nouveau Conducteur</span>
+                    </a>
+                    <a href="/reports.html" class="quick-action">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Générer Rapport</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Dashboard Content -->
+        <div class="content-grid">
+            <!-- Vehicle Status Overview -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-pie"></i> État du Parc
+                    </h3>
+                </div>
+                <div class="vehicle-status-overview">
+                    <div class="status-item">
+                        <div class="status-indicator active"></div>
+                        <div class="status-info">
+                            <div class="status-count" id="active-vehicles">0</div>
+                            <div class="status-label">Véhicules Actifs</div>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-indicator maintenance"></div>
+                        <div class="status-info">
+                            <div class="status-count" id="maintenance-vehicles">0</div>
+                            <div class="status-label">En Maintenance</div>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-indicator inactive"></div>
+                        <div class="status-info">
+                            <div class="status-count" id="inactive-vehicles">0</div>
+                            <div class="status-label">Hors Service</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Maintenance -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-calendar-alt"></i> Maintenance à Venir
+                    </h3>
+                </div>
+                <div class="upcoming-maintenance" id="upcoming-maintenance">
+                    <div class="maintenance-item">
+                        <div class="maintenance-date">15 Jan</div>
+                        <div class="maintenance-info">
+                            <div class="maintenance-vehicle">Peugeot 308 - AB-123-CD</div>
+                            <div class="maintenance-type">Révision 20 000 km</div>
+                        </div>
+                    </div>
+                    <div class="maintenance-item">
+                        <div class="maintenance-date">18 Jan</div>
+                        <div class="maintenance-info">
+                            <div class="maintenance-vehicle">Renault Clio - EF-456-GH</div>
+                            <div class="maintenance-type">Changement pneus</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/sidebar-component.js"></script>
+    <script src="js/load-sidebar.js"></script>
+    <script src="js/dashboard/dashboard.js"></script>
+</body>
+</html>

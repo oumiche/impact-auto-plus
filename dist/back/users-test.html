@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Utilisateurs - Impact Auto</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/impact-auto.css">
+    <link rel="stylesheet" href="css/users-vue.css">
+    <!-- Vue.js CDN - Version Production -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div class="main-content">
+            <div class="page-header">
+                <h1>Test de l'API Utilisateurs</h1>
+                <div class="header-actions">
+                    <button @click="simulateLogin" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Simuler Connexion
+                    </button>
+                    <button @click="clearAuth" class="btn btn-secondary">
+                        <i class="fas fa-sign-out-alt"></i> Déconnexion
+                    </button>
+                    <button @click="testAPI" class="btn btn-outline">
+                        <i class="fas fa-flask"></i> Tester API
+                    </button>
+                </div>
+            </div>
+            
+            <div class="test-section">
+                <h2>État de l'authentification</h2>
+                <p><strong>Token:</strong> <span id="token-status">{{ authStatus }}</span></p>
+                <p><strong>Connecté:</strong> <span id="auth-status">{{ isAuthenticated ? 'Oui' : 'Non' }}</span></p>
+            </div>
+            
+            <!-- Le composant UserCrud sera monté ici -->
+            <UserCrud />
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/services/ApiService.js"></script>
+    <script src="js/users-vue.js"></script>
+    
+    <script>
+        const { createApp } = Vue;
+        
+        const app = createApp({
+            components: {
+                UserCrud
+            },
+            data() {
+                return {
+                    authStatus: 'Non connecté',
+                    isAuthenticated: false
+                };
+            },
+            async mounted() {
+                this.checkAuthStatus();
+                // Initialiser ApiService
+                window.apiService = new ApiService();
+            },
+            methods: {
+                checkAuthStatus() {
+                    const token = localStorage.getItem('auth_token');
+                    if (token) {
+                        this.authStatus = token.substring(0, 20) + '...';
+                        this.isAuthenticated = true;
+                    } else {
+                        this.authStatus = 'Aucun token';
+                        this.isAuthenticated = false;
+                    }
+                },
+                
+                simulateLogin() {
+                    // Simuler un token JWT pour les tests
+                    const fakeToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2Mzk5NzI4MDAsImV4cCI6MTY0MDA1OTIwMCwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJ1c2VybmFtZSI6ImFkbWluQGltcGFjdC1hdXRvLmNvbSJ9.fake-signature';
+                    localStorage.setItem('auth_token', fakeToken);
+                    window.apiService.setToken(fakeToken);
+                    this.checkAuthStatus();
+                    this.showNotification('Connexion simulée avec succès', 'success');
+                },
+                
+                clearAuth() {
+                    localStorage.removeItem('auth_token');
+                    window.apiService.token = null;
+                    this.checkAuthStatus();
+                    this.showNotification('Déconnexion effectuée', 'info');
+                },
+                
+                async testAPI() {
+                    try {
+                        if (!window.apiService.isAuthenticated()) {
+                            this.showNotification('Veuillez d\'abord vous connecter', 'error');
+                            return;
+                        }
+                        
+                        const response = await fetch('https://127.0.0.1:8000/api/users', {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': 'Bearer ' + localStorage.getItem('auth_token'),
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        const data = await response.json();
+                        console.log('API Response:', data);
+                        
+                        if (response.ok) {
+                            this.showNotification(`API fonctionne! ${data.total || 0} utilisateurs trouvés`, 'success');
+                        } else {
+                            this.showNotification(`Erreur API: ${data.message || 'Erreur inconnue'}`, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Erreur test API:', error);
+                        this.showNotification('Erreur lors du test API: ' + error.message, 'error');
+                    }
+                },
+                
+                showNotification(message, type = 'info') {
+                    const notification = document.createElement('div');
+                    notification.className = `notification notification-${type}`;
+                    notification.innerHTML = `
+                        <i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                        <span>${message}</span>
+                    `;
+                    
+                    const container = document.getElementById('notification-container') || document.body;
+                    container.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 5000);
+                }
+            },
+            template: `
+                <div class="main-content">
+                    <div class="page-header">
+                        <h1>Test de l'API Utilisateurs</h1>
+                        <div class="header-actions">
+                            <button @click="simulateLogin" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt"></i> Simuler Connexion
+                            </button>
+                            <button @click="clearAuth" class="btn btn-secondary">
+                                <i class="fas fa-sign-out-alt"></i> Déconnexion
+                            </button>
+                            <button @click="testAPI" class="btn btn-outline">
+                                <i class="fas fa-flask"></i> Tester API
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="test-section">
+                        <h2>État de l'authentification</h2>
+                        <p><strong>Token:</strong> <span id="token-status">{{ authStatus }}</span></p>
+                        <p><strong>Connecté:</strong> <span id="auth-status">{{ isAuthenticated ? 'Oui' : 'Non' }}</span></p>
+                    </div>
+                    
+                    <!-- Le composant UserCrud sera monté ici -->
+                    <UserCrud />
+                    
+                    <!-- Notification Container -->
+                    <div class="notification-container" id="notification-container"></div>
+                </div>
+            `
+        });
+        
+        app.mount('#app');
+    </script>
+    
+    <style>
+        .test-section {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .test-section h2 {
+            margin-top: 0;
+            color: #495057;
+        }
+        
+        .test-section p {
+            margin: 10px 0;
+        }
+        
+        #token-status, #auth-status {
+            font-family: monospace;
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</body>
+</html>

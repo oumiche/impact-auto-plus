@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charte Graphique - Impact Auto</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+            display: flex;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #ffd700;
+        }
+
+        .logo-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section-title {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffd700;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav-item {
+            display: block;
+            padding: 0.8rem 1.5rem;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-left-color: #ffd700;
+            padding-left: 2rem;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
+            border-left-color: #ffd700;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+        }
+
+        .content-section {
+            background: white;
+            margin: 2rem 0;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            color: #1e3c72;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            border-bottom: 3px solid #ffd700;
+            padding-bottom: 0.5rem;
+        }
+
+        .subsection-title {
+            color: #2a5298;
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .color-card {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .color-swatch {
+            width: 100%;
+            height: 80px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .color-name {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .color-code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .typography-sample {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #ffd700;
+        }
+
+        .font-example {
+            margin: 1rem 0;
+        }
+
+        .font-example h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .font-example h2 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .font-example h3 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .font-example h4 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+        .font-example p { margin-bottom: 0.5rem; }
+
+        .component-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .component-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .component-card h4 {
+            color: #1e3c72;
+            margin-bottom: 1rem;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            margin: 0.5rem;
+            border: none;
+            border-radius: 25px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(30, 60, 114, 0.3);
+        }
+
+        .btn-secondary {
+            background: #ffd700;
+            color: #1e3c72;
+        }
+
+        .btn-secondary:hover {
+            background: #ffed4e;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #1e3c72;
+            border: 2px solid #1e3c72;
+        }
+
+        .btn-outline:hover {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .form-group {
+            margin: 1rem 0;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #1e3c72;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #1e3c72;
+            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+        }
+
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 1rem 0;
+        }
+
+        .card-header {
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            color: #1e3c72;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left-color: #28a745;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left-color: #ffc107;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left-color: #dc3545;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left-color: #17a2b8;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 0.2rem;
+        }
+
+        .badge-primary {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge-warning {
+            background: #ffc107;
+            color: #1e3c72;
+        }
+
+        .badge-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .table th,
+        .table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #1e3c72;
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1e3c72, #2a5298);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .icon-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .icon-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #1e3c72;
+        }
+
+        .icon-name {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .spacing-example {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .spacing-xs { margin: 0.25rem; padding: 0.25rem; background: #e3f2fd; }
+        .spacing-sm { margin: 0.5rem; padding: 0.5rem; background: #e3f2fd; }
+        .spacing-md { margin: 1rem; padding: 1rem; background: #e3f2fd; }
+        .spacing-lg { margin: 1.5rem; padding: 1.5rem; background: #e3f2fd; }
+        .spacing-xl { margin: 2rem; padding: 2rem; background: #e3f2fd; }
+
+        .responsive-demo {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .demo-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .color-palette {
+                grid-template-columns: 1fr;
+            }
+
+            .component-showcase {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: #1e3c72;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+    
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">IMPACT AUTO</div>
+            <div class="logo-subtitle">Gestion de Parc Automobile</div>
+        </div>
+        
+        <div class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Identité Visuelle</div>
+                <a href="#logo" class="nav-item">Logo & Marque</a>
+                <a href="#colors" class="nav-item">Palette de Couleurs</a>
+                <a href="#typography" class="nav-item">Typographie</a>
+                <a href="#icons" class="nav-item">Icônes</a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Composants UI</div>
+                <a href="#buttons" class="nav-item">Boutons</a>
+                <a href="#forms" class="nav-item">Formulaires</a>
+                <a href="#cards" class="nav-item">Cartes</a>
+                <a href="#alerts" class="nav-item">Alertes</a>
+                <a href="#tables" class="nav-item">Tableaux</a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Layout</div>
+                <a href="#spacing" class="nav-item">Espacement</a>
+                <a href="#grid" class="nav-item">Grille</a>
+                <a href="#responsive" class="nav-item">Responsive</a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Application</div>
+                <a href="#dashboard" class="nav-item">Tableau de Bord</a>
+                <a href="#vehicles" class="nav-item">Véhicules</a>
+                <a href="#interventions" class="nav-item">Interventions</a>
+                <a href="#reports" class="nav-item">Rapports</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <section id="logo" class="content-section">
+            <h1 class="section-title">Logo & Marque</h1>
+            
+            <div class="component-showcase">
+                <div class="component-card">
+                    <h4>Logo Principal</h4>
+                    <div style="background: #1e3c72; color: white; padding: 2rem; text-align: center; border-radius: 8px; margin: 1rem 0;">
+                        <div style="font-size: 2.5rem; font-weight: bold; color: #ffd700;">IMPACT AUTO</div>
+                        <div style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem;">Gestion de Parc Automobile</div>
+                    </div>
+                </div>
+                
+                <div class="component-card">
+                    <h4>Variantes du Logo</h4>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="background: white; color: #1e3c72; padding: 1rem; text-align: center; border: 2px solid #1e3c72; border-radius: 8px;">
+                            <div style="font-size: 1.5rem; font-weight: bold;">IMPACT AUTO</div>
+                        </div>
+                        <div style="background: #ffd700; color: #1e3c72; padding: 1rem; text-align: center; border-radius: 8px;">
+                            <div style="font-size: 1.5rem; font-weight: bold;">IMPACT AUTO</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="typography-sample">
+                <h4>Guidelines d'utilisation</h4>
+                <ul>
+                    <li>Le logo doit toujours être lisible et contrasté</li>
+                    <li>Espacement minimum : 1x la hauteur du "I"</li>
+                    <li>Ne pas déformer ou modifier les proportions</li>
+                    <li>Utiliser les couleurs officielles uniquement</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="colors" class="content-section">
+            <h1 class="section-title">Palette de Couleurs</h1>
+            
+            <div class="color-palette">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #1e3c72;"></div>
+                    <div class="color-name">Bleu Principal</div>
+                    <div class="color-code">#1e3c72</div>
+                    <p>Utilisé pour les titres, navigation et éléments principaux</p>
+                </div>
+                
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #2a5298;"></div>
+                    <div class="color-name">Bleu Secondaire</div>
+                    <div class="color-code">#2a5298</div>
+                    <p>Utilisé pour les sous-titres et éléments secondaires</p>
+                </div>
+                
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #ffd700;"></div>
+                    <div class="color-name">Or Accent</div>
+                    <div class="color-code">#ffd700</div>
+                    <p>Utilisé pour les accents, boutons et éléments d'action</p>
+                </div>
+                
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #f8f9fa;"></div>
+                    <div class="color-name">Gris Clair</div>
+                    <div class="color-code">#f8f9fa</div>
+                    <p>Utilisé pour les arrière-plans et surfaces</p>
+                </div>
+                
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #e0e0e0;"></div>
+                    <div class="color-name">Gris Bordure</div>
+                    <div class="color-code">#e0e0e0</div>
+                    <p>Utilisé pour les bordures et séparateurs</p>
+                </div>
+                
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #333333;"></div>
+                    <div class="color-name">Texte Principal</div>
+                    <div class="color-code">#333333</div>
+                    <p>Utilisé pour le texte principal et contenu</p>
+                </div>
+            </div>
+            
+            <div class="typography-sample">
+                <h4>Utilisation des couleurs</h4>
+                <ul>
+                    <li><strong>Bleu Principal :</strong> Navigation, titres, éléments de navigation</li>
+                    <li><strong>Bleu Secondaire :</strong> Sous-titres, éléments secondaires</li>
+                    <li><strong>Or Accent :</strong> Boutons d'action, liens, éléments importants</li>
+                    <li><strong>Gris Clair :</strong> Arrière-plans, cartes, surfaces</li>
+                    <li><strong>Gris Bordure :</strong> Bordures, séparateurs, lignes</li>
+                    <li><strong>Texte Principal :</strong> Contenu, paragraphes, texte général</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="typography" class="content-section">
+            <h1 class="section-title">Typographie</h1>
+            
+            <div class="font-example">
+                <h1>Heading 1 - Titre Principal</h1>
+                <h2>Heading 2 - Titre de Section</h2>
+                <h3>Heading 3 - Sous-titre</h3>
+                <h4>Heading 4 - Titre de Composant</h4>
+                <p>Paragraphe - Texte principal utilisant la police Segoe UI pour une lisibilité optimale sur tous les écrans. Cette police offre une excellente lisibilité et un aspect professionnel.</p>
+                <p><strong>Texte en gras</strong> pour mettre en évidence des informations importantes.</p>
+                <p><em>Texte en italique</em> pour les citations ou les notes.</p>
+            </div>
+            
+            <div class="typography-sample">
+                <h4>Hiérarchie typographique</h4>
+                <ul>
+                    <li><strong>H1 (2.5rem) :</strong> Titres de page principaux</li>
+                    <li><strong>H2 (2rem) :</strong> Titres de section</li>
+                    <li><strong>H3 (1.5rem) :</strong> Sous-titres</li>
+                    <li><strong>H4 (1.2rem) :</strong> Titres de composants</li>
+                    <li><strong>Body (1rem) :</strong> Texte principal</li>
+                    <li><strong>Small (0.9rem) :</strong> Texte secondaire</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="icons" class="content-section">
+            <h1 class="section-title">Icônes</h1>
+            
+            <div class="icon-grid">
+                <div class="icon-item">
+                    <div class="icon">🚗</div>
+                    <div class="icon-name">Véhicule</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon">👨‍💼</div>
+                    <div class="icon-name">Conducteur</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon">🔧</div>
+                    <div class="icon-name">Intervention</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon">📊</div>
+                    <div class="icon-name">Rapport</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon">⚙️</div>
+                    <div class="icon-name">Paramètres</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon">📎</div>
+                    <div class="icon-name">Pièce jointe</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon">✅</div>
+                    <div class="icon-name">Validation</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon">❌</div>
+                    <div class="icon-name">Annulation</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="buttons" class="content-section">
+            <h1 class="section-title">Boutons</h1>
+            
+            <div class="component-showcase">
+                <div class="component-card">
+                    <h4>Boutons Principaux</h4>
+                    <button class="button btn-primary">Action Principale</button>
+                    <button class="button btn-secondary">Action Secondaire</button>
+                    <button class="button btn-outline">Action Tertiaire</button>
+                </div>
+                
+                <div class="component-card">
+                    <h4>États des Boutons</h4>
+                    <button class="button btn-primary">Normal</button>
+                    <button class="button btn-primary" disabled>Désactivé</button>
+                    <button class="button btn-primary" style="opacity: 0.7;">Chargement...</button>
+                </div>
+                
+                <div class="component-card">
+                    <h4>Tailles</h4>
+                    <button class="button btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Petit</button>
+                    <button class="button btn-primary">Moyen</button>
+                    <button class="button btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem;">Grand</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="forms" class="content-section">
+            <h1 class="section-title">Formulaires</h1>
+            
+            <div class="component-showcase">
+                <div class="component-card">
+                    <h4>Champs de Saisie</h4>
+                    <div class="form-group">
+                        <label class="form-label">Nom du véhicule</label>
+                        <input type="text" class="form-input" placeholder="Ex: Peugeot 308">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Plaque d'immatriculation</label>
+                        <input type="text" class="form-input" placeholder="Ex: AB-123-CD">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-input" rows="3" placeholder="Description de l'intervention..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="component-card">
+                    <h4>Sélection</h4>
+                    <div class="form-group">
+                        <label class="form-label">Type de véhicule</label>
+                        <select class="form-input">
+                            <option>Voiture</option>
+                            <option>Camion</option>
+                            <option>Fourgon</option>
+                            <option>Moto</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Statut</label>
+                        <select class="form-input">
+                            <option>Actif</option>
+                            <option>En maintenance</option>
+                            <option>Hors service</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="cards" class="content-section">
+            <h1 class="section-title">Cartes</h1>
+            
+            <div class="component-showcase">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Véhicule #001</h3>
+                        <p>Peugeot 308 - AB-123-CD</p>
+                    </div>
+                    <p>Véhicule en bon état, dernière maintenance effectuée le 15/01/2024.</p>
+                    <div style="margin-top: 1rem;">
+                        <span class="badge badge-success">Actif</span>
+                        <span class="badge badge-primary">Voiture</span>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Intervention #INT-2024-001</h3>
+                        <p>Réparation moteur - En cours</p>
+                    </div>
+                    <p>Problème de démarrage, diagnostic en cours par l'équipe technique.</p>
+                    <div style="margin-top: 1rem;">
+                        <span class="badge badge-warning">En cours</span>
+                        <span class="badge badge-danger">Urgent</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="alerts" class="content-section">
+            <h1 class="section-title">Alertes</h1>
+            
+            <div class="alert alert-success">
+                <strong>Succès !</strong> Le véhicule a été ajouté avec succès à la base de données.
+            </div>
+            
+            <div class="alert alert-warning">
+                <strong>Attention !</strong> La maintenance du véhicule est prévue dans 7 jours.
+            </div>
+            
+            <div class="alert alert-danger">
+                <strong>Erreur !</strong> Impossible de sauvegarder les modifications. Vérifiez vos données.
+            </div>
+            
+            <div class="alert alert-info">
+                <strong>Information :</strong> Nouvelle mise à jour disponible pour l'application.
+            </div>
+        </section>
+
+        <section id="tables" class="content-section">
+            <h1 class="section-title">Tableaux</h1>
+            
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Véhicule</th>
+                        <th>Plaque</th>
+                        <th>Statut</th>
+                        <th>Dernière Maintenance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>001</td>
+                        <td>Peugeot 308</td>
+                        <td>AB-123-CD</td>
+                        <td><span class="badge badge-success">Actif</span></td>
+                        <td>15/01/2024</td>
+                        <td>
+                            <button class="button btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">Modifier</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>002</td>
+                        <td>Renault Clio</td>
+                        <td>EF-456-GH</td>
+                        <td><span class="badge badge-warning">Maintenance</span></td>
+                        <td>10/01/2024</td>
+                        <td>
+                            <button class="button btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">Modifier</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="spacing" class="content-section">
+            <h1 class="section-title">Espacement</h1>
+            
+            <div class="spacing-example">
+                <h4>Système d'espacement</h4>
+                <div class="spacing-xs">Espacement XS (0.25rem)</div>
+                <div class="spacing-sm">Espacement SM (0.5rem)</div>
+                <div class="spacing-md">Espacement MD (1rem)</div>
+                <div class="spacing-lg">Espacement LG (1.5rem)</div>
+                <div class="spacing-xl">Espacement XL (2rem)</div>
+            </div>
+        </section>
+
+        <section id="grid" class="content-section">
+            <h1 class="section-title">Grille Responsive</h1>
+            
+            <div class="responsive-demo">
+                <h4>Exemple de grille adaptative</h4>
+                <div class="demo-grid">
+                    <div class="demo-item">Élément 1</div>
+                    <div class="demo-item">Élément 2</div>
+                    <div class="demo-item">Élément 3</div>
+                    <div class="demo-item">Élément 4</div>
+                    <div class="demo-item">Élément 5</div>
+                    <div class="demo-item">Élément 6</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="responsive" class="content-section">
+            <h1 class="section-title">Design Responsive</h1>
+            
+            <div class="typography-sample">
+                <h4>Breakpoints</h4>
+                <ul>
+                    <li><strong>Mobile :</strong> < 768px - Navigation en menu hamburger</li>
+                    <li><strong>Tablet :</strong> 768px - 1024px - Layout adaptatif</li>
+                    <li><strong>Desktop :</strong> > 1024px - Layout complet</li>
+                </ul>
+            </div>
+            
+            <div class="typography-sample">
+                <h4>Principes responsive</h4>
+                <ul>
+                    <li>Mobile-first approach</li>
+                    <li>Grilles adaptatives avec CSS Grid</li>
+                    <li>Navigation collapsible sur mobile</li>
+                    <li>Typographie fluide</li>
+                    <li>Images et médias responsives</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="dashboard" class="content-section">
+            <h1 class="section-title">Tableau de Bord</h1>
+            
+            <div class="component-showcase">
+                <div class="component-card">
+                    <h4>Métriques Principales</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #1e3c72;">24</div>
+                            <div>Véhicules</div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #28a745;">18</div>
+                            <div>Actifs</div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #ffc107;">3</div>
+                            <div>En Maintenance</div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #dc3545;">3</div>
+                            <div>Hors Service</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="vehicles" class="content-section">
+            <h1 class="section-title">Gestion des Véhicules</h1>
+            
+            <div class="component-showcase">
+                <div class="component-card">
+                    <h4>Liste des Véhicules</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3>Véhicules du Parc</h3>
+                        <button class="button btn-primary">+ Ajouter un véhicule</button>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                        <input type="text" class="form-input" placeholder="Rechercher..." style="flex: 1;">
+                        <select class="form-input" style="width: 150px;">
+                            <option>Tous les statuts</option>
+                            <option>Actif</option>
+                            <option>Maintenance</option>
+                            <option>Hors service</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="interventions" class="content-section">
+            <h1 class="section-title">Gestion des Interventions</h1>
+            
+            <div class="component-showcase">
+                <div class="component-card">
+                    <h4>Workflow d'Intervention</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 1rem 0;">
+                        <div style="text-align: center; flex: 1;">
+                            <div style="width: 40px; height: 40px; background: #28a745; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem;">1</div>
+                            <div>Déclaration</div>
+                        </div>
+                        <div style="flex: 1; height: 2px; background: #e0e0e0; margin: 0 1rem;"></div>
+                        <div style="text-align: center; flex: 1;">
+                            <div style="width: 40px; height: 40px; background: #ffc107; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem;">2</div>
+                            <div>Prédiagnostic</div>
+                        </div>
+                        <div style="flex: 1; height: 2px; background: #e0e0e0; margin: 0 1rem;"></div>
+                        <div style="text-align: center; flex: 1;">
+                            <div style="width: 40px; height: 40px; background: #17a2b8; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem;">3</div>
+                            <div>Devis</div>
+                        </div>
+                        <div style="flex: 1; height: 2px; background: #e0e0e0; margin: 0 1rem;"></div>
+                        <div style="text-align: center; flex: 1;">
+                            <div style="width: 40px; height: 40px; background: #6c757d; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem;">4</div>
+                            <div>Réparation</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="reports" class="content-section">
+            <h1 class="section-title">Rapports et Statistiques</h1>
+            
+            <div class="component-showcase">
+                <div class="component-card">
+                    <h4>Graphiques et Métriques</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <h4>Coûts par Mois</h4>
+                            <div style="height: 100px; background: linear-gradient(45deg, #1e3c72, #2a5298); border-radius: 4px; margin: 1rem 0;"></div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <h4>Types d'Interventions</h4>
+                            <div style="height: 100px; background: linear-gradient(45deg, #ffd700, #ffed4e); border-radius: 4px; margin: 1rem 0;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Navigation active
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all items
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                
+                // Add active class to clicked item
+                this.classList.add('active');
+                
+                // Scroll to section
+                const targetId = this.getAttribute('href').substring(1);
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    targetSection.scrollIntoView({ behavior: 'smooth' });
+                }
+                
+                // Close sidebar on mobile
+                if (window.innerWidth <= 768) {
+                    document.getElementById('sidebar').classList.remove('open');
+                }
+            });
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !menuBtn.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // Update active nav item on scroll
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('.content-section');
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (scrollY >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('href') === '#' + current) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

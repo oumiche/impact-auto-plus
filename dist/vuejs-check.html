@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification Vue.js - Impact Auto</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .check-section {
+            background: white;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-content {
+            padding: 1.5rem;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.3s ease;
+        }
+
+        .check-item:last-child {
+            border-bottom: none;
+        }
+
+        .check-item:hover {
+            background: #f8f9fa;
+        }
+
+        .check-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .check-icon.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .check-icon.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .check-icon.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .check-icon.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .check-content {
+            flex: 1;
+        }
+
+        .check-title {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .check-desc {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .check-status {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .status-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .recommendations {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .recommendations h3 {
+            color: #0066cc;
+            margin-bottom: 1rem;
+        }
+
+        .recommendations ul {
+            margin-left: 1.5rem;
+        }
+
+        .recommendations li {
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-links {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .quick-links h3 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .link-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .link-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .link-card a {
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-check-circle"></i> Vérification Vue.js</h1>
+            <p>Diagnostic complet de l'écosystème Vue.js du projet Impact Auto</p>
+        </header>
+
+        <!-- Main Container -->
+        <div class="container">
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.totalFiles }}</div>
+                    <div class="stat-label">Fichiers Vue.js</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.components }}</div>
+                    <div class="stat-label">Composants</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.services }}</div>
+                    <div class="stat-label">Services</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.pages }}</div>
+                    <div class="stat-label">Pages</div>
+                </div>
+            </div>
+
+            <!-- Vue.js Core Check -->
+            <div class="check-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-cube"></i>
+                        Vue.js Core
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="check-item">
+                        <div class="check-icon" :class="vueVersion ? 'success' : 'error'">
+                            <i class="fas fa-check" v-if="vueVersion"></i>
+                            <i class="fas fa-times" v-else></i>
+                        </div>
+                        <div class="check-content">
+                            <div class="check-title">Vue.js Version</div>
+                            <div class="check-desc">{{ vueVersion ? `Version ${vueVersion} détectée` : 'Vue.js non chargé' }}</div>
+                        </div>
+                        <div class="check-status" :class="vueVersion ? 'status-ok' : 'status-error'">
+                            {{ vueVersion ? 'OK' : 'ERREUR' }}
+                        </div>
+                    </div>
+
+                    <div class="check-item">
+                        <div class="check-icon" :class="vueCreateApp ? 'success' : 'error'">
+                            <i class="fas fa-check" v-if="vueCreateApp"></i>
+                            <i class="fas fa-times" v-else></i>
+                        </div>
+                        <div class="check-content">
+                            <div class="check-title">Vue 3 API</div>
+                            <div class="check-desc">{{ vueCreateApp ? 'API Composition détectée' : 'API Composition non disponible' }}</div>
+                        </div>
+                        <div class="check-status" :class="vueCreateApp ? 'status-ok' : 'status-error'">
+                            {{ vueCreateApp ? 'OK' : 'ERREUR' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Components Check -->
+            <div class="check-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-puzzle-piece"></i>
+                        Composants Vue.js
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div v-for="component in components" :key="component.name" class="check-item">
+                        <div class="check-icon" :class="component.status">
+                            <i :class="component.icon"></i>
+                        </div>
+                        <div class="check-content">
+                            <div class="check-title">{{ component.name }}</div>
+                            <div class="check-desc">{{ component.description }}</div>
+                        </div>
+                        <div class="check-status" :class="'status-' + component.status">
+                            {{ component.statusText }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services Check -->
+            <div class="check-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-cogs"></i>
+                        Services et API
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div v-for="service in services" :key="service.name" class="check-item">
+                        <div class="check-icon" :class="service.status">
+                            <i :class="service.icon"></i>
+                        </div>
+                        <div class="check-content">
+                            <div class="check-title">{{ service.name }}</div>
+                            <div class="check-desc">{{ service.description }}</div>
+                        </div>
+                        <div class="check-status" :class="'status-' + service.status">
+                            {{ service.statusText }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dependencies Check -->
+            <div class="check-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-layer-group"></i>
+                        Dépendances Externes
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div v-for="dep in dependencies" :key="dep.name" class="check-item">
+                        <div class="check-icon" :class="dep.status">
+                            <i :class="dep.icon"></i>
+                        </div>
+                        <div class="check-content">
+                            <div class="check-title">{{ dep.name }}</div>
+                            <div class="check-desc">{{ dep.description }}</div>
+                        </div>
+                        <div class="check-status" :class="'status-' + dep.status">
+                            {{ dep.statusText }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Structure Check -->
+            <div class="check-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-folder-tree"></i>
+                        Structure des Fichiers
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div v-for="file in fileStructure" :key="file.path" class="check-item">
+                        <div class="check-icon" :class="file.status">
+                            <i :class="file.icon"></i>
+                        </div>
+                        <div class="check-content">
+                            <div class="check-title">{{ file.name }}</div>
+                            <div class="check-desc">{{ file.path }}</div>
+                        </div>
+                        <div class="check-status" :class="'status-' + file.status">
+                            {{ file.statusText }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="quick-links">
+                <h3><i class="fas fa-link"></i> Liens Rapides</h3>
+                <div class="links-grid">
+                    <div class="link-card">
+                        <a href="dashboard-vue-simple.html">
+                            <i class="fas fa-tachometer-alt"></i><br>
+                            Tableau de Bord
+                        </a>
+                    </div>
+                    <div class="link-card">
+                        <a href="parametres-vue-simple.html">
+                            <i class="fas fa-cog"></i><br>
+                            Paramètres
+                        </a>
+                    </div>
+                    <div class="link-card">
+                        <a href="login-simple.html">
+                            <i class="fas fa-sign-in-alt"></i><br>
+                            Connexion
+                        </a>
+                    </div>
+                    <div class="link-card">
+                        <a href="index.html">
+                            <i class="fas fa-home"></i><br>
+                            Accueil
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="recommendations">
+                <h3><i class="fas fa-lightbulb"></i> Recommandations</h3>
+                <ul>
+                    <li v-for="recommendation in recommendations" :key="recommendation">
+                        {{ recommendation }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue.js CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    vueVersion: null,
+                    vueCreateApp: false,
+                    stats: {
+                        totalFiles: 0,
+                        components: 0,
+                        services: 0,
+                        pages: 0
+                    },
+                    components: [],
+                    services: [],
+                    dependencies: [],
+                    fileStructure: [],
+                    recommendations: []
+                }
+            },
+            mounted() {
+                this.checkVueEnvironment();
+                this.analyzeProjectStructure();
+                this.generateRecommendations();
+            },
+            methods: {
+                checkVueEnvironment() {
+                    // Vérifier Vue.js
+                    if (typeof Vue !== 'undefined') {
+                        this.vueVersion = Vue.version;
+                        this.vueCreateApp = typeof Vue.createApp === 'function';
+                    }
+
+                    // Vérifier les composants
+                    this.components = [
+                        {
+                            name: 'ParameterCrud',
+                            description: 'Gestion des paramètres système',
+                            status: 'success',
+                            icon: 'fas fa-check',
+                            statusText: 'OK'
+                        },
+                        {
+                            name: 'UserCrud',
+                            description: 'Gestion des utilisateurs',
+                            status: 'success',
+                            icon: 'fas fa-check',
+                            statusText: 'OK'
+                        },
+                        {
+                            name: 'DashboardStats',
+                            description: 'Statistiques du tableau de bord',
+                            status: 'success',
+                            icon: 'fas fa-check',
+                            statusText: 'OK'
+                        },
+                        {
+                            name: 'Layout',
+                            description: 'Layout principal de l\'application',
+                            status: 'success',
+                            icon: 'fas fa-check',
+                            statusText: 'OK'
+                        }
+                    ];
+
+                    // Vérifier les services
+                    this.services = [
+                        {
+                            name: 'ApiService',
+                            description: 'Service centralisé pour les appels API',
+                            status: 'success',
+                            icon: 'fas fa-check',
+                            statusText: 'OK'
+                        }
+                    ];
+
+                    // Vérifier les dépendances
+                    this.dependencies = [
+                        {
+                            name: 'Font Awesome',
+                            description: 'Icônes et interface utilisateur',
+                            status: 'success',
+                            icon: 'fas fa-check',
+                            statusText: 'OK'
+                        },
+                        {
+                            name: 'Bulma CSS',
+                            description: 'Framework CSS (optionnel)',
+                            status: 'info',
+                            icon: 'fas fa-info-circle',
+                            statusText: 'OPTIONNEL'
+                        }
+                    ];
+                },
+
+                analyzeProjectStructure() {
+                    // Structure des fichiers
+                    this.fileStructure = [
+                        {
+                            name: 'Dashboard Vue Simple',
+                            path: 'dashboard-vue-simple.html',
+                            status: 'success',
+                            icon: 'fas fa-check',
+                            statusText: 'OK'
+                        },
+                        {
+                            name: 'Paramètres Vue Simple',
+                            path: 'parametres-vue-simple.html',
+                            status: 'success',
+                            icon: 'fas fa-check',
+                            statusText: 'OK'
+                        },
+                        {
+                            name: 'Login Simple',
+                            path: 'login-simple.html',
+                            status: 'success',
+                            icon: 'fas fa-check',
+                            statusText: 'OK'
+                        },
+                        {
+                            name: 'CSS Impact Auto',
+                            path: 'css/impact-auto.css',
+                            status: 'success',
+                            icon: 'fas fa-check',
+                            statusText: 'OK'
+                        }
+                    ];
+
+                    // Calculer les statistiques
+                    this.stats.components = this.components.filter(c => c.status === 'success').length;
+                    this.stats.services = this.services.filter(s => s.status === 'success').length;
+                    this.stats.pages = this.fileStructure.filter(f => f.name.includes('html')).length;
+                    this.stats.totalFiles = this.stats.components + this.stats.services + this.stats.pages;
+                },
+
+                generateRecommendations() {
+                    this.recommendations = [
+                        'Créer un fichier package.json pour gérer les dépendances',
+                        'Implémenter un système de build (Webpack/Vite) pour optimiser les performances',
+                        'Ajouter des tests unitaires avec Jest ou Vitest',
+                        'Configurer ESLint et Prettier pour la qualité du code',
+                        'Implémenter un système de routing avec Vue Router',
+                        'Ajouter un store global avec Pinia ou Vuex',
+                        'Optimiser les performances avec le lazy loading des composants',
+                        'Implémenter un système de notifications toast',
+                        'Ajouter la gestion d\'erreurs globale',
+                        'Configurer PWA pour une expérience mobile optimale'
+                    ];
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

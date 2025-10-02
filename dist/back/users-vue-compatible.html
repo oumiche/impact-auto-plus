@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utilisateurs - Impact Auto</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/impact-auto.css">
+    <link rel="stylesheet" href="css/users-vue.css">
+    <!-- Vue.js CDN - Version Production -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body>
+    <!-- Sidebar sera chargé dynamiquement -->
+    
+    <!-- Vue.js App Container -->
+    <div id="app">
+        <div class="main-content">
+            <UserCrud />
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/services/ApiService.js"></script>
+    <script src="../js/auth/auth-guard.js"></script>
+    <script src="../js/users-vue.js"></script>
+    <script src="../js/sidebar-component.js"></script>
+    <script src="../js/load-sidebar.js"></script>
+    
+    <!-- Vue.js Application -->
+    <script>
+        // Vérifier que tous les scripts sont chargés
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof Vue === 'undefined') {
+                console.error('Vue.js n\'est pas chargé');
+                document.getElementById('app').innerHTML = '<div class="error">Erreur: Vue.js n\'est pas chargé</div>';
+                return;
+            }
+            
+            if (typeof UserCrud === 'undefined') {
+                console.error('Composant UserCrud n\'est pas chargé');
+                document.getElementById('app').innerHTML = '<div class="error">Erreur: Composant UserCrud n\'est pas chargé</div>';
+                return;
+            }
+            
+            if (typeof ApiService === 'undefined') {
+                console.error('ApiService n\'est pas chargé');
+                document.getElementById('app').innerHTML = '<div class="error">Erreur: ApiService n\'est pas chargé</div>';
+                return;
+            }
+            
+            // Initialiser ApiService
+            window.apiService = new ApiService();
+            
+            // Créer l'application Vue
+            const { createApp } = Vue;
+            
+            const app = createApp({
+                components: {
+                    UserCrud
+                },
+                template: `
+                    <div class="main-content">
+                        <UserCrud />
+                    </div>
+                `
+            });
+            
+            // Monter l'application
+            app.mount('#app');
+            
+            console.log('Application Vue.js montée avec succès');
+        });
+    </script>
+    
+    <style>
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px;
+            text-align: center;
+        }
+    </style>
+</body>
+</html>
