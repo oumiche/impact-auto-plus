@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}} - Impact Auto</title>
+    
+    <!-- Configuration centralisée -->
+    <script src="js/config.js"></script>
+    
+    <!-- CSS communs -->
+    <script>
+        // Charger les CSS automatiquement
+        window.addEventListener('DOMContentLoaded', function() {
+            window.loadCSS();
+        });
+    </script>
+    
+    <!-- CSS spécifiques à la page -->
+    {{PAGE_CSS}}
+</head>
+<body>
+    <div id="app"></div>
+    
+    <!-- Chargement dynamique de tous les assets -->
+    <script>
+        window.addEventListener('DOMContentLoaded', async function() {
+            // Initialiser l'application
+            await window.initializeApp();
+            
+            // Charger le composant spécifique à la page
+            {{PAGE_SCRIPT}}
+        });
+    </script>
+</body>
+</html>

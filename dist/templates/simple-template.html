@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Création de Facture - Impact Auto</title>
+    <title>{{TITLE}} - Impact Auto</title>
     
     <!-- Inclusion automatique de tous les assets -->
     <script src="js/app-includes.js"></script>
     
     <!-- CSS spécifiques à la page -->
-    <link rel="stylesheet" href="css/intervention-invoice-form.css">
+    {{PAGE_CSS}}
 </head>
 <body>
     <div id="app"></div>
     
     <!-- Script de la page -->
-    <script src="js/intervention-invoice-form-vue.js"></script>
+    <script src="{{PAGE_JS}}"></script>
     
     <!-- Initialisation Vue.js -->
     <script>
@@ -24,20 +24,7 @@
             const checkVue = setInterval(() => {
                 if (window.Vue) {
                     clearInterval(checkVue);
-                    
-                    const { createApp } = Vue;
-                    const app = createApp({
-                        components: {
-                            InterventionInvoiceForm
-                        },
-                        template: `
-                            <div class="main-content">
-                                <InterventionInvoiceForm />
-                            </div>
-                        `
-                    });
-                    
-                    app.mount('#app');
+                    {{PAGE_INIT}}
                 }
             }, 100);
         });

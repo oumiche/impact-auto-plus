@@ -3,288 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Détail de la Facture d'Intervention - Impact Auto</title>
-    <link rel="stylesheet" href="css/main.css">
+    <title>Détail de Facture - Impact Auto</title>
+    
+    <!-- Inclusion automatique de tous les assets -->
+    <script src="js/app-includes.js"></script>
+    
+    <!-- CSS spécifiques à la page -->
     <link rel="stylesheet" href="css/intervention-invoice-view.css">
-    <link rel="stylesheet" href="css/notification.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
-    <!-- Sidebar -->
-    <div id="sidebar-container"></div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Header -->
-        <div class="page-header">
-            <div class="header-content">
-                <div class="header-left">
-                    <div class="header-text">
-                        <h1>Facture {{ invoice.invoiceNumber }}</h1>
-                        <p>Détail de la facture d'intervention</p>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <button class="btn btn-secondary" @click="goBack">
-                        <i class="fas fa-arrow-left"></i>
-                        Retour
-                    </button>
-                    <button class="btn btn-primary" @click="generatePdf">
-                        <i class="fas fa-file-pdf"></i>
-                        Télécharger PDF
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading State -->
-        <div v-if="loading" class="loading-state">
-            <div class="loading-spinner"></div>
-            <p>Chargement de la facture...</p>
-        </div>
-
-        <!-- Invoice Details -->
-        <div v-else-if="invoice" class="invoice-view-container">
-            <!-- Invoice Header -->
-            <div class="invoice-header">
-                <div class="invoice-info">
-                    <div class="invoice-number">
-                        <h2>{{ invoice.invoiceNumber }}</h2>
-                        <span class="invoice-status" :class="getPaymentStatusClass(invoice.paymentStatus)">
-                            {{ getPaymentStatusLabel(invoice.paymentStatus) }}
-                        </span>
-                    </div>
-                    <div class="invoice-dates">
-                        <div class="date-item">
-                            <label>Date de facture</label>
-                            <span>{{ formatDate(invoice.invoiceDate) }}</span>
-                        </div>
-                        <div class="date-item">
-                            <label>Date d'échéance</label>
-                            <span :class="{ 'overdue': isOverdue(invoice.dueDate) }">
-                                {{ formatDate(invoice.dueDate) }}
-                            </span>
-                        </div>
-                        <div v-if="invoice.paidAt" class="date-item">
-                            <label>Date de paiement</label>
-                            <span>{{ formatDateTime(invoice.paidAt) }}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="invoice-amount">
-                    <div class="total-amount">{{ formatCurrency(invoice.totalAmount) }}</div>
-                    <div class="amount-breakdown">
-                        <div class="breakdown-item">
-                            <span>HT:</span>
-                            <span>{{ formatCurrency(invoice.subtotal) }}</span>
-                        </div>
-                        <div class="breakdown-item">
-                            <span>TVA:</span>
-                            <span>{{ formatCurrency(invoice.taxAmount) }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Intervention Information -->
-            <div class="info-section">
-                <div class="section-header">
-                    <i class="fas fa-tools"></i>
-                    <h3>Intervention</h3>
-                </div>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Numéro d'intervention</label>
-                        <span>{{ invoice.intervention.interventionNumber }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Titre</label>
-                        <span>{{ invoice.intervention.title }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Statut</label>
-                        <span class="status-badge">{{ invoice.intervention.currentStatus }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Véhicule</label>
-                        <span>{{ invoice.intervention.vehicle.plateNumber }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Marque/Modèle</label>
-                        <span>{{ invoice.intervention.vehicle.brand }} {{ invoice.intervention.vehicle.model }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Année</label>
-                        <span>{{ invoice.intervention.vehicle.year }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quote Information (if exists) -->
-            <div v-if="invoice.quote" class="info-section">
-                <div class="section-header">
-                    <i class="fas fa-file-invoice-dollar"></i>
-                    <h3>Devis associé</h3>
-                </div>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Numéro de devis</label>
-                        <span>{{ invoice.quote.quoteNumber }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Montant du devis</label>
-                        <span>{{ formatCurrency(invoice.quote.totalAmount) }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Invoice Lines -->
-            <div class="info-section">
-                <div class="section-header">
-                    <i class="fas fa-list"></i>
-                    <h3>Détail des lignes</h3>
-                </div>
-                <div class="invoice-lines">
-                    <table class="lines-table">
-                        <thead>
-                            <tr>
-                                <th>N°</th>
-                                <th>Description</th>
-                                <th>Qté</th>
-                                <th>Prix unitaire</th>
-                                <th>Remise</th>
-                                <th>TVA</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="line in invoice.lines" :key="line.id">
-                                <td>{{ line.lineNumber }}</td>
-                                <td>
-                                    <div class="line-description">
-                                        {{ line.description }}
-                                        <div v-if="line.supply" class="supply-info">
-                                            <small>{{ line.supply.name }} ({{ line.supply.reference }})</small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>{{ line.quantity }}</td>
-                                <td>{{ formatCurrency(line.unitPrice) }}</td>
-                                <td>
-                                    <div v-if="line.discountPercentage > 0" class="discount">
-                                        {{ line.discountPercentage }}%
-                                    </div>
-                                    <div v-else-if="line.discountAmount > 0" class="discount">
-                                        {{ formatCurrency(line.discountAmount) }}
-                                    </div>
-                                    <span v-else>-</span>
-                                </td>
-                                <td>{{ line.taxRate }}%</td>
-                                <td class="line-total">{{ formatCurrency(line.lineTotal) }}</td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr class="total-row">
-                                <td colspan="6" class="total-label">TOTAL TTC</td>
-                                <td class="total-amount">{{ formatCurrency(invoice.totalAmount) }}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Payment Information -->
-            <div class="info-section">
-                <div class="section-header">
-                    <i class="fas fa-credit-card"></i>
-                    <h3>Informations de paiement</h3>
-                </div>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Statut de paiement</label>
-                        <span class="status-badge" :class="getPaymentStatusClass(invoice.paymentStatus)">
-                            {{ getPaymentStatusLabel(invoice.paymentStatus) }}
-                        </span>
-                    </div>
-                    <div v-if="invoice.paymentMethod" class="info-item">
-                        <label>Méthode de paiement</label>
-                        <span>{{ invoice.paymentMethod }}</span>
-                    </div>
-                    <div v-if="invoice.paidAt" class="info-item">
-                        <label>Date de paiement</label>
-                        <span>{{ formatDateTime(invoice.paidAt) }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Notes -->
-            <div v-if="invoice.notes" class="info-section">
-                <div class="section-header">
-                    <i class="fas fa-sticky-note"></i>
-                    <h3>Notes</h3>
-                </div>
-                <div class="notes-content">
-                    {{ invoice.notes }}
-                </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="actions-section">
-                <div class="actions-grid">
-                    <button 
-                        v-if="invoice.paymentStatus === 'pending'"
-                        class="btn btn-success action-btn"
-                        @click="markAsPaid"
-                    >
-                        <i class="fas fa-check"></i>
-                        Marquer comme payé
-                    </button>
-                    
-                    <button class="btn btn-primary action-btn" @click="editInvoice">
-                        <i class="fas fa-edit"></i>
-                        Modifier
-                    </button>
-                    
-                    <button class="btn btn-info action-btn" @click="generatePdf">
-                        <i class="fas fa-file-pdf"></i>
-                        Télécharger PDF
-                    </button>
-                    
-                    <button 
-                        v-if="invoice.paymentStatus !== 'paid'"
-                        class="btn btn-danger action-btn"
-                        @click="deleteInvoice"
-                    >
-                        <i class="fas fa-trash"></i>
-                        Supprimer
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Error State -->
-        <div v-else class="error-state">
-            <i class="fas fa-exclamation-triangle"></i>
-            <h3>Facture non trouvée</h3>
-            <p>La facture demandée n'existe pas ou vous n'avez pas l'autorisation de la consulter.</p>
-            <button class="btn btn-primary" @click="goBack">Retour à la liste</button>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="js/vue.global.prod.js"></script>
-    <script src="js/services/ApiService.js"></script>
-    <script src="js/auth/auth-guard.js"></script>
-    <script src="js/sidebar-component.js"></script>
-    <script src="js/load-sidebar.js"></script>
-    <script src="js/services/NotificationService.js"></script>
+    <div id="app"></div>
+    
+    <!-- Script de la page -->
     <script src="js/intervention-invoice-view-vue.js"></script>
-
+    
+    <!-- Initialisation Vue.js -->
     <script>
-        // Initialize Vue app
-        const { createApp } = Vue;
-        
-        createApp(window.InterventionInvoiceViewApp).mount('#app');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attendre que Vue.js soit chargé
+            const checkVue = setInterval(() => {
+                if (window.Vue) {
+                    clearInterval(checkVue);
+                    
+                    const { createApp } = Vue;
+                    const app = createApp({
+                        components: {
+                            InterventionInvoiceView
+                        },
+                        template: `
+                            <div class="main-content">
+                                <InterventionInvoiceView />
+                            </div>
+                        `
+                    });
+                    
+                    app.mount('#app');
+                }
+            }, 100);
+        });
     </script>
 </body>
 </html>

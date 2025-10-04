@@ -3,303 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Créer un Rapport de Réception - Impact Auto</title>
-    <link rel="stylesheet" href="css/main.css">
+    <title>Création de Rapport - Impact Auto</title>
+    
+    <!-- Inclusion automatique de tous les assets -->
+    <script src="js/app-includes.js"></script>
+    
+    <!-- CSS spécifiques à la page -->
     <link rel="stylesheet" href="css/intervention-reception-report-form.css">
-    <link rel="stylesheet" href="css/notification.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
-    <!-- Sidebar -->
-    <div id="sidebar-container"></div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Header -->
-        <div class="page-header">
-            <div class="header-content">
-                <div class="header-left">
-                    <div class="header-text">
-                        <h1>Créer un Rapport de Réception</h1>
-                        <p>Nouveau rapport de réception de véhicule</p>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <button class="btn btn-secondary" @click="goBack">
-                        <i class="fas fa-arrow-left"></i>
-                        Retour
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading State -->
-        <div v-if="loading" class="loading-state">
-            <div class="loading-spinner"></div>
-            <p>Chargement...</p>
-        </div>
-
-        <!-- Report Form -->
-        <div v-else class="report-form-container">
-            <form @submit.prevent="submitForm" class="report-form">
-                <!-- Intervention Selection Section -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <i class="fas fa-tools"></i>
-                        <h3>Intervention</h3>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Intervention *</label>
-                        <div class="intervention-search-container">
-                            <input 
-                                type="text" 
-                                v-model="searchInterventionQuery"
-                                @input="searchInterventions"
-                                @focus="showInterventionSearch = true"
-                                placeholder="Rechercher une intervention..."
-                                class="intervention-search-input form-control"
-                                :class="{ 'is-invalid': errors.interventionId }"
-                                required
-                            >
-                            <button 
-                                type="button" 
-                                v-if="selectedIntervention"
-                                @click="clearIntervention"
-                                class="clear-btn"
-                                title="Effacer la sélection"
-                            >
-                                <i class="fas fa-times"></i>
-                            </button>
-                            
-                            <!-- Intervention Search Dropdown -->
-                            <div 
-                                v-if="showInterventionSearch && (searchInterventionQuery || availableInterventions.length > 0)" 
-                                class="intervention-search-dropdown"
-                                @click.stop
-                            >
-                                <div 
-                                    v-if="loadingInterventions" 
-                                    class="intervention-no-results"
-                                >
-                                    <i class="fas fa-spinner fa-spin"></i>
-                                    Recherche en cours...
-                                </div>
-                                <div 
-                                    v-else-if="filteredInterventions.length === 0" 
-                                    class="intervention-no-results"
-                                >
-                                    <i class="fas fa-search"></i>
-                                    Aucune intervention trouvée
-                                </div>
-                                <div 
-                                    v-else
-                                    class="intervention-results"
-                                >
-                                    <div 
-                                        v-for="intervention in filteredInterventions" 
-                                        :key="intervention.id"
-                                        @click="selectIntervention(intervention)"
-                                        class="intervention-item"
-                                    >
-                                        <div class="intervention-code">{{ intervention.interventionNumber }}</div>
-                                        <div class="intervention-title">{{ intervention.title }}</div>
-                                        <div class="intervention-vehicle">
-                                            {{ intervention.vehicle.plateNumber }} - 
-                                            {{ intervention.vehicle.brand }} {{ intervention.vehicle.model }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div v-if="errors.interventionId" class="invalid-feedback">{{ errors.interventionId }}</div>
-                        
-                        <!-- Selected Intervention Display -->
-                        <div v-if="selectedIntervention" class="selected-intervention">
-                            <div class="selected-info">
-                                <strong>{{ selectedIntervention.interventionNumber }}</strong>
-                                <span>{{ selectedIntervention.title }}</span>
-                                <small>{{ selectedIntervention.vehicle.plateNumber }} - {{ selectedIntervention.vehicle.brand }} {{ selectedIntervention.vehicle.model }}</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Reception Information Section -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <i class="fas fa-calendar-check"></i>
-                        <h3>Informations de réception</h3>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Date de réception *</label>
-                            <input 
-                                type="datetime-local" 
-                                v-model="report.receptionDate" 
-                                class="form-control"
-                                :class="{ 'is-invalid': errors.receptionDate }"
-                                required
-                            >
-                            <div v-if="errors.receptionDate" class="invalid-feedback">{{ errors.receptionDate }}</div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Reçu par (ID utilisateur) *</label>
-                            <input 
-                                type="number" 
-                                v-model="report.receivedBy" 
-                                class="form-control"
-                                :class="{ 'is-invalid': errors.receivedBy }"
-                                required
-                            >
-                            <div v-if="errors.receivedBy" class="invalid-feedback">{{ errors.receivedBy }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Vehicle Condition Section -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <i class="fas fa-car"></i>
-                        <h3>État du véhicule</h3>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Condition du véhicule *</label>
-                        <textarea 
-                            v-model="report.vehicleCondition" 
-                            class="form-control"
-                            :class="{ 'is-invalid': errors.vehicleCondition }"
-                            rows="4"
-                            placeholder="Décrivez l'état général du véhicule à la réception..."
-                            required
-                        ></textarea>
-                        <div v-if="errors.vehicleCondition" class="invalid-feedback">{{ errors.vehicleCondition }}</div>
-                    </div>
-                </div>
-
-                <!-- Work Completed Section -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <i class="fas fa-wrench"></i>
-                        <h3>Travaux effectués</h3>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Travaux réalisés *</label>
-                        <textarea 
-                            v-model="report.workCompleted" 
-                            class="form-control"
-                            :class="{ 'is-invalid': errors.workCompleted }"
-                            rows="4"
-                            placeholder="Décrivez les travaux qui ont été effectués sur le véhicule..."
-                            required
-                        ></textarea>
-                        <div v-if="errors.workCompleted" class="invalid-feedback">{{ errors.workCompleted }}</div>
-                    </div>
-                </div>
-
-                <!-- Remaining Issues Section -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Problèmes restants</h3>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Problèmes non résolus</label>
-                        <textarea 
-                            v-model="report.remainingIssues" 
-                            class="form-control"
-                            :class="{ 'is-invalid': errors.remainingIssues }"
-                            rows="3"
-                            placeholder="Décrivez les problèmes qui n'ont pas pu être résolus (optionnel)..."
-                        ></textarea>
-                        <div v-if="errors.remainingIssues" class="invalid-feedback">{{ errors.remainingIssues }}</div>
-                        <div class="form-text">
-                            Laissez vide si aucun problème n'est resté non résolu
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Customer Satisfaction Section -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <i class="fas fa-star"></i>
-                        <h3>Satisfaction client</h3>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Niveau de satisfaction *</label>
-                            <select 
-                                v-model="report.customerSatisfaction" 
-                                class="form-control"
-                                :class="{ 'is-invalid': errors.customerSatisfaction }"
-                                required
-                            >
-                                <option value="excellent">⭐ Excellent</option>
-                                <option value="good">👍 Bon</option>
-                                <option value="fair">😐 Moyen</option>
-                                <option value="poor">👎 Mauvais</option>
-                            </select>
-                            <div v-if="errors.customerSatisfaction" class="invalid-feedback">{{ errors.customerSatisfaction }}</div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Véhicule prêt à être rendu</label>
-                            <div class="form-check">
-                                <input 
-                                    type="checkbox" 
-                                    v-model="report.isVehicleReady" 
-                                    class="form-check-input"
-                                    id="vehicleReady"
-                                >
-                                <label class="form-check-label" for="vehicleReady">
-                                    Le véhicule est prêt et peut être rendu au client
-                                </label>
-                            </div>
-                            <div v-if="errors.isVehicleReady" class="invalid-feedback">{{ errors.isVehicleReady }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Form Actions -->
-                <div class="form-actions-bottom">
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary" @click="goBack">
-                            <i class="fas fa-times"></i>
-                            Annuler
-                        </button>
-                        <button type="submit" class="btn btn-primary" :disabled="!isFormValid || submitting">
-                            <i v-if="submitting" class="fas fa-spinner fa-spin"></i>
-                            <i v-else class="fas fa-save"></i>
-                            {{ submitting ? 'Création...' : 'Créer le rapport' }}
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="js/vue.global.prod.js"></script>
-    <script src="js/services/ApiService.js"></script>
-    <script src="js/auth/auth-guard.js"></script>
-    <script src="js/sidebar-component.js"></script>
-    <script src="js/load-sidebar.js"></script>
-    <script src="js/services/NotificationService.js"></script>
+    <div id="app"></div>
+    
+    <!-- Script de la page -->
     <script src="js/intervention-reception-report-form-vue.js"></script>
-
+    
+    <!-- Initialisation Vue.js -->
     <script>
-        // Initialize Vue app
-        const { createApp } = Vue;
-        
-        createApp(window.InterventionReceptionReportFormApp, {
-            mode: 'create'
-        }).mount('#app');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attendre que Vue.js soit chargé
+            const checkVue = setInterval(() => {
+                if (window.Vue) {
+                    clearInterval(checkVue);
+                    
+                    const { createApp } = Vue;
+                    const app = createApp({
+                        components: {
+                            InterventionReceptionReportForm
+                        },
+                        template: `
+                            <div class="main-content">
+                                <InterventionReceptionReportForm />
+                            </div>
+                        `
+                    });
+                    
+                    app.mount('#app');
+                }
+            }, 100);
+        });
     </script>
 </body>
 </html>

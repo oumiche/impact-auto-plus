@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des Devis - Impact Auto</title>
+    <title>{{TITLE}} - Impact Auto</title>
     
     <!-- Inclusion automatique de tous les assets -->
     <script src="js/app-includes.js"></script>
     
     <!-- CSS spécifiques à la page -->
-    <link rel="stylesheet" href="css/intervention-quotes.css">
+    {{PAGE_CSS}}
 </head>
 <body>
     <div id="app"></div>
     
     <!-- Script de la page -->
-    <script src="js/intervention-quotes-vue.js"></script>
+    <script src="{{PAGE_JS}}"></script>
     
     <!-- Initialisation Vue.js -->
     <script>
@@ -28,14 +28,13 @@
                     const { createApp } = Vue;
                     const app = createApp({
                         components: {
-                            InterventionQuotesList,
-                            AttachmentGallery: window.AttachmentGallery
+                            {{COMPONENTS}}
                         },
-                        template: `
+                        template: \
                             <div class="main-content">
-                                <InterventionQuotesList />
+                                <{{MAIN_COMPONENT}} />
                             </div>
-                        `
+                        \
                     });
                     
                     app.mount('#app');

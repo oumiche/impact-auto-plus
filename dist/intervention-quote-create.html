@@ -3,46 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Créer un Devis - Impact Auto</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="css/impact-auto.css">
-    <link rel="stylesheet" href="css/parametres-vue.css">
-    <link rel="stylesheet" href="css/intervention-types.css">
-    <link rel="stylesheet" href="css/vehicle-interventions.css">
+    <title>Création de Devis - Impact Auto</title>
+    
+    <!-- Inclusion automatique de tous les assets -->
+    <script src="js/app-includes.js"></script>
+    
+    <!-- CSS spécifiques à la page -->
     <link rel="stylesheet" href="css/intervention-quote-form.css">
-    <link rel="stylesheet" href="css/attachment-gallery.css">
-    <link rel="stylesheet" href="css/ocr-processor.css">
-    <!-- Vue.js CDN -->
-    <script src="js/vue.global.prod.js"></script>
-    <!-- Tesseract.js CDN -->
-    <script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 </head>
 <body>
     <div id="app"></div>
-    <script src="js/services/ApiService.js"></script>
-    <script src="js/auth/auth-guard.js"></script>
-    <script src="js/sidebar-component.js"></script>
-    <script src="js/load-sidebar.js"></script>
-    <script src="js/services/NotificationService.js"></script>
-    <script src="js/services/FileUploadService.js"></script>
-    <script src="js/components/AttachmentGallery.js"></script>
-    <script src="js/components/OCRProcessor.js"></script>
+    
+    <!-- Script de la page -->
     <script src="js/intervention-quote-form-vue.js"></script>
+    
+    <!-- Initialisation Vue.js -->
     <script>
-        const { createApp } = Vue;
-        const app = createApp({
-            components: {
-                InterventionQuoteForm,
-                AttachmentGallery: window.AttachmentGallery
-            },
-            template: `
-                <div class="main-content">
-                    <InterventionQuoteForm mode="create" />
-                </div>
-            `
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attendre que Vue.js soit chargé
+            const checkVue = setInterval(() => {
+                if (window.Vue) {
+                    clearInterval(checkVue);
+                    
+                    const { createApp } = Vue;
+                    const app = createApp({
+                        components: {
+                            InterventionQuoteForm,
+                            AttachmentGallery: window.AttachmentGallery,
+                            OCRProcessor: window.OCRProcessor
+                        },
+                        template: `
+                            <div class="main-content">
+                                <InterventionQuoteForm />
+                            </div>
+                        `
+                    });
+                    
+                    app.mount('#app');
+                }
+            }, 100);
         });
-        
-        app.mount('#app');
     </script>
 </body>
 </html>

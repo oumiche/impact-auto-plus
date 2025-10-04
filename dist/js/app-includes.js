@@ -1,0 +1,95 @@
+/**
+ * Fichier d'inclusion automatique pour Impact Auto
+ * Ce script charge automatiquement tous les assets nécessaires
+ */
+
+(function() {
+    'use strict';
+    
+    // Configuration
+    const CONFIG = {
+        vue: {
+            useLocal: true,
+            local: 'js/vue.global.prod.js',
+            cdn: 'https://unpkg.com/vue@3/dist/vue.global.prod.js'
+        },
+        css: [
+            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
+            'css/impact-auto.css',
+            'css/parametres-vue.css',
+            'css/intervention-types.css',
+            'css/vehicle-interventions.css'
+        ],
+        js: [
+            'js/services/ApiService.js',
+            'js/auth/auth-guard.js', 
+            'js/sidebar-component.js',
+            'js/load-sidebar.js',
+            'js/services/NotificationService.js'
+        ]
+    };
+    
+    // Fonction pour charger un CSS
+    function loadCSS(href) {
+        if (document.querySelector(`link[href="${href}"]`)) return;
+        
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        document.head.appendChild(link);
+    }
+    
+    // Fonction pour charger un script
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            if (document.querySelector(`script[src="${src}"]`)) {
+                resolve();
+                return;
+            }
+            
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
+    }
+    
+    // Charger Vue.js
+    function loadVue() {
+        const vueSrc = CONFIG.vue.useLocal ? CONFIG.vue.local : CONFIG.vue.cdn;
+        return loadScript(vueSrc);
+    }
+    
+    // Charger tous les CSS
+    function loadAllCSS() {
+        CONFIG.css.forEach(loadCSS);
+    }
+    
+    // Charger tous les scripts
+    function loadAllScripts() {
+        return Promise.all(CONFIG.js.map(loadScript));
+    }
+    
+    // Initialisation
+    function init() {
+        // Charger CSS immédiatement
+        loadAllCSS();
+        
+        // Charger Vue.js et scripts quand DOM est prêt
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', async () => {
+                await loadVue();
+                await loadAllScripts();
+                console.log('Impact Auto - Assets chargés');
+            });
+        } else {
+            // DOM déjà chargé
+            loadVue().then(() => loadAllScripts());
+        }
+    }
+    
+    // Démarrer
+    init();
+    
+})();

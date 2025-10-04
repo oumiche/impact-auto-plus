@@ -3,318 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Détail du Rapport de Réception - Impact Auto</title>
-    <link rel="stylesheet" href="css/main.css">
+    <title>Détail de Rapport - Impact Auto</title>
+    
+    <!-- Inclusion automatique de tous les assets -->
+    <script src="js/app-includes.js"></script>
+    
+    <!-- CSS spécifiques à la page -->
     <link rel="stylesheet" href="css/intervention-reception-report-view.css">
-    <link rel="stylesheet" href="css/notification.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
-    <!-- Sidebar -->
-    <div id="sidebar-container"></div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Header -->
-        <div class="page-header">
-            <div class="header-content">
-                <div class="header-left">
-                    <div class="header-text">
-                        <h1>Rapport de Réception</h1>
-                        <p>Détail du rapport de réception</p>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <button class="btn btn-secondary" @click="goBack">
-                        <i class="fas fa-arrow-left"></i>
-                        Retour
-                    </button>
-                    <button class="btn btn-primary" @click="editReport">
-                        <i class="fas fa-edit"></i>
-                        Modifier
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading State -->
-        <div v-if="loading" class="loading-state">
-            <div class="loading-spinner"></div>
-            <p>Chargement du rapport...</p>
-        </div>
-
-        <!-- Report Details -->
-        <div v-else-if="report" class="report-view-container">
-            <!-- Report Header -->
-            <div class="report-header">
-                <div class="report-info">
-                    <div class="report-title">
-                        <h2>Rapport #{{ report.id }}</h2>
-                        <span class="report-status" :class="getOverallRatingClass(report.overallRating)">
-                            {{ report.overallRating }}
-                        </span>
-                    </div>
-                    <div class="report-dates">
-                        <div class="date-item">
-                            <label>Date de réception</label>
-                            <span>{{ formatDateTime(report.receptionDate) }}</span>
-                        </div>
-                        <div class="date-item">
-                            <label>Créé le</label>
-                            <span>{{ formatDateTime(report.createdAt) }}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="report-summary">
-                    <div class="satisfaction-display">
-                        <div class="satisfaction-score">{{ report.satisfactionScore }}/5</div>
-                        <div class="satisfaction-stars">
-                            <i 
-                                v-for="star in 5" 
-                                :key="star"
-                                class="fas fa-star"
-                                :class="{ 'active': star <= report.satisfactionScore }"
-                            ></i>
-                        </div>
-                    </div>
-                    <div class="vehicle-status">
-                        <span 
-                            class="status-badge"
-                            :class="report.isVehicleReady ? 'ready' : 'not-ready'"
-                        >
-                            <i :class="report.isVehicleReady ? 'fas fa-check' : 'fas fa-times'"></i>
-                            {{ report.isVehicleReady ? 'Véhicule prêt' : 'Véhicule non prêt' }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Intervention Information -->
-            <div class="info-section">
-                <div class="section-header">
-                    <i class="fas fa-tools"></i>
-                    <h3>Intervention</h3>
-                </div>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Numéro d'intervention</label>
-                        <span>{{ report.intervention.interventionNumber }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Titre</label>
-                        <span>{{ report.intervention.title }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Statut</label>
-                        <span class="status-badge">{{ report.intervention.currentStatus }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Véhicule</label>
-                        <span>{{ report.intervention.vehicle.plateNumber }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Marque/Modèle</label>
-                        <span>{{ report.intervention.vehicle.brand }} {{ report.intervention.vehicle.model }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Année</label>
-                        <span>{{ report.intervention.vehicle.year }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reception Details -->
-            <div class="info-section">
-                <div class="section-header">
-                    <i class="fas fa-calendar-check"></i>
-                    <h3>Détails de la réception</h3>
-                </div>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Reçu par (ID)</label>
-                        <span>{{ report.receivedBy }}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Date de réception</label>
-                        <span>{{ formatDateTime(report.receptionDate) }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Vehicle Condition -->
-            <div class="info-section">
-                <div class="section-header">
-                    <i class="fas fa-car"></i>
-                    <h3>État du véhicule</h3>
-                </div>
-                <div class="content-display">
-                    <p>{{ report.vehicleCondition }}</p>
-                </div>
-            </div>
-
-            <!-- Work Completed -->
-            <div class="info-section">
-                <div class="section-header">
-                    <i class="fas fa-wrench"></i>
-                    <h3>Travaux effectués</h3>
-                </div>
-                <div class="content-display">
-                    <p>{{ report.workCompleted }}</p>
-                </div>
-            </div>
-
-            <!-- Remaining Issues -->
-            <div v-if="report.remainingIssues" class="info-section">
-                <div class="section-header">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>Problèmes restants</h3>
-                </div>
-                <div class="content-display warning">
-                    <p>{{ report.remainingIssues }}</p>
-                </div>
-            </div>
-
-            <!-- Customer Satisfaction -->
-            <div class="info-section">
-                <div class="section-header">
-                    <i class="fas fa-star"></i>
-                    <h3>Satisfaction client</h3>
-                </div>
-                <div class="satisfaction-details">
-                    <div class="satisfaction-info">
-                        <div class="satisfaction-item">
-                            <label>Niveau de satisfaction</label>
-                            <span 
-                                class="satisfaction-badge"
-                                :class="getSatisfactionClass(report.customerSatisfaction)"
-                            >
-                                {{ report.satisfactionLabel }}
-                            </span>
-                        </div>
-                        <div class="satisfaction-item">
-                            <label>Score</label>
-                            <span class="satisfaction-score">{{ report.satisfactionScore }}/5</span>
-                        </div>
-                        <div class="satisfaction-item">
-                            <label>Évaluation globale</label>
-                            <span class="overall-rating">{{ report.overallRating }}</span>
-                        </div>
-                    </div>
-                    <div class="satisfaction-visual">
-                        <div class="stars-display">
-                            <i 
-                                v-for="star in 5" 
-                                :key="star"
-                                class="fas fa-star"
-                                :class="{ 'active': star <= report.satisfactionScore }"
-                            ></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Report Summary -->
-            <div class="info-section">
-                <div class="section-header">
-                    <i class="fas fa-chart-line"></i>
-                    <h3>Résumé du rapport</h3>
-                </div>
-                <div class="summary-grid">
-                    <div class="summary-item">
-                        <div class="summary-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="summary-content">
-                            <div class="summary-label">Complet</div>
-                            <div class="summary-value" :class="{ 'complete': report.isComplete }">
-                                {{ report.isComplete ? 'Oui' : 'Non' }}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-icon">
-                            <i class="fas fa-thumbs-up"></i>
-                        </div>
-                        <div class="summary-content">
-                            <div class="summary-label">Satisfaisant</div>
-                            <div class="summary-value" :class="{ 'satisfactory': report.isSatisfactory }">
-                                {{ report.isSatisfactory ? 'Oui' : 'Non' }}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-icon">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <div class="summary-content">
-                            <div class="summary-label">Suivi requis</div>
-                            <div class="summary-value" :class="{ 'follow-up': report.requiresFollowUp }">
-                                {{ report.requiresFollowUp ? 'Oui' : 'Non' }}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-icon">
-                            <i class="fas fa-car"></i>
-                        </div>
-                        <div class="summary-content">
-                            <div class="summary-label">Véhicule prêt</div>
-                            <div class="summary-value" :class="{ 'ready': report.isVehicleReady }">
-                                {{ report.isVehicleReady ? 'Oui' : 'Non' }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="actions-section">
-                <div class="actions-grid">
-                    <button class="btn btn-primary action-btn" @click="editReport">
-                        <i class="fas fa-edit"></i>
-                        Modifier
-                    </button>
-                    
-                    <button 
-                        v-if="!report.isSatisfactory"
-                        class="btn btn-success action-btn"
-                        @click="markAsComplete"
-                    >
-                        <i class="fas fa-check"></i>
-                        Marquer comme terminé
-                    </button>
-                    
-                    <button class="btn btn-danger action-btn" @click="deleteReport">
-                        <i class="fas fa-trash"></i>
-                        Supprimer
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Error State -->
-        <div v-else class="error-state">
-            <i class="fas fa-exclamation-triangle"></i>
-            <h3>Rapport non trouvé</h3>
-            <p>Le rapport de réception demandé n'existe pas ou vous n'avez pas l'autorisation de le consulter.</p>
-            <button class="btn btn-primary" @click="goBack">Retour à la liste</button>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="js/vue.global.prod.js"></script>
-    <script src="js/services/ApiService.js"></script>
-    <script src="js/auth/auth-guard.js"></script>
-    <script src="js/sidebar-component.js"></script>
-    <script src="js/load-sidebar.js"></script>
-    <script src="js/services/NotificationService.js"></script>
+    <div id="app"></div>
+    
+    <!-- Script de la page -->
     <script src="js/intervention-reception-report-view-vue.js"></script>
-
+    
+    <!-- Initialisation Vue.js -->
     <script>
-        // Initialize Vue app
-        const { createApp } = Vue;
-        
-        createApp(window.InterventionReceptionReportViewApp).mount('#app');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attendre que Vue.js soit chargé
+            const checkVue = setInterval(() => {
+                if (window.Vue) {
+                    clearInterval(checkVue);
+                    
+                    const { createApp } = Vue;
+                    const app = createApp({
+                        components: {
+                            InterventionReceptionReportView
+                        },
+                        template: `
+                            <div class="main-content">
+                                <InterventionReceptionReportView />
+                            </div>
+                        `
+                    });
+                    
+                    app.mount('#app');
+                }
+            }, 100);
+        });
     </script>
 </body>
 </html>
