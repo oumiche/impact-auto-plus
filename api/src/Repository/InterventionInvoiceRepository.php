@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\InterventionInvoice;
+use App\Entity\Tenant;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,163 +17,218 @@ class InterventionInvoiceRepository extends ServiceEntityRepository
         parent::__construct($registry, InterventionInvoice::class);
     }
 
-    public function save(InterventionInvoice $entity, bool $flush = false): void
+    /**
+     * Trouve une facture par ID et tenant
+     */
+    public function findByIdAndTenant(int $id, ?Tenant $tenant): ?InterventionInvoice
     {
-        $this->getEntityManager()->persist($entity);
-
-        if ($flush) {
-            $this->getEntityManager()->flush();
+        if (!$tenant) {
+            return null;
         }
-    }
 
-    public function remove(InterventionInvoice $entity, bool $flush = false): void
-    {
-        $this->getEntityManager()->remove($entity);
-
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
-    }
-
-    public function findByIntervention(int $interventionId): ?InterventionInvoice
-    {
-        return $this->createQueryBuilder('ii')
-            ->andWhere('ii.intervention = :interventionId')
-            ->setParameter('interventionId', $interventionId)
+        return $this->createQueryBuilder('i')
+            ->innerJoin('i.intervention', 'vi')
+            ->where('i.id = :id')
+            ->andWhere('vi.tenant = :tenant')
+            ->setParameter('id', $id)
+            ->setParameter('tenant', $tenant)
             ->getQuery()
             ->getOneOrNullResult();
     }
 
-    public function findByPaymentStatus(string $paymentStatus): array
+    /**
+     * Trouve les factures par tenant avec filtres
+     */
+    public function findByTenantWithFilters(
+        ?Tenant $tenant,
+        int $page = 1,
+        int $limit = 10,
+        string $search = '',
+        string $status = '',
+        string $sortBy = 'invoiceDate',
+        string $sortOrder = 'DESC'
+    ): array {
+        if (!$tenant) {
+            return [];
+        }
+
+        $qb = $this->createQueryBuilder('i')
+            ->innerJoin('i.intervention', 'vi')
+            ->innerJoin('vi.vehicle', 'v')
+            ->leftJoin('v.brand', 'b')
+            ->leftJoin('v.model', 'm')
+            ->leftJoin('i.quote', 'q')
+            ->where('vi.tenant = :tenant')
+            ->setParameter('tenant', $tenant);
+
+        // Filtre de recherche
+        if (!empty($search)) {
+            $qb->andWhere('(
+                i.invoiceNumber LIKE :search OR
+                vi.interventionNumber LIKE :search OR
+                vi.title LIKE :search OR
+                v.plateNumber LIKE :search OR
+                b.name LIKE :search OR
+                m.name LIKE :search
+            )')
+            ->setParameter('search', '%' . $search . '%');
+        }
+
+        // Filtre par statut de paiement
+        if (!empty($status)) {
+            $qb->andWhere('i.paymentStatus = :status')
+               ->setParameter('status', $status);
+        }
+
+        // Tri
+        $allowedSortFields = ['invoiceDate', 'dueDate', 'totalAmount', 'paymentStatus', 'invoiceNumber'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $qb->orderBy('i.' . $sortBy, $sortOrder);
+        } else {
+            $qb->orderBy('i.invoiceDate', 'DESC');
+        }
+
+        // Pagination
+        $offset = ($page - 1) * $limit;
+        $qb->setFirstResult($offset)
+           ->setMaxResults($limit);
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Compte les factures par tenant avec filtres
+     */
+    public function countByTenantWithFilters(
+        ?Tenant $tenant,
+        string $search = '',
+        string $status = ''
+    ): int {
+        if (!$tenant) {
+            return 0;
+        }
+
+        $qb = $this->createQueryBuilder('i')
+            ->select('COUNT(i.id)')
+            ->innerJoin('i.intervention', 'vi')
+            ->innerJoin('vi.vehicle', 'v')
+            ->leftJoin('v.brand', 'b')
+            ->leftJoin('v.model', 'm')
+            ->where('vi.tenant = :tenant')
+            ->setParameter('tenant', $tenant);
+
+        // Filtre de recherche
+        if (!empty($search)) {
+            $qb->andWhere('(
+                i.invoiceNumber LIKE :search OR
+                vi.interventionNumber LIKE :search OR
+                vi.title LIKE :search OR
+                v.plateNumber LIKE :search OR
+                b.name LIKE :search OR
+                m.name LIKE :search
+            )')
+            ->setParameter('search', '%' . $search . '%');
+        }
+
+        // Filtre par statut de paiement
+        if (!empty($status)) {
+            $qb->andWhere('i.paymentStatus = :status')
+               ->setParameter('status', $status);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * Trouve les factures en retard de paiement
+     */
+    public function findOverdueInvoices(?Tenant $tenant): array
     {
-        return $this->createQueryBuilder('ii')
-            ->andWhere('ii.paymentStatus = :paymentStatus')
-            ->setParameter('paymentStatus', $paymentStatus)
-            ->orderBy('ii.invoiceDate', 'DESC')
+        if (!$tenant) {
+            return [];
+        }
+
+        return $this->createQueryBuilder('i')
+            ->innerJoin('i.intervention', 'vi')
+            ->where('vi.tenant = :tenant')
+            ->andWhere('i.paymentStatus = :status')
+            ->andWhere('i.dueDate < :today')
+            ->setParameter('tenant', $tenant)
+            ->setParameter('status', 'pending')
+            ->setParameter('today', new \DateTime())
+            ->orderBy('i.dueDate', 'ASC')
             ->getQuery()
             ->getResult();
     }
 
-    public function findPaid(): array
+    /**
+     * Trouve les factures par période
+     */
+    public function findByDateRange(?Tenant $tenant, \DateTime $startDate, \DateTime $endDate): array
     {
-        return $this->createQueryBuilder('ii')
-            ->andWhere('ii.paymentStatus = :paid')
-            ->setParameter('paid', 'paid')
-            ->orderBy('ii.paidAt', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
+        if (!$tenant) {
+            return [];
+        }
 
-    public function findPending(): array
-    {
-        return $this->createQueryBuilder('ii')
-            ->andWhere('ii.paymentStatus = :pending')
-            ->setParameter('pending', 'pending')
-            ->orderBy('ii.invoiceDate', 'ASC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    public function findOverdue(): array
-    {
-        return $this->createQueryBuilder('ii')
-            ->andWhere('ii.paymentStatus = :overdue')
-            ->setParameter('overdue', 'overdue')
-            ->orderBy('ii.dueDate', 'ASC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    public function findCancelled(): array
-    {
-        return $this->createQueryBuilder('ii')
-            ->andWhere('ii.paymentStatus = :cancelled')
-            ->setParameter('cancelled', 'cancelled')
-            ->orderBy('ii.invoiceDate', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    public function findOverdueInvoices(): array
-    {
-        return $this->createQueryBuilder('ii')
-            ->andWhere('ii.dueDate < :now')
-            ->andWhere('ii.paymentStatus IN (:statuses)')
-            ->setParameter('now', new \DateTime())
-            ->setParameter('statuses', ['pending', 'overdue'])
-            ->orderBy('ii.dueDate', 'ASC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    public function findDueSoon(int $days = 7): array
-    {
-        $date = new \DateTime();
-        $date->add(new \DateInterval('P' . $days . 'D'));
-
-        return $this->createQueryBuilder('ii')
-            ->andWhere('ii.dueDate <= :date')
-            ->andWhere('ii.dueDate > :now')
-            ->andWhere('ii.paymentStatus = :pending')
-            ->setParameter('date', $date)
-            ->setParameter('now', new \DateTime())
-            ->setParameter('pending', 'pending')
-            ->orderBy('ii.dueDate', 'ASC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    public function findByDateRange(\DateTimeInterface $startDate, \DateTimeInterface $endDate): array
-    {
-        return $this->createQueryBuilder('ii')
-            ->andWhere('ii.invoiceDate BETWEEN :startDate AND :endDate')
+        return $this->createQueryBuilder('i')
+            ->innerJoin('i.intervention', 'vi')
+            ->where('vi.tenant = :tenant')
+            ->andWhere('i.invoiceDate >= :startDate')
+            ->andWhere('i.invoiceDate <= :endDate')
+            ->setParameter('tenant', $tenant)
             ->setParameter('startDate', $startDate)
             ->setParameter('endDate', $endDate)
-            ->orderBy('ii.invoiceDate', 'DESC')
+            ->orderBy('i.invoiceDate', 'DESC')
             ->getQuery()
             ->getResult();
     }
 
-    public function findByAmountRange(float $minAmount, float $maxAmount): array
+    /**
+     * Calcule le total des factures par statut
+     */
+    public function getTotalByStatus(?Tenant $tenant, string $status): float
     {
-        return $this->createQueryBuilder('ii')
-            ->andWhere('ii.totalAmount BETWEEN :minAmount AND :maxAmount')
-            ->setParameter('minAmount', $minAmount)
-            ->setParameter('maxAmount', $maxAmount)
-            ->orderBy('ii.totalAmount', 'DESC')
+        if (!$tenant) {
+            return 0.0;
+        }
+
+        $result = $this->createQueryBuilder('i')
+            ->select('SUM(i.totalAmount)')
+            ->innerJoin('i.intervention', 'vi')
+            ->where('vi.tenant = :tenant')
+            ->andWhere('i.paymentStatus = :status')
+            ->setParameter('tenant', $tenant)
+            ->setParameter('status', $status)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (float) ($result ?? 0);
+    }
+
+    /**
+     * Trouve les factures par intervention
+     */
+    public function findByIntervention(int $interventionId): array
+    {
+        return $this->createQueryBuilder('i')
+            ->where('i.intervention = :interventionId')
+            ->setParameter('interventionId', $interventionId)
+            ->orderBy('i.invoiceDate', 'DESC')
             ->getQuery()
             ->getResult();
     }
 
-    public function findByPaymentMethod(string $paymentMethod): array
+    /**
+     * Trouve la dernière facture par numéro
+     */
+    public function findLastInvoiceByNumber(string $numberPrefix): ?InterventionInvoice
     {
-        return $this->createQueryBuilder('ii')
-            ->andWhere('ii.paymentMethod = :paymentMethod')
-            ->setParameter('paymentMethod', $paymentMethod)
-            ->orderBy('ii.paidAt', 'DESC')
+        return $this->createQueryBuilder('i')
+            ->where('i.invoiceNumber LIKE :prefix')
+            ->setParameter('prefix', $numberPrefix . '%')
+            ->orderBy('i.invoiceNumber', 'DESC')
+            ->setMaxResults(1)
             ->getQuery()
-            ->getResult();
-    }
-
-    public function getStatistics(): array
-    {
-        $qb = $this->createQueryBuilder('ii')
-            ->select([
-                'COUNT(ii.id) as total',
-                'SUM(CASE WHEN ii.paymentStatus = :paid THEN 1 ELSE 0 END) as paid',
-                'SUM(CASE WHEN ii.paymentStatus = :pending THEN 1 ELSE 0 END) as pending',
-                'SUM(CASE WHEN ii.paymentStatus = :overdue THEN 1 ELSE 0 END) as overdue',
-                'SUM(CASE WHEN ii.paymentStatus = :cancelled THEN 1 ELSE 0 END) as cancelled',
-                'SUM(ii.totalAmount) as totalAmount',
-                'SUM(CASE WHEN ii.paymentStatus = :paid THEN ii.totalAmount ELSE 0 END) as paidAmount',
-                'SUM(CASE WHEN ii.paymentStatus IN (:pending, :overdue) THEN ii.totalAmount ELSE 0 END) as pendingAmount',
-                'AVG(ii.totalAmount) as avgAmount'
-            ])
-            ->setParameter('paid', 'paid')
-            ->setParameter('pending', 'pending')
-            ->setParameter('overdue', 'overdue')
-            ->setParameter('cancelled', 'cancelled');
-
-        return $qb->getQuery()->getSingleResult();
+            ->getOneOrNullResult();
     }
 }

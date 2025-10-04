@@ -283,8 +283,9 @@ class FileUploadService
     /**
      * Formate la taille d'un fichier
      */
-    public function formatFileSize(int $bytes): string
+    public function formatFileSize(int|string $bytes): string
     {
+        $bytes = (int) $bytes;
         if ($bytes === 0) return '0 B';
         
         $k = 1024;

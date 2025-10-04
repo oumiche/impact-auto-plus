@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\InterventionReceptionReport;
+use App\Entity\Tenant;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,135 +17,335 @@ class InterventionReceptionReportRepository extends ServiceEntityRepository
         parent::__construct($registry, InterventionReceptionReport::class);
     }
 
-    public function save(InterventionReceptionReport $entity, bool $flush = false): void
+    /**
+     * Trouve un rapport par ID et tenant
+     */
+    public function findByIdAndTenant(int $id, ?Tenant $tenant): ?InterventionReceptionReport
     {
-        $this->getEntityManager()->persist($entity);
-
-        if ($flush) {
-            $this->getEntityManager()->flush();
+        if (!$tenant) {
+            return null;
         }
-    }
 
-    public function remove(InterventionReceptionReport $entity, bool $flush = false): void
-    {
-        $this->getEntityManager()->remove($entity);
-
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
-    }
-
-    public function findByIntervention(int $interventionId): ?InterventionReceptionReport
-    {
-        return $this->createQueryBuilder('irr')
-            ->andWhere('irr.intervention = :interventionId')
-            ->setParameter('interventionId', $interventionId)
+        return $this->createQueryBuilder('r')
+            ->innerJoin('r.intervention', 'i')
+            ->where('r.id = :id')
+            ->andWhere('i.tenant = :tenant')
+            ->setParameter('id', $id)
+            ->setParameter('tenant', $tenant)
             ->getQuery()
             ->getOneOrNullResult();
     }
 
-    public function findBySatisfaction(string $satisfaction): array
-    {
-        return $this->createQueryBuilder('irr')
-            ->andWhere('irr.customerSatisfaction = :satisfaction')
-            ->setParameter('satisfaction', $satisfaction)
-            ->orderBy('irr.receptionDate', 'DESC')
-            ->getQuery()
-            ->getResult();
+    /**
+     * Trouve les rapports par tenant avec filtres
+     */
+    public function findByTenantWithFilters(
+        ?Tenant $tenant,
+        int $page = 1,
+        int $limit = 10,
+        string $search = '',
+        string $satisfaction = '',
+        string $sortBy = 'receptionDate',
+        string $sortOrder = 'DESC'
+    ): array {
+        if (!$tenant) {
+            return [];
+        }
+
+        $qb = $this->createQueryBuilder('r')
+            ->innerJoin('r.intervention', 'i')
+            ->innerJoin('i.vehicle', 'v')
+            ->leftJoin('v.brand', 'b')
+            ->leftJoin('v.model', 'm')
+            ->where('i.tenant = :tenant')
+            ->setParameter('tenant', $tenant);
+
+        // Filtre de recherche
+        if (!empty($search)) {
+            $qb->andWhere('(
+                i.interventionNumber LIKE :search OR
+                i.title LIKE :search OR
+                v.plateNumber LIKE :search OR
+                b.name LIKE :search OR
+                m.name LIKE :search OR
+                r.vehicleCondition LIKE :search OR
+                r.workCompleted LIKE :search
+            )')
+            ->setParameter('search', '%' . $search . '%');
+        }
+
+        // Filtre par satisfaction client
+        if (!empty($satisfaction)) {
+            $qb->andWhere('r.customerSatisfaction = :satisfaction')
+               ->setParameter('satisfaction', $satisfaction);
+        }
+
+        // Tri
+        $allowedSortFields = ['receptionDate', 'customerSatisfaction', 'createdAt'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $qb->orderBy('r.' . $sortBy, $sortOrder);
+        } else {
+            $qb->orderBy('r.receptionDate', 'DESC');
+        }
+
+        // Pagination
+        $offset = ($page - 1) * $limit;
+        $qb->setFirstResult($offset)
+           ->setMaxResults($limit);
+
+        return $qb->getQuery()->getResult();
     }
 
-    public function findSatisfactory(): array
-    {
-        return $this->createQueryBuilder('irr')
-            ->andWhere('irr.customerSatisfaction IN (:satisfactory)')
-            ->setParameter('satisfactory', ['excellent', 'good'])
-            ->orderBy('irr.receptionDate', 'DESC')
-            ->getQuery()
-            ->getResult();
+    /**
+     * Compte les rapports par tenant avec filtres
+     */
+    public function countByTenantWithFilters(
+        ?Tenant $tenant,
+        string $search = '',
+        string $satisfaction = ''
+    ): int {
+        if (!$tenant) {
+            return 0;
+        }
+
+        $qb = $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)')
+            ->innerJoin('r.intervention', 'i')
+            ->innerJoin('i.vehicle', 'v')
+            ->leftJoin('v.brand', 'b')
+            ->leftJoin('v.model', 'm')
+            ->where('i.tenant = :tenant')
+            ->setParameter('tenant', $tenant);
+
+        // Filtre de recherche
+        if (!empty($search)) {
+            $qb->andWhere('(
+                i.interventionNumber LIKE :search OR
+                i.title LIKE :search OR
+                v.plateNumber LIKE :search OR
+                b.name LIKE :search OR
+                m.name LIKE :search OR
+                r.vehicleCondition LIKE :search OR
+                r.workCompleted LIKE :search
+            )')
+            ->setParameter('search', '%' . $search . '%');
+        }
+
+        // Filtre par satisfaction client
+        if (!empty($satisfaction)) {
+            $qb->andWhere('r.customerSatisfaction = :satisfaction')
+               ->setParameter('satisfaction', $satisfaction);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
-    public function findUnsatisfactory(): array
+    /**
+     * Trouve les rapports nécessitant un suivi
+     */
+    public function findReportsRequiringFollowUp(?Tenant $tenant): array
     {
-        return $this->createQueryBuilder('irr')
-            ->andWhere('irr.customerSatisfaction IN (:unsatisfactory)')
-            ->setParameter('unsatisfactory', ['fair', 'poor'])
-            ->orderBy('irr.receptionDate', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
+        if (!$tenant) {
+            return [];
+        }
 
-    public function findWithRemainingIssues(): array
-    {
-        return $this->createQueryBuilder('irr')
-            ->andWhere('irr.remainingIssues IS NOT NULL')
-            ->andWhere('irr.remainingIssues != :empty')
-            ->setParameter('empty', '')
-            ->orderBy('irr.receptionDate', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    public function findNotReady(): array
-    {
-        return $this->createQueryBuilder('irr')
-            ->andWhere('irr.isVehicleReady = :ready')
-            ->setParameter('ready', false)
-            ->orderBy('irr.receptionDate', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    public function findRequiringFollowUp(): array
-    {
-        return $this->createQueryBuilder('irr')
-            ->andWhere('irr.customerSatisfaction = :poor OR irr.isVehicleReady = :ready OR irr.remainingIssues IS NOT NULL')
+        return $this->createQueryBuilder('r')
+            ->innerJoin('r.intervention', 'i')
+            ->where('i.tenant = :tenant')
+            ->andWhere('(
+                r.remainingIssues IS NOT NULL AND r.remainingIssues != \'\' OR
+                r.isVehicleReady = false OR
+                r.customerSatisfaction = :poor
+            )')
+            ->setParameter('tenant', $tenant)
             ->setParameter('poor', 'poor')
-            ->setParameter('ready', false)
-            ->orderBy('irr.receptionDate', 'DESC')
+            ->orderBy('r.receptionDate', 'DESC')
             ->getQuery()
             ->getResult();
     }
 
-    public function findByReceivedBy(int $receivedBy): array
+    /**
+     * Trouve les rapports par période
+     */
+    public function findByDateRange(?Tenant $tenant, \DateTime $startDate, \DateTime $endDate): array
     {
-        return $this->createQueryBuilder('irr')
-            ->andWhere('irr.receivedBy = :receivedBy')
-            ->setParameter('receivedBy', $receivedBy)
-            ->orderBy('irr.receptionDate', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
+        if (!$tenant) {
+            return [];
+        }
 
-    public function findByDateRange(\DateTimeInterface $startDate, \DateTimeInterface $endDate): array
-    {
-        return $this->createQueryBuilder('irr')
-            ->andWhere('irr.receptionDate BETWEEN :startDate AND :endDate')
+        return $this->createQueryBuilder('r')
+            ->innerJoin('r.intervention', 'i')
+            ->where('i.tenant = :tenant')
+            ->andWhere('r.receptionDate >= :startDate')
+            ->andWhere('r.receptionDate <= :endDate')
+            ->setParameter('tenant', $tenant)
             ->setParameter('startDate', $startDate)
             ->setParameter('endDate', $endDate)
-            ->orderBy('irr.receptionDate', 'DESC')
+            ->orderBy('r.receptionDate', 'DESC')
             ->getQuery()
             ->getResult();
     }
 
-    public function getStatistics(): array
+    /**
+     * Calcule les statistiques de satisfaction
+     */
+    public function getStatistics(?Tenant $tenant): array
     {
-        $qb = $this->createQueryBuilder('irr')
-            ->select([
-                'COUNT(irr.id) as total',
-                'SUM(CASE WHEN irr.customerSatisfaction = :excellent THEN 1 ELSE 0 END) as excellent',
-                'SUM(CASE WHEN irr.customerSatisfaction = :good THEN 1 ELSE 0 END) as good',
-                'SUM(CASE WHEN irr.customerSatisfaction = :fair THEN 1 ELSE 0 END) as fair',
-                'SUM(CASE WHEN irr.customerSatisfaction = :poor THEN 1 ELSE 0 END) as poor',
-                'SUM(CASE WHEN irr.isVehicleReady = true THEN 1 ELSE 0 END) as ready',
-                'SUM(CASE WHEN irr.remainingIssues IS NOT NULL AND irr.remainingIssues != :empty THEN 1 ELSE 0 END) as withIssues',
-                'AVG(CASE irr.customerSatisfaction WHEN :excellent THEN 5 WHEN :good THEN 4 WHEN :fair THEN 3 WHEN :poor THEN 2 END) as avgScore'
-            ])
-            ->setParameter('excellent', 'excellent')
-            ->setParameter('good', 'good')
-            ->setParameter('fair', 'fair')
-            ->setParameter('poor', 'poor')
-            ->setParameter('empty', '');
+        if (!$tenant) {
+            return [];
+        }
 
-        return $qb->getQuery()->getSingleResult();
+        $qb = $this->createQueryBuilder('r')
+            ->innerJoin('r.intervention', 'i')
+            ->where('i.tenant = :tenant')
+            ->setParameter('tenant', $tenant);
+
+        // Total des rapports
+        $totalReports = (int) $qb->getQuery()->getSingleScalarResult();
+
+        // Répartition par satisfaction
+        $satisfactionStats = $this->createQueryBuilder('r')
+            ->select('r.customerSatisfaction, COUNT(r.id) as count')
+            ->innerJoin('r.intervention', 'i')
+            ->where('i.tenant = :tenant')
+            ->groupBy('r.customerSatisfaction')
+            ->setParameter('tenant', $tenant)
+            ->getQuery()
+            ->getResult();
+
+        $satisfactionBreakdown = [
+            'excellent' => 0,
+            'good' => 0,
+            'fair' => 0,
+            'poor' => 0
+        ];
+
+        foreach ($satisfactionStats as $stat) {
+            $satisfactionBreakdown[$stat['customerSatisfaction']] = (int) $stat['count'];
+        }
+
+        // Moyenne de satisfaction
+        $avgSatisfaction = $this->createQueryBuilder('r')
+            ->select('AVG(
+                CASE r.customerSatisfaction 
+                    WHEN \'excellent\' THEN 5
+                    WHEN \'good\' THEN 4
+                    WHEN \'fair\' THEN 3
+                    WHEN \'poor\' THEN 2
+                    ELSE 3
+                END
+            ) as avgScore')
+            ->innerJoin('r.intervention', 'i')
+            ->where('i.tenant = :tenant')
+            ->setParameter('tenant', $tenant)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        // Rapports nécessitant un suivi
+        $followUpReports = (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)')
+            ->innerJoin('r.intervention', 'i')
+            ->where('i.tenant = :tenant')
+            ->andWhere('(
+                r.remainingIssues IS NOT NULL AND r.remainingIssues != \'\' OR
+                r.isVehicleReady = false OR
+                r.customerSatisfaction = :poor
+            )')
+            ->setParameter('tenant', $tenant)
+            ->setParameter('poor', 'poor')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        // Véhicules prêts
+        $vehiclesReady = (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)')
+            ->innerJoin('r.intervention', 'i')
+            ->where('i.tenant = :tenant')
+            ->andWhere('r.isVehicleReady = true')
+            ->setParameter('tenant', $tenant)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return [
+            'totalReports' => $totalReports,
+            'satisfactionBreakdown' => $satisfactionBreakdown,
+            'averageSatisfaction' => round((float) $avgSatisfaction, 2),
+            'followUpRequired' => $followUpReports,
+            'vehiclesReady' => $vehiclesReady,
+            'vehiclesNotReady' => $totalReports - $vehiclesReady,
+            'satisfactionRate' => $totalReports > 0 ? round((($satisfactionBreakdown['excellent'] + $satisfactionBreakdown['good']) / $totalReports) * 100, 2) : 0
+        ];
+    }
+
+    /**
+     * Trouve les rapports par intervention
+     */
+    public function findByIntervention(int $interventionId): array
+    {
+        return $this->createQueryBuilder('r')
+            ->where('r.intervention = :interventionId')
+            ->setParameter('interventionId', $interventionId)
+            ->orderBy('r.receptionDate', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve le dernier rapport pour une intervention
+     */
+    public function findLatestByIntervention(int $interventionId): ?InterventionReceptionReport
+    {
+        return $this->createQueryBuilder('r')
+            ->where('r.intervention = :interventionId')
+            ->setParameter('interventionId', $interventionId)
+            ->orderBy('r.receptionDate', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Trouve les rapports excellents
+     */
+    public function findExcellentReports(?Tenant $tenant, int $limit = 10): array
+    {
+        if (!$tenant) {
+            return [];
+        }
+
+        return $this->createQueryBuilder('r')
+            ->innerJoin('r.intervention', 'i')
+            ->where('i.tenant = :tenant')
+            ->andWhere('r.customerSatisfaction = :excellent')
+            ->setParameter('tenant', $tenant)
+            ->setParameter('excellent', 'excellent')
+            ->orderBy('r.receptionDate', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les rapports problématiques
+     */
+    public function findProblematicReports(?Tenant $tenant): array
+    {
+        if (!$tenant) {
+            return [];
+        }
+
+        return $this->createQueryBuilder('r')
+            ->innerJoin('r.intervention', 'i')
+            ->where('i.tenant = :tenant')
+            ->andWhere('(
+                r.customerSatisfaction = :poor OR
+                r.isVehicleReady = false OR
+                (r.remainingIssues IS NOT NULL AND r.remainingIssues != \'\')
+            )')
+            ->setParameter('tenant', $tenant)
+            ->setParameter('poor', 'poor')
+            ->orderBy('r.receptionDate', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 }

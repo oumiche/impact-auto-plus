@@ -1702,3 +1702,4 @@ class ApiService {
 
 // Instance globale du service API
 window.apiService = new ApiService();
+window.ApiService = ApiService;

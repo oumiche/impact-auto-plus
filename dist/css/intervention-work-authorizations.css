@@ -1,291 +1,170 @@
-/* Styles spécifiques pour les autorisations de travail */
+/* Styles pour la gestion des autorisations de travail */
 
-/* Container principal */
-.data-container {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    overflow: hidden;
-}
-
-/* Table des autorisations */
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-}
-
-.data-table th {
-    background: #f8f9fa;
-    padding: 12px 8px;
-    text-align: left;
-    font-weight: 600;
-    color: #495057;
-    border-bottom: 2px solid #dee2e6;
-    white-space: nowrap;
-}
-
-.data-table td {
-    padding: 12px 8px;
-    border-bottom: 1px solid #dee2e6;
-    vertical-align: top;
-}
-
-.data-table tbody tr:hover {
-    background-color: #f8f9fa;
-}
-
-/* Informations sur l'intervention */
-.intervention-info {
-    min-width: 200px;
-}
-
-.intervention-title {
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 4px;
-}
-
-/* Informations sur le véhicule */
-.vehicle-info {
-    min-width: 150px;
-}
-
-.vehicle-plate {
-    font-weight: 600;
-    color: #007bff;
-    font-family: 'Courier New', monospace;
-    margin-bottom: 2px;
-}
-
-.vehicle-details {
-    font-size: 12px;
-    color: #6c757d;
-}
-
-/* Informations sur le devis */
-.quote-info {
-    min-width: 120px;
-}
-
-.quote-number {
-    font-weight: 600;
-    color: #28a745;
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-}
-
-.no-quote {
-    color: #6c757d;
-    font-style: italic;
-}
-
-/* Informations sur l'autoriseur */
-.authorized-by {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 600;
-    color: #495057;
-}
-
-.authorized-by i {
-    color: #28a745;
-    font-size: 14px;
-}
-
-/* Informations de montant maximum */
-.max-amount {
-    font-weight: 600;
-    color: #ffc107;
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
-}
-
-.no-limit {
-    color: #6c757d;
-    font-style: italic;
-    font-size: 12px;
-}
-
-/* Badges d'urgence */
-.urgent-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: #dc3545;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
-}
-
-.normal-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: #6c757d;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
-}
-
-/* Informations de date */
-.date-info {
-    font-size: 12px;
-    color: #495057;
-    white-space: nowrap;
-}
-
-/* Boutons d'action */
-.action-buttons {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-}
-
-.action-buttons .btn {
-    padding: 6px 8px;
-    font-size: 12px;
-    min-width: 32px;
-}
-
-/* Filtres */
-.filters-section {
-    background: white;
+.intervention-work-authorizations-container {
+    max-width: 1400px;
+    margin: 0 auto;
     padding: 20px;
+}
+
+/* En-tête de page */
+.page-header {
+    margin-bottom: 30px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 20px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-text {
+    flex: 1;
+}
+
+.header-text h1 {
+    margin: 0 0 5px 0;
+    color: #2c3e50;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.header-text p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Section des filtres */
+.filters-section {
+    background: #f8f9fa;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
     margin-bottom: 20px;
 }
 
-.filters-row {
+.search-bar {
     display: flex;
-    gap: 16px;
+    gap: 15px;
     align-items: center;
-    flex-wrap: wrap;
+    margin-bottom: 15px;
 }
 
-.search-container {
-    position: relative;
+.search-input-container {
     flex: 1;
-    min-width: 300px;
+    position: relative;
 }
 
-.search-container input {
-    width: 100%;
-    padding: 10px 40px 10px 12px;
-    border: 1px solid #ced4da;
-    border-radius: 6px;
-    font-size: 14px;
-}
-
-.search-container i {
+.search-input-container i {
     position: absolute;
-    right: 12px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
     color: #6c757d;
 }
 
-.filter-group select {
-    padding: 10px 12px;
-    border: 1px solid #ced4da;
-    border-radius: 6px;
-    font-size: 14px;
-    min-width: 180px;
-}
-
-/* Modal */
-.modal-lg {
-    max-width: 800px;
-}
-
-.modal-sm {
-    max-width: 400px;
-}
-
-/* Formulaires dans le modal */
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.form-group {
-    margin-bottom: 16px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 600;
-    color: #495057;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
+.search-input {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ced4da;
+    padding: 10px 12px 10px 40px;
+    border: 1px solid #ddd;
     border-radius: 6px;
     font-size: 14px;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    transition: border-color 0.3s ease;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.search-input:focus {
     outline: none;
     border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
-.form-group textarea {
-    resize: vertical;
-    min-height: 100px;
+.filters-panel {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding-top: 15px;
+    border-top: 1px solid #dee2e6;
 }
 
-.form-group small {
-    display: block;
-    margin-top: 4px;
-    color: #6c757d;
-    font-size: 12px;
-}
-
-/* Checkboxes */
-.checkbox-label {
+.filter-group {
     display: flex;
     align-items: center;
     gap: 8px;
-    cursor: pointer;
-    font-weight: normal;
 }
 
-.checkbox-label input[type="checkbox"] {
-    width: auto;
-    margin: 0;
+.filter-group label {
+    font-weight: 500;
+    color: #495057;
+    white-space: nowrap;
 }
 
-.checkmark {
+.filter-select {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
     font-size: 14px;
+    background: #fff;
+    min-width: 150px;
 }
 
-/* États de chargement */
-.loading {
-    text-align: center;
-    padding: 40px;
+/* Actions en masse */
+.bulk-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 6px;
+    padding: 12px 20px;
+    margin-bottom: 20px;
+}
+
+.bulk-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1976d2;
+    font-weight: 500;
+}
+
+.bulk-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+/* Liste des autorisations */
+.authorizations-list {
+    min-height: 400px;
+}
+
+.loading-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
     color: #6c757d;
+    font-size: 16px;
 }
 
-.loading i {
-    font-size: 24px;
-    margin-bottom: 12px;
+.loading-state i {
+    margin-right: 10px;
+    font-size: 20px;
 }
 
 .empty-state {
@@ -295,77 +174,318 @@
 }
 
 .empty-state i {
-    font-size: 48px;
-    margin-bottom: 16px;
+    font-size: 64px;
+    margin-bottom: 20px;
     opacity: 0.5;
 }
 
-/* Informations dans les modals */
-.delete-info {
-    background: #f8f9fa;
-    padding: 12px;
-    border-radius: 6px;
-    margin-top: 12px;
+.empty-state h3 {
+    margin: 0 0 10px 0;
+    color: #495057;
+}
+
+.empty-state p {
+    margin: 0 0 20px 0;
+}
+
+/* Styles pour le tableau des autorisations */
+.data-table-container {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
     font-size: 14px;
-    line-height: 1.4;
-    border-left: 4px solid #dc3545;
+}
+
+.data-table thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.data-table th {
+    padding: 15px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 1px solid #dee2e6;
+    white-space: nowrap;
+}
+
+.data-table th:first-child {
+    width: 50px;
+    text-align: center;
+}
+
+.data-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f1f3f4;
+    vertical-align: top;
+}
+
+.auth-row:hover {
+    background: #f8f9fa;
+}
+
+.checkbox-cell {
+    text-align: center;
+    width: 50px;
+}
+
+.select-all-checkbox,
+.auth-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.auth-id-cell {
+    width: 80px;
+}
+
+.auth-id {
+    background: #e9ecef;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #495057;
+}
+
+.intervention-cell {
+    width: 150px;
+}
+
+.intervention-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.intervention-title {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 13px;
+}
+
+.vehicle-cell {
+    width: 200px;
+}
+
+.vehicle-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.vehicle-details {
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 2px;
+}
+
+.vehicle-plate {
+    font-size: 12px;
+    color: #6c757d;
+    font-family: 'Courier New', monospace;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-validated {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-expired {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.amount-cell {
+    width: 150px;
+}
+
+.amount-total {
+    font-weight: 700;
+    color: #2c3e50;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.amount-details {
+    font-size: 11px;
+    color: #6c757d;
+}
+
+.amount-detail {
+    margin-bottom: 2px;
+}
+
+.date-cell {
+    width: 120px;
+    font-size: 13px;
+    color: #495057;
+}
+
+.authorization-date-cell {
+    width: 140px;
+    font-size: 13px;
+    color: #495057;
+}
+
+.urgency-cell {
+    width: 100px;
+    text-align: center;
+}
+
+.urgency-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.urgency-urgent {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.urgency-normal {
+    background: #d4edda;
+    color: #155724;
+}
+
+.expiration-cell {
+    width: 120px;
+    font-size: 13px;
+}
+
+.expiration-warning {
+    color: #fd7e14;
+    font-weight: 500;
+}
+
+.expiration-expired {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+.expiration-valid {
+    color: #17a2b8;
+    font-weight: 500;
+}
+
+.actions-cell {
+    width: 160px;
+    text-align: center;
+}
+
+.auth-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.auth-actions .btn {
+    padding: 4px 8px;
+    font-size: 11px;
+    min-width: 32px;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .filters-row {
+    .intervention-work-authorizations-container {
+        padding: 15px;
+    }
+    
+    .header-content {
         flex-direction: column;
         align-items: stretch;
     }
     
-    .search-container {
-        min-width: auto;
+    .header-left {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
     }
     
-    .form-row {
-        grid-template-columns: 1fr;
+    .search-bar {
+        flex-direction: column;
+        align-items: stretch;
     }
     
+    .filters-panel {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .bulk-actions {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    
+    .bulk-buttons {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-text h1 {
+        font-size: 24px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+    
+    .auth-actions {
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    .auth-actions .btn {
+        padding: 6px 4px;
+        font-size: 10px;
+    }
+}
+
+/* Responsive pour le tableau */
+@media (max-width: 1200px) {
     .data-table-container {
         overflow-x: auto;
     }
     
     .data-table {
         min-width: 1000px;
-    }
-    
-    .action-buttons {
-        flex-direction: column;
-        gap: 2px;
-    }
-}
-
-@media (max-width: 480px) {
-    .filters-section {
-        padding: 16px;
-    }
-    
-    .modal-content {
-        margin: 10px;
-        max-height: calc(100vh - 20px);
-        overflow-y: auto;
-    }
-    
-    .data-table th,
-    .data-table td {
-        padding: 8px 4px;
-        font-size: 12px;
-    }
-    
-    .max-amount {
-        font-size: 12px;
-    }
-    
-    .quote-number {
-        font-size: 11px;
-    }
-    
-    .authorized-by {
-        font-size: 12px;
     }
 }

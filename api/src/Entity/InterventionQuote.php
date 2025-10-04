@@ -20,6 +20,10 @@ class InterventionQuote
     #[ORM\JoinColumn(nullable: false)]
     private ?VehicleIntervention $intervention = null;
 
+    #[ORM\ManyToOne(targetEntity: Garage::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Garage $garage = null;
+
     #[ORM\Column(type: 'string', length: 50)]
     private string $quoteNumber;
 
@@ -28,6 +32,9 @@ class InterventionQuote
 
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $validUntil = null;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $receivedDate = null;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     private string $totalAmount;
@@ -59,16 +66,12 @@ class InterventionQuote
     #[ORM\OneToMany(mappedBy: 'quote', targetEntity: InterventionQuoteLine::class, cascade: ['persist'])]
     private Collection $lines;
 
-    #[ORM\OneToMany(targetEntity: Attachment::class, mappedBy: 'entityType', cascade: ['persist'])]
-    private Collection $attachments;
-
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->quoteDate = new \DateTime();
         $this->totalAmount = '0.00';
         $this->lines = new ArrayCollection();
-        $this->attachments = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -84,6 +87,17 @@ class InterventionQuote
     public function setIntervention(?VehicleIntervention $intervention): self
     {
         $this->intervention = $intervention;
+        return $this;
+    }
+
+    public function getGarage(): ?Garage
+    {
+        return $this->garage;
+    }
+
+    public function setGarage(?Garage $garage): self
+    {
+        $this->garage = $garage;
         return $this;
     }
 
@@ -117,6 +131,17 @@ class InterventionQuote
     public function setValidUntil(?\DateTimeInterface $validUntil): self
     {
         $this->validUntil = $validUntil;
+        return $this;
+    }
+
+    public function getReceivedDate(): ?\DateTimeInterface
+    {
+        return $this->receivedDate;
+    }
+
+    public function setReceivedDate(?\DateTimeInterface $receivedDate): self
+    {
+        $this->receivedDate = $receivedDate;
         return $this;
     }
 
@@ -232,24 +257,6 @@ class InterventionQuote
     }
 
     // Méthodes utilitaires
-    public function isExpired(): bool
-    {
-        if (!$this->validUntil) {
-            return false;
-        }
-        return $this->validUntil < new \DateTime();
-    }
-
-    public function getDaysUntilExpiry(): int
-    {
-        if (!$this->validUntil) {
-            return 0;
-        }
-        $now = new \DateTime();
-        $expiry = $this->validUntil;
-        $diff = $now->diff($expiry);
-        return $expiry > $now ? $diff->days : -$diff->days;
-    }
 
     public function approve(int $approvedBy): self
     {
@@ -329,29 +336,34 @@ class InterventionQuote
     }
 
     /**
-     * @return Collection<int, Attachment>
+     * Vérifie si le devis est expiré
      */
-    public function getAttachments(): Collection
+    public function isExpired(): bool
     {
-        return $this->attachments;
+        if (!$this->validUntil) {
+            return false; // Pas de date d'expiration = jamais expiré
+        }
+        
+        return $this->validUntil < new \DateTime();
     }
 
-    public function addAttachment(Attachment $attachment): static
+    /**
+     * Calcule le nombre de jours jusqu'à l'expiration
+     */
+    public function getDaysUntilExpiry(): ?int
     {
-        if (!$this->attachments->contains($attachment)) {
-            $this->attachments->add($attachment);
-            $attachment->setEntityType('intervention_quote');
-            $attachment->setEntityId($this->getId());
+        if (!$this->validUntil) {
+            return null; // Pas de date d'expiration
         }
-        return $this;
-    }
-
-    public function removeAttachment(Attachment $attachment): static
-    {
-        if ($this->attachments->removeElement($attachment)) {
-            // The attachment relationship is managed by the FileUploadService
-            // No need to manually set entityType/entityId to null
+        
+        $now = new \DateTime();
+        $diff = $now->diff($this->validUntil);
+        
+        // Si la date est dans le passé, retourner un nombre négatif
+        if ($this->validUntil < $now) {
+            return -$diff->days;
         }
-        return $this;
+        
+        return $diff->days;
     }
 }

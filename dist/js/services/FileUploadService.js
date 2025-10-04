@@ -80,6 +80,9 @@ class FileUploadService {
                 case 'vehicle_intervention':
                     endpoint = `/vehicle-interventions/${entityId}/attachments`;
                     break;
+                case 'intervention_quote':
+                    endpoint = `/intervention-quotes/${entityId}/attachments`;
+                    break;
                 default:
                     throw new Error(`Type d'entité non supporté: ${entityType}`);
             }
@@ -157,6 +160,9 @@ class FileUploadService {
                 case 'vehicle_intervention':
                     endpoint = `/vehicle-interventions/${entityId}/attachments`;
                     break;
+                case 'intervention_quote':
+                    endpoint = `/intervention-quotes/${entityId}/attachments`;
+                    break;
                 default:
                     throw new Error(`Type d'entité non supporté: ${entityType}`);
             }
@@ -191,6 +197,9 @@ class FileUploadService {
                     break;
                 case 'vehicle_intervention':
                     endpoint = `/vehicle-interventions/${entityId}/attachments/${fileId}`;
+                    break;
+                case 'intervention_quote':
+                    endpoint = `/intervention-quotes/${entityId}/attachments/${fileId}`;
                     break;
                 default:
                     throw new Error(`Type d'entité non supporté: ${entityType}`);

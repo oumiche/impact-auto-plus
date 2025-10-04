@@ -467,3 +467,4 @@ class NotificationService {
 
 // Initialiser le service globalement
 window.notificationService = new NotificationService();
+window.NotificationService = NotificationService;

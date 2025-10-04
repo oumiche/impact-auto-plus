@@ -413,3 +413,258 @@
         padding: 0 15px 15px 15px;
     }
 }
+
+/* Styles pour le tableau des devis */
+.data-table-container {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.data-table thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.data-table th {
+    padding: 15px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 1px solid #dee2e6;
+    white-space: nowrap;
+}
+
+.data-table th:first-child {
+    width: 50px;
+    text-align: center;
+}
+
+.data-table th:nth-child(2) {
+    width: 120px;
+}
+
+.data-table th:nth-child(3) {
+    width: 150px;
+}
+
+.data-table th:nth-child(4) {
+    width: 200px;
+}
+
+.data-table th:nth-child(5) {
+    width: 100px;
+}
+
+.data-table th:nth-child(6) {
+    width: 150px;
+}
+
+.data-table th:nth-child(7) {
+    width: 120px;
+}
+
+.data-table th:nth-child(8) {
+    width: 140px;
+}
+
+.data-table th:last-child {
+    width: 160px;
+    text-align: center;
+}
+
+.data-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f1f3f4;
+    vertical-align: top;
+}
+
+.quote-row:hover {
+    background: #f8f9fa;
+}
+
+.checkbox-cell {
+    text-align: center;
+    width: 50px;
+}
+
+.select-all-checkbox,
+.quote-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.quote-number-cell {
+    width: 120px;
+}
+
+.entity-code {
+    background: #e9ecef;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #495057;
+}
+
+.intervention-cell {
+    width: 150px;
+}
+
+.intervention-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.intervention-title {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 13px;
+}
+
+.vehicle-cell {
+    width: 200px;
+}
+
+.vehicle-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.vehicle-details {
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 2px;
+}
+
+.vehicle-plate {
+    font-size: 12px;
+    color: #6c757d;
+    font-family: 'Courier New', monospace;
+}
+
+.status-cell {
+    width: 100px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-approved {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-expired {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.amount-cell {
+    width: 150px;
+}
+
+.amount-total {
+    font-weight: 700;
+    color: #2c3e50;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.amount-details {
+    font-size: 11px;
+    color: #6c757d;
+}
+
+.amount-detail {
+    margin-bottom: 2px;
+}
+
+.date-cell {
+    width: 120px;
+    font-size: 13px;
+    color: #495057;
+}
+
+.reception-date-cell {
+    width: 140px;
+    font-size: 13px;
+    color: #495057;
+}
+
+.no-reception-date {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.actions-cell {
+    width: 160px;
+    text-align: center;
+}
+
+.quote-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.quote-actions .btn {
+    padding: 4px 8px;
+    font-size: 11px;
+    min-width: 32px;
+}
+
+/* Responsive pour le tableau */
+@media (max-width: 1200px) {
+    .data-table-container {
+        overflow-x: auto;
+    }
+    
+    .data-table {
+        min-width: 1000px;
+    }
+}
+
+@media (max-width: 768px) {
+    .data-table th,
+    .data-table td {
+        padding: 8px 6px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        font-size: 12px;
+    }
+    
+    .quote-actions {
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    .quote-actions .btn {
+        padding: 6px 4px;
+        font-size: 10px;
+    }
+}

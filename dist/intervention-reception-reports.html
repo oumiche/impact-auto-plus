@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapports de Réception - Impact Auto</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/intervention-reception-reports.css">
+    <link rel="stylesheet" href="css/notification.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="header-text">
+                        <h1>Rapports de Réception</h1>
+                        <p>Gestion des rapports de réception des véhicules</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-primary" @click="createReport">
+                        <i class="fas fa-plus"></i>
+                        Nouveau Rapport
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card satisfaction-rate">
+                <div class="stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ statistics.satisfactionRate }}%</div>
+                    <div class="stat-label">Taux de satisfaction</div>
+                </div>
+            </div>
+            
+            <div class="stat-card total-reports">
+                <div class="stat-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ statistics.totalReports }}</div>
+                    <div class="stat-label">Rapports totaux</div>
+                </div>
+            </div>
+            
+            <div class="stat-card vehicles-ready">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ statistics.vehiclesReady }}</div>
+                    <div class="stat-label">Véhicules prêts</div>
+                </div>
+            </div>
+            
+            <div class="stat-card follow-up">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ statistics.followUpRequired }}</div>
+                    <div class="stat-label">Suivi requis</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <div class="search-bar">
+                <div class="search-input-container">
+                    <i class="fas fa-search"></i>
+                    <input 
+                        type="text" 
+                        v-model="searchQuery" 
+                        @input="debounceSearch"
+                        placeholder="Rechercher par intervention, véhicule..."
+                        class="search-input"
+                    >
+                </div>
+            </div>
+            
+            <div class="filters-panel">
+                <div class="filter-group">
+                    <label>Satisfaction client</label>
+                    <select v-model="selectedSatisfaction" @change="applyFilters" class="filter-select">
+                        <option value="">Toutes les satisfactions</option>
+                        <option value="excellent">Excellent</option>
+                        <option value="good">Bon</option>
+                        <option value="fair">Moyen</option>
+                        <option value="poor">Mauvais</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Tri par</label>
+                    <select v-model="sortBy" @change="applyFilters" class="filter-select">
+                        <option value="receptionDate">Date de réception</option>
+                        <option value="customerSatisfaction">Satisfaction</option>
+                        <option value="createdAt">Date de création</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Ordre</label>
+                    <select v-model="sortOrder" @change="applyFilters" class="filter-select">
+                        <option value="DESC">Décroissant</option>
+                        <option value="ASC">Croissant</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div v-if="selectedReports.length > 0" class="bulk-actions">
+            <div class="bulk-info">
+                {{ selectedReports.length }} rapport(s) sélectionné(s)
+            </div>
+            <div class="bulk-buttons">
+                <button class="btn btn-success" @click="markSelectedAsComplete">
+                    <i class="fas fa-check"></i>
+                    Marquer comme terminé
+                </button>
+                <button class="btn btn-outline" @click="exportSelectedReports">
+                    <i class="fas fa-download"></i>
+                    Exporter
+                </button>
+                <button class="btn btn-outline" @click="clearSelection">
+                    <i class="fas fa-times"></i>
+                    Annuler
+                </button>
+            </div>
+        </div>
+
+        <!-- Reports List -->
+        <div class="reports-list">
+            <!-- Loading State -->
+            <div v-if="loading" class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Chargement des rapports...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else-if="reports.length === 0" class="empty-state">
+                <i class="fas fa-file-alt"></i>
+                <h3>Aucun rapport trouvé</h3>
+                <p v-if="hasActiveFilters">
+                    Aucun rapport ne correspond à vos critères de recherche.
+                    <button @click="clearFilters" class="btn-link">Effacer les filtres</button>
+                </p>
+                <p v-else>
+                    Aucun rapport de réception n'a encore été créé.
+                    <button @click="createReport" class="btn-link">Créer le premier rapport</button>
+                </p>
+            </div>
+
+            <!-- Data Table -->
+            <div v-else class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell">
+                                <input 
+                                    type="checkbox" 
+                                    v-model="selectAll"
+                                    @change="toggleSelectAll"
+                                    class="select-all-checkbox"
+                                >
+                            </th>
+                            <th>Date de réception</th>
+                            <th>Intervention</th>
+                            <th>Véhicule</th>
+                            <th>État du véhicule</th>
+                            <th>Satisfaction</th>
+                            <th>Prêt</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="report in reports" :key="report.id" class="report-row">
+                            <td class="checkbox-cell">
+                                <input 
+                                    type="checkbox" 
+                                    v-model="selectedReports"
+                                    :value="report.id"
+                                    class="report-checkbox"
+                                >
+                            </td>
+                            
+                            <!-- Date de réception -->
+                            <td class="date-cell">
+                                <div class="reception-date">{{ formatDateTime(report.receptionDate) }}</div>
+                            </td>
+                            
+                            <!-- Intervention -->
+                            <td class="intervention-cell">
+                                <div class="intervention-info">
+                                    <div class="intervention-number">{{ report.intervention.interventionNumber }}</div>
+                                    <div class="intervention-title">{{ report.intervention.title }}</div>
+                                </div>
+                            </td>
+                            
+                            <!-- Véhicule -->
+                            <td class="vehicle-cell">
+                                <div class="vehicle-info">
+                                    <div class="vehicle-plate">{{ report.intervention.vehicle.plateNumber }}</div>
+                                    <div class="vehicle-details">
+                                        {{ report.intervention.vehicle.brand }} {{ report.intervention.vehicle.model }}
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <!-- État du véhicule -->
+                            <td class="condition-cell">
+                                <div class="vehicle-condition" v-if="report.vehicleCondition">
+                                    {{ truncateText(report.vehicleCondition, 50) }}
+                                </div>
+                                <span v-else class="no-data">-</span>
+                            </td>
+                            
+                            <!-- Satisfaction -->
+                            <td class="satisfaction-cell">
+                                <div class="satisfaction-rating">
+                                    <span 
+                                        class="satisfaction-badge"
+                                        :class="getSatisfactionClass(report.customerSatisfaction)"
+                                    >
+                                        {{ report.satisfactionLabel }}
+                                    </span>
+                                    <div class="satisfaction-stars">
+                                        <i 
+                                            v-for="star in 5" 
+                                            :key="star"
+                                            class="fas fa-star"
+                                            :class="{ 'active': star <= report.satisfactionScore }"
+                                        ></i>
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <!-- Prêt -->
+                            <td class="ready-cell">
+                                <span 
+                                    class="ready-badge"
+                                    :class="report.isVehicleReady ? 'ready' : 'not-ready'"
+                                >
+                                    <i :class="report.isVehicleReady ? 'fas fa-check' : 'fas fa-times'"></i>
+                                    {{ report.isVehicleReady ? 'Prêt' : 'Non prêt' }}
+                                </span>
+                                <div v-if="report.hasRemainingIssues" class="has-issues">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Problèmes restants
+                                </div>
+                            </td>
+                            
+                            <!-- Actions -->
+                            <td class="actions-cell">
+                                <div class="report-actions">
+                                    <button 
+                                        class="btn btn-sm btn-primary"
+                                        @click="viewReport(report.id)"
+                                        title="Voir le rapport"
+                                    >
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button 
+                                        class="btn btn-sm btn-secondary"
+                                        @click="editReport(report.id)"
+                                        title="Modifier"
+                                    >
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button 
+                                        v-if="!report.isSatisfactory"
+                                        class="btn btn-sm btn-warning"
+                                        @click="markAsComplete(report.id)"
+                                        title="Marquer comme terminé"
+                                    >
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button 
+                                        class="btn btn-sm btn-danger"
+                                        @click="deleteReport(report.id)"
+                                        title="Supprimer"
+                                    >
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="totalPages > 1" class="pagination">
+                <button 
+                    class="btn btn-outline"
+                    :disabled="currentPage === 1"
+                    @click="changePage(currentPage - 1)"
+                >
+                    <i class="fas fa-chevron-left"></i>
+                    Précédent
+                </button>
+                
+                <div class="pagination-info">
+                    Page {{ currentPage }} sur {{ totalPages }}
+                    ({{ totalItems }} rapport(s))
+                </div>
+                
+                <button 
+                    class="btn btn-outline"
+                    :disabled="currentPage === totalPages"
+                    @click="changePage(currentPage + 1)"
+                >
+                    Suivant
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/vue.global.prod.js"></script>
+    <script src="js/services/ApiService.js"></script>
+    <script src="js/auth/auth-guard.js"></script>
+    <script src="js/sidebar-component.js"></script>
+    <script src="js/load-sidebar.js"></script>
+    <script src="js/services/NotificationService.js"></script>
+    <script src="js/intervention-reception-reports-vue.js"></script>
+
+    <script>
+        // Initialize Vue app
+        const { createApp } = Vue;
+        
+        createApp(window.InterventionReceptionReportsApp).mount('#app');
+    </script>
+</body>
+</html>

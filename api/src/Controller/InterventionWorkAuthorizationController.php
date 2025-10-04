@@ -4,147 +4,91 @@ namespace App\Controller;
 
 use App\Entity\InterventionWorkAuthorization;
 use App\Entity\VehicleIntervention;
-use App\Entity\InterventionQuote;
 use App\Service\TenantService;
-use App\Service\CodeGenerationService;
-use App\Repository\InterventionWorkAuthorizationRepository;
-use App\Repository\VehicleInterventionRepository;
-use App\Repository\InterventionQuoteRepository;
+use App\Service\InterventionWorkAuthorizationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use App\Repository\InterventionWorkAuthorizationRepository;
+use App\Repository\VehicleInterventionRepository;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Psr\Log\LoggerInterface;
 
 #[Route('/api/intervention-work-authorizations')]
 class InterventionWorkAuthorizationController extends AbstractTenantController
 {
-    private $entityManager;
-    private $authorizationRepository;
-    private $vehicleInterventionRepository;
-    private $quoteRepository;
-    private $validator;
-    private $codeGenerationService;
+    private EntityManagerInterface $entityManager;
+    private InterventionWorkAuthorizationRepository $authorizationRepository;
+    private VehicleInterventionRepository $vehicleInterventionRepository;
+    private ValidatorInterface $validator;
+    private InterventionWorkAuthorizationService $authorizationService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         InterventionWorkAuthorizationRepository $authorizationRepository,
         VehicleInterventionRepository $vehicleInterventionRepository,
-        InterventionQuoteRepository $quoteRepository,
         ValidatorInterface $validator,
-        CodeGenerationService $codeGenerationService,
+        InterventionWorkAuthorizationService $authorizationService,
         TenantService $tenantService
     ) {
         parent::__construct($tenantService);
         $this->entityManager = $entityManager;
         $this->authorizationRepository = $authorizationRepository;
         $this->vehicleInterventionRepository = $vehicleInterventionRepository;
-        $this->quoteRepository = $quoteRepository;
         $this->validator = $validator;
-        $this->codeGenerationService = $codeGenerationService;
+        $this->authorizationService = $authorizationService;
     }
 
     #[Route('', name: 'intervention_work_authorizations_list', methods: ['GET'])]
-    public function list(Request $request): JsonResponse
+    public function index(Request $request, LoggerInterface $logger): JsonResponse
     {
         try {
+            $logger->info("=== WORK AUTHORIZATIONS LIST DEBUG ===");
+            
             $currentTenant = $this->checkAuthAndGetTenant($request);
+            $logger->info("Current tenant: " . ($currentTenant ? $currentTenant->getId() : 'NULL'));
 
-            $page = (int) $request->query->get('page', 1);
-            $limit = (int) $request->query->get('limit', 10);
-            $search = trim($request->query->get('search', ''));
-            $interventionId = $request->query->get('interventionId');
-            $urgent = $request->query->get('urgent'); // true, false
-
-            $queryBuilder = $this->authorizationRepository->createQueryBuilder('a')
-                ->leftJoin('a.intervention', 'intervention')
-                ->leftJoin('a.quote', 'q')
-                ->leftJoin('intervention.vehicle', 'v')
-                ->leftJoin('intervention.tenant', 't')
-                ->where('t = :tenant')
-                ->setParameter('tenant', $currentTenant)
-                ->orderBy('a.authorizationDate', 'DESC');
-
-            if (!empty($search)) {
-                $queryBuilder->andWhere('
-                    a.specialInstructions LIKE :search OR 
-                    v.plateNumber LIKE :search
-                ')->setParameter('search', '%' . $search . '%');
-            }
-
-            if ($interventionId) {
-                $queryBuilder->andWhere('intervention.id = :interventionId')
-                    ->setParameter('interventionId', $interventionId);
-            }
-
-            if ($urgent === 'true') {
-                $queryBuilder->andWhere('a.isUrgent = :urgent')
-                    ->setParameter('urgent', true);
-            } elseif ($urgent === 'false') {
-                $queryBuilder->andWhere('a.isUrgent = :urgent')
-                    ->setParameter('urgent', false);
-            }
-
-            $totalQuery = clone $queryBuilder;
-            $total = $totalQuery->select('COUNT(a.id)')
-                ->getQuery()
-                ->getSingleScalarResult();
-
-            $totalPages = ceil($total / $limit);
-            $offset = ($page - 1) * $limit;
-
-            $authorizations = $queryBuilder
-                ->setFirstResult($offset)
-                ->setMaxResults($limit)
-                ->getQuery()
-                ->getResult();
-
-            $authorizationData = array_map(function (InterventionWorkAuthorization $authorization) use ($currentTenant) {
-                $entityCode = $this->codeGenerationService->getExistingCode('intervention_work_authorization', $authorization->getId(), $currentTenant);
-                
+            $authorizations = $this->authorizationRepository->findByTenant($currentTenant);
+            $logger->info("Authorizations found: " . count($authorizations));
+            
+            $data = array_map(function($authorization) {
                 return [
                     'id' => $authorization->getId(),
-                    'code' => $entityCode ? $entityCode->getCode() : null,
-                    'intervention' => [
-                        'id' => $authorization->getIntervention()->getId(),
-                        'title' => $authorization->getIntervention()->getTitle(),
-                        'vehicle' => [
-                            'id' => $authorization->getIntervention()->getVehicle()->getId(),
-                            'plateNumber' => $authorization->getIntervention()->getVehicle()->getPlateNumber(),
-                            'brand' => $authorization->getIntervention()->getVehicle()->getBrand() ? 
-                                $authorization->getIntervention()->getVehicle()->getBrand()->getName() : null,
-                            'model' => $authorization->getIntervention()->getVehicle()->getModel() ? 
-                                $authorization->getIntervention()->getVehicle()->getModel()->getName() : null,
-                        ]
+                    'interventionId' => $authorization->getIntervention()->getId(),
+                    'interventionCode' => $authorization->getIntervention()->getInterventionNumber(),
+                    'quoteId' => $authorization->getQuote() ? $authorization->getQuote()->getId() : null,
+                    'quoteNumber' => $authorization->getQuote() ? $authorization->getQuote()->getQuoteNumber() : null,
+                    'vehicle' => [
+                        'brand' => $authorization->getIntervention()->getVehicle()->getBrand() ? $authorization->getIntervention()->getVehicle()->getBrand()->getName() : '',
+                        'model' => $authorization->getIntervention()->getVehicle()->getModel() ? $authorization->getIntervention()->getVehicle()->getModel()->getName() : '',
+                        'plateNumber' => $authorization->getIntervention()->getVehicle()->getPlateNumber(),
                     ],
-                    'quote' => $authorization->getQuote() ? [
-                        'id' => $authorization->getQuote()->getId(),
-                        'quoteNumber' => $authorization->getQuote()->getQuoteNumber(),
-                    ] : null,
                     'authorizedBy' => $authorization->getAuthorizedBy(),
-                    'authorizationDate' => $authorization->getAuthorizationDate() ? 
-                        $authorization->getAuthorizationDate()->format('Y-m-d H:i:s') : null,
+                    'authorizationDate' => $authorization->getAuthorizationDate()->format('Y-m-d H:i:s'),
                     'maxAmount' => $authorization->getMaxAmount(),
                     'specialInstructions' => $authorization->getSpecialInstructions(),
                     'isUrgent' => $authorization->isUrgent(),
-                    'createdAt' => $authorization->getCreatedAt() ? 
-                        $authorization->getCreatedAt()->format('Y-m-d H:i:s') : null,
+                    'isValidated' => $authorization->isValidated(),
+                    'createdAt' => $authorization->getCreatedAt()->format('Y-m-d H:i:s'),
+                    'linesCount' => $authorization->getLines()->count(),
+                    'isExpired' => $authorization->isExpired(),
+                    'daysUntilExpiry' => $authorization->getDaysUntilExpiry(),
+                    'budgetStats' => $this->authorizationService->getBudgetStatistics($authorization),
+                    'expirationStatus' => $this->authorizationService->checkExpiration($authorization),
                 ];
             }, $authorizations);
 
             return new JsonResponse([
                 'success' => true,
-                'data' => $authorizationData,
-                'pagination' => [
-                    'total' => (int) $total,
-                    'totalPages' => (int) $totalPages,
-                    'currentPage' => $page,
-                    'limit' => $limit
-                ],
-                'code' => 200
+                'data' => $data
             ]);
 
         } catch (\Exception $e) {
+            $logger->error("=== WORK AUTHORIZATIONS LIST ERROR ===");
+            $logger->error("Error message: " . $e->getMessage());
+            $logger->error("Error trace: " . $e->getTraceAsString());
+            
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération des autorisations: ' . $e->getMessage(),
@@ -159,45 +103,60 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
         try {
             $currentTenant = $this->checkAuthAndGetTenant($request);
 
-            $authorization = $this->authorizationRepository->find($id);
+            $authorization = $this->authorizationRepository->findByIdAndTenant($id, $currentTenant);
             if (!$authorization) {
                 return new JsonResponse([
                     'success' => false,
-                    'message' => 'Autorisation non trouvée',
+                    'message' => 'Autorisation non trouvée ou non autorisée',
                     'code' => 404
                 ], 404);
             }
 
-            // Vérifier que l'autorisation appartient au tenant
-            if ($authorization->getIntervention()->getTenant() !== $currentTenant) {
-                return new JsonResponse([
-                    'success' => false,
-                    'message' => 'Accès non autorisé à cette autorisation',
-                    'code' => 403
-                ], 403);
-            }
-
-            $entityCode = $this->codeGenerationService->getExistingCode('intervention_work_authorization', $authorization->getId(), $currentTenant);
-
             $data = [
                 'id' => $authorization->getId(),
-                'code' => $entityCode ? $entityCode->getCode() : null,
                 'interventionId' => $authorization->getIntervention()->getId(),
+                'interventionCode' => $authorization->getIntervention()->getInterventionNumber(),
                 'quoteId' => $authorization->getQuote() ? $authorization->getQuote()->getId() : null,
+                'quoteNumber' => $authorization->getQuote() ? $authorization->getQuote()->getQuoteNumber() : null,
+                'vehicle' => [
+                    'brand' => $authorization->getIntervention()->getVehicle()->getBrand() ? $authorization->getIntervention()->getVehicle()->getBrand()->getName() : '',
+                    'model' => $authorization->getIntervention()->getVehicle()->getModel() ? $authorization->getIntervention()->getVehicle()->getModel()->getName() : '',
+                    'plateNumber' => $authorization->getIntervention()->getVehicle()->getPlateNumber(),
+                ],
                 'authorizedBy' => $authorization->getAuthorizedBy(),
-                'authorizationDate' => $authorization->getAuthorizationDate() ? 
-                    $authorization->getAuthorizationDate()->format('Y-m-d H:i:s') : null,
+                'authorizationDate' => $authorization->getAuthorizationDate()->format('Y-m-d H:i:s'),
                 'maxAmount' => $authorization->getMaxAmount(),
                 'specialInstructions' => $authorization->getSpecialInstructions(),
                 'isUrgent' => $authorization->isUrgent(),
-                'createdAt' => $authorization->getCreatedAt() ? 
-                    $authorization->getCreatedAt()->format('Y-m-d H:i:s') : null,
+                'isValidated' => $authorization->isValidated(),
+                'createdAt' => $authorization->getCreatedAt()->format('Y-m-d H:i:s'),
+                'lines' => array_map(function($line) {
+                    $supply = $line->getSupply();
+                    return [
+                        'id' => $line->getId(),
+                        'supplyId' => $supply->getId(),
+                        'supplyName' => $supply->getName() ?: $supply->getReference() ?: 'Fourniture',
+                        'supplyReference' => $supply->getReference(),
+                        'description' => $line->getDescription(),
+                        'quantity' => $line->getQuantity(),
+                        'unitPrice' => $line->getUnitPrice(),
+                        'lineTotal' => $line->getLineTotal(),
+                        'lineNumber' => $line->getLineNumber(),
+                        'discountPercentage' => $line->getDiscountPercentage(),
+                        'discountAmount' => $line->getDiscountAmount(),
+                        'taxRate' => $line->getTaxRate(),
+                        'notes' => $line->getNotes(),
+                    ];
+                }, $authorization->getLines()->toArray()),
+                'isExpired' => $authorization->isExpired(),
+                'daysUntilExpiry' => $authorization->getDaysUntilExpiry(),
+                'budgetStats' => $this->authorizationService->getBudgetStatistics($authorization),
+                'expirationStatus' => $this->authorizationService->checkExpiration($authorization),
             ];
 
             return new JsonResponse([
                 'success' => true,
-                'data' => $data,
-                'code' => 200
+                'data' => $data
             ]);
 
         } catch (\Exception $e) {
@@ -214,10 +173,9 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
     {
         try {
             $currentTenant = $this->checkAuthAndGetTenant($request);
-
             $data = json_decode($request->getContent(), true);
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
+            if (!$data) {
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'Données JSON invalides',
@@ -225,25 +183,8 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
                 ], 400);
             }
 
-            // Validation des champs requis
-            if (empty($data['interventionId'])) {
-                return new JsonResponse([
-                    'success' => false,
-                    'message' => 'L\'intervention est requise',
-                    'code' => 400
-                ], 400);
-            }
-
-            if (empty($data['authorizedBy'])) {
-                return new JsonResponse([
-                    'success' => false,
-                    'message' => 'L\'ID de l\'autoriseur est requis',
-                    'code' => 400
-                ], 400);
-            }
-
             // Vérifier que l'intervention existe et appartient au tenant
-            $intervention = $this->vehicleInterventionRepository->find($data['interventionId']);
+            $intervention = $this->vehicleInterventionRepository->find($data['interventionId'] ?? null);
             if (!$intervention || $intervention->getTenant() !== $currentTenant) {
                 return new JsonResponse([
                     'success' => false,
@@ -252,34 +193,39 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
                 ], 404);
             }
 
-            // Vérifier que le devis existe et appartient au tenant (si fourni)
-            $quote = null;
-            if (!empty($data['quoteId'])) {
-                $quote = $this->quoteRepository->find($data['quoteId']);
-                if (!$quote || $quote->getIntervention()->getTenant() !== $currentTenant) {
-                    return new JsonResponse([
-                        'success' => false,
-                        'message' => 'Devis non trouvé ou non autorisé',
-                        'code' => 404
-                    ], 404);
-                }
-            }
-
             $authorization = new InterventionWorkAuthorization();
             $authorization->setIntervention($intervention);
-            $authorization->setQuote($quote);
-            $authorization->setAuthorizedBy($data['authorizedBy']);
-            $authorization->setMaxAmount($data['maxAmount'] ?? null);
-            $authorization->setSpecialInstructions($data['specialInstructions'] ?? null);
-            $authorization->setIsUrgent($data['isUrgent'] ?? false);
-
-            // Gestion de la date d'autorisation
-            if (!empty($data['authorizationDate'])) {
+            $authorization->setAuthorizedBy($data['authorizedBy'] ?? $this->getCurrentUser($request));
+            
+            if (isset($data['authorizationDate'])) {
                 $authorization->setAuthorizationDate(new \DateTime($data['authorizationDate']));
             }
+            
+            if (isset($data['maxAmount'])) {
+                $authorization->setMaxAmount($data['maxAmount']);
+            }
+            
+            if (isset($data['specialInstructions'])) {
+                $authorization->setSpecialInstructions($data['specialInstructions']);
+            }
+            
+            if (isset($data['isUrgent'])) {
+                $authorization->setIsUrgent($data['isUrgent']);
+            }
 
-            // Générer le code
-            $this->codeGenerationService->generateCode('intervention_work_authorization', $authorization->getId(), $currentTenant);
+            // Valider l'entité
+            $errors = $this->validator->validate($authorization);
+            if (count($errors) > 0) {
+                $errorMessages = [];
+                foreach ($errors as $error) {
+                    $errorMessages[] = $error->getMessage();
+                }
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Erreurs de validation: ' . implode(', ', $errorMessages),
+                    'code' => 400
+                ], 400);
+            }
 
             $this->entityManager->persist($authorization);
             $this->entityManager->flush();
@@ -289,9 +235,8 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
                 'message' => 'Autorisation créée avec succès',
                 'data' => [
                     'id' => $authorization->getId(),
-                    'code' => $this->codeGenerationService->getExistingCode('intervention_work_authorization', $authorization->getId(), $currentTenant)?->getCode()
-                ],
-                'code' => 201
+                    'authorizationDate' => $authorization->getAuthorizationDate()->format('Y-m-d H:i:s')
+                ]
             ], 201);
 
         } catch (\Exception $e) {
@@ -308,28 +253,9 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
     {
         try {
             $currentTenant = $this->checkAuthAndGetTenant($request);
-
-            $authorization = $this->authorizationRepository->find($id);
-            if (!$authorization) {
-                return new JsonResponse([
-                    'success' => false,
-                    'message' => 'Autorisation non trouvée',
-                    'code' => 404
-                ], 404);
-            }
-
-            // Vérifier que l'autorisation appartient au tenant
-            if ($authorization->getIntervention()->getTenant() !== $currentTenant) {
-                return new JsonResponse([
-                    'success' => false,
-                    'message' => 'Accès non autorisé à cette autorisation',
-                    'code' => 403
-                ], 403);
-            }
-
             $data = json_decode($request->getContent(), true);
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
+            if (!$data) {
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'Données JSON invalides',
@@ -337,39 +263,61 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
                 ], 400);
             }
 
-            // Mise à jour des champs
-            if (isset($data['authorizedBy'])) {
-                $authorization->setAuthorizedBy($data['authorizedBy']);
+            $authorization = $this->authorizationRepository->findByIdAndTenant($id, $currentTenant);
+            if (!$authorization) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Autorisation non trouvée ou non autorisée',
+                    'code' => 404
+                ], 404);
             }
+
+            // Mettre à jour les propriétés
+            if (isset($data['authorizationDate'])) {
+                $authorization->setAuthorizationDate(new \DateTime($data['authorizationDate']));
+            }
+            
             if (isset($data['maxAmount'])) {
                 $authorization->setMaxAmount($data['maxAmount']);
             }
+            
             if (isset($data['specialInstructions'])) {
                 $authorization->setSpecialInstructions($data['specialInstructions']);
             }
+            
             if (isset($data['isUrgent'])) {
                 $authorization->setIsUrgent($data['isUrgent']);
             }
-            if (isset($data['authorizationDate']) && !empty($data['authorizationDate'])) {
-                $authorization->setAuthorizationDate(new \DateTime($data['authorizationDate']));
+
+            // Valider l'entité
+            $errors = $this->validator->validate($authorization);
+            if (count($errors) > 0) {
+                $errorMessages = [];
+                foreach ($errors as $error) {
+                    $errorMessages[] = $error->getMessage();
+                }
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Erreurs de validation: ' . implode(', ', $errorMessages),
+                    'code' => 400
+                ], 400);
             }
 
             $this->entityManager->flush();
 
             return new JsonResponse([
                 'success' => true,
-                'message' => 'Autorisation mise à jour avec succès',
+                'message' => 'Autorisation modifiée avec succès',
                 'data' => [
                     'id' => $authorization->getId(),
-                    'code' => $this->codeGenerationService->getExistingCode('intervention_work_authorization', $authorization->getId(), $currentTenant)?->getCode()
-                ],
-                'code' => 200
+                    'authorizationDate' => $authorization->getAuthorizationDate()->format('Y-m-d H:i:s')
+                ]
             ]);
 
         } catch (\Exception $e) {
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Erreur lors de la mise à jour de l\'autorisation: ' . $e->getMessage(),
+                'message' => 'Erreur lors de la modification de l\'autorisation: ' . $e->getMessage(),
                 'code' => 500
             ], 500);
         }
@@ -381,22 +329,13 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
         try {
             $currentTenant = $this->checkAuthAndGetTenant($request);
 
-            $authorization = $this->authorizationRepository->find($id);
+            $authorization = $this->authorizationRepository->findByIdAndTenant($id, $currentTenant);
             if (!$authorization) {
                 return new JsonResponse([
                     'success' => false,
-                    'message' => 'Autorisation non trouvée',
+                    'message' => 'Autorisation non trouvée ou non autorisée',
                     'code' => 404
                 ], 404);
-            }
-
-            // Vérifier que l'autorisation appartient au tenant
-            if ($authorization->getIntervention()->getTenant() !== $currentTenant) {
-                return new JsonResponse([
-                    'success' => false,
-                    'message' => 'Accès non autorisé à cette autorisation',
-                    'code' => 403
-                ], 403);
             }
 
             $this->entityManager->remove($authorization);
@@ -404,8 +343,7 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
 
             return new JsonResponse([
                 'success' => true,
-                'message' => 'Autorisation supprimée avec succès',
-                'code' => 200
+                'message' => 'Autorisation supprimée avec succès'
             ]);
 
         } catch (\Exception $e) {
@@ -415,5 +353,219 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
                 'code' => 500
             ], 500);
         }
+    }
+
+    #[Route('/{id}/validate', name: 'intervention_work_authorization_validate', methods: ['POST'])]
+    public function validate(Request $request, int $id): JsonResponse
+    {
+        try {
+            $currentTenant = $this->checkAuthAndGetTenant($request);
+
+            $authorization = $this->authorizationRepository->findByIdAndTenant($id, $currentTenant);
+            if (!$authorization) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Autorisation non trouvée ou non autorisée',
+                    'code' => 404
+                ], 404);
+            }
+
+            $this->authorizationService->validateAuthorization($authorization);
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Autorisation validée avec succès',
+                'data' => [
+                    'id' => $authorization->getId(),
+                    'isValidated' => $authorization->isValidated(),
+                    'authorizationDate' => $authorization->getAuthorizationDate()->format('Y-m-d H:i:s')
+                ]
+            ]);
+
+        } catch (\InvalidArgumentException $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => 400
+            ], 400);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la validation de l\'autorisation: ' . $e->getMessage(),
+                'code' => 500
+            ], 500);
+        }
+    }
+
+    #[Route('/{id}/budget-check', name: 'intervention_work_authorization_budget_check', methods: ['POST'])]
+    public function checkBudget(Request $request, int $id): JsonResponse
+    {
+        try {
+            $currentTenant = $this->checkAuthAndGetTenant($request);
+            $data = json_decode($request->getContent(), true);
+
+            $authorization = $this->authorizationRepository->findByIdAndTenant($id, $currentTenant);
+            if (!$authorization) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Autorisation non trouvée ou non autorisée',
+                    'code' => 404
+                ], 404);
+            }
+
+            $actualCost = $data['actualCost'] ?? 0;
+            $budgetCheck = $this->authorizationService->checkBudgetCompliance($authorization, (float) $actualCost);
+
+            return new JsonResponse([
+                'success' => true,
+                'data' => $budgetCheck
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la vérification du budget: ' . $e->getMessage(),
+                'code' => 500
+            ], 500);
+        }
+    }
+
+    #[Route('/{id}/statistics', name: 'intervention_work_authorization_statistics', methods: ['GET'])]
+    public function statistics(Request $request, int $id): JsonResponse
+    {
+        try {
+            $currentTenant = $this->checkAuthAndGetTenant($request);
+
+            $authorization = $this->authorizationRepository->findByIdAndTenant($id, $currentTenant);
+            if (!$authorization) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Autorisation non trouvée ou non autorisée',
+                    'code' => 404
+                ], 404);
+            }
+
+            $budgetStats = $this->authorizationService->getBudgetStatistics($authorization);
+            $expirationStatus = $this->authorizationService->checkExpiration($authorization);
+
+            return new JsonResponse([
+                'success' => true,
+                'data' => [
+                    'budget' => $budgetStats,
+                    'expiration' => $expirationStatus,
+                    'linesCount' => $authorization->getLines()->count(),
+                    'isUrgent' => $authorization->isUrgent(),
+                    'isValidated' => $authorization->isValidated(),
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des statistiques: ' . $e->getMessage(),
+                'code' => 500
+            ], 500);
+        }
+    }
+
+    #[Route('/urgent', name: 'intervention_work_authorizations_urgent', methods: ['GET'])]
+    public function urgent(Request $request): JsonResponse
+    {
+        try {
+            $currentTenant = $this->checkAuthAndGetTenant($request);
+
+            $urgentAuthorizations = $this->authorizationRepository->findUrgentByTenant($currentTenant);
+            
+            $data = array_map(function($authorization) {
+                return [
+                    'id' => $authorization->getId(),
+                    'interventionCode' => $authorization->getIntervention()->getInterventionNumber(),
+                    'vehicle' => [
+                        'plateNumber' => $authorization->getIntervention()->getVehicle()->getPlateNumber(),
+                    ],
+                    'authorizationDate' => $authorization->getAuthorizationDate()->format('Y-m-d H:i:s'),
+                    'maxAmount' => $authorization->getMaxAmount(),
+                    'specialInstructions' => $authorization->getSpecialInstructions(),
+                    'isValidated' => $authorization->isValidated(),
+                    'daysUntilExpiry' => $authorization->getDaysUntilExpiry(),
+                ];
+            }, $urgentAuthorizations);
+
+            return new JsonResponse([
+                'success' => true,
+                'data' => $data
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des autorisations urgentes: ' . $e->getMessage(),
+                'code' => 500
+            ], 500);
+        }
+    }
+
+    #[Route('/expired', name: 'intervention_work_authorizations_expired', methods: ['GET'])]
+    public function expired(Request $request): JsonResponse
+    {
+        try {
+            $currentTenant = $this->checkAuthAndGetTenant($request);
+
+            $expiredAuthorizations = $this->authorizationRepository->findExpiredByTenant($currentTenant);
+            
+            $data = array_map(function($authorization) {
+                return [
+                    'id' => $authorization->getId(),
+                    'interventionCode' => $authorization->getIntervention()->getInterventionNumber(),
+                    'vehicle' => [
+                        'plateNumber' => $authorization->getIntervention()->getVehicle()->getPlateNumber(),
+                    ],
+                    'authorizationDate' => $authorization->getAuthorizationDate()->format('Y-m-d H:i:s'),
+                    'maxAmount' => $authorization->getMaxAmount(),
+                    'daysUntilExpiry' => $authorization->getDaysUntilExpiry(),
+                ];
+            }, $expiredAuthorizations);
+
+            return new JsonResponse([
+                'success' => true,
+                'data' => $data
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des autorisations expirées: ' . $e->getMessage(),
+                'code' => 500
+            ], 500);
+        }
+    }
+
+    #[Route('/statistics/overview', name: 'intervention_work_authorizations_statistics_overview', methods: ['GET'])]
+    public function overviewStatistics(Request $request): JsonResponse
+    {
+        try {
+            $currentTenant = $this->checkAuthAndGetTenant($request);
+
+            $statistics = $this->authorizationRepository->countByStatusForTenant($currentTenant);
+
+            return new JsonResponse([
+                'success' => true,
+                'data' => $statistics
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des statistiques: ' . $e->getMessage(),
+                'code' => 500
+            ], 500);
+        }
+    }
+
+    private function getCurrentUser(Request $request)
+    {
+        // Cette méthode devrait récupérer l'utilisateur actuel depuis le token JWT
+        // Pour l'instant, on retourne null ou on peut implémenter la logique appropriée
+        return null;
     }
 }

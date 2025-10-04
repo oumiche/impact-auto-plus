@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer une Autorisation de Travail - Impact Auto</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/impact-auto.css">
+    <link rel="stylesheet" href="css/parametres-vue.css">
+    <link rel="stylesheet" href="css/intervention-types.css">
+    <link rel="stylesheet" href="css/vehicle-interventions.css">
+    <link rel="stylesheet" href="css/intervention-work-authorization-form.css">
+    <link rel="stylesheet" href="css/attachment-gallery.css">
+    <!-- Vue.js CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body>
+    <div id="app"></div>
+    <script src="js/services/ApiService.js"></script>
+    <script src="js/auth/auth-guard.js"></script>
+    <script src="js/sidebar-component.js"></script>
+    <script src="js/load-sidebar.js"></script>
+    <script src="js/services/NotificationService.js"></script>
+    <script src="js/services/FileUploadService.js"></script>
+    <script src="js/components/AttachmentGallery.js"></script>
+    <script src="js/intervention-work-authorization-form-vue.js"></script>
+    <script>
+        const { createApp } = Vue;
+        const app = createApp({
+            components: {
+                InterventionWorkAuthorizationForm,
+                AttachmentGallery: window.AttachmentGallery
+            },
+            template: `
+                <div class="main-content">
+                    <InterventionWorkAuthorizationForm mode="create" />
+                </div>
+            `
+        });
+        
+        app.mount('#app');
+    </script>
+</body>
+</html>

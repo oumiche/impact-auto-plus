@@ -23,16 +23,17 @@ class InterventionQuoteLine
     private ?InterventionQuote $quote = null;
 
     #[ORM\ManyToOne(targetEntity: Supply::class)]
-    #[Groups(['quote_line:read'])]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['quote_line:read', 'quote_line:write'])]
     private ?Supply $supply = null;
+
+    #[ORM\Column(type: Types::STRING, length: 20)]
+    #[Groups(['quote_line:read', 'quote_line:write'])]
+    private ?string $workType = null;
 
     #[ORM\Column(type: Types::INTEGER)]
     #[Groups(['quote_line:read', 'quote_line:write'])]
     private ?int $lineNumber = null;
-
-    #[ORM\Column(type: Types::TEXT)]
-    #[Groups(['quote_line:read', 'quote_line:write'])]
-    private ?string $description = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     #[Groups(['quote_line:read', 'quote_line:write'])]
@@ -98,6 +99,17 @@ class InterventionQuoteLine
         return $this;
     }
 
+    public function getWorkType(): ?string
+    {
+        return $this->workType;
+    }
+
+    public function setWorkType(?string $workType): static
+    {
+        $this->workType = $workType;
+        return $this;
+    }
+
     public function getLineNumber(): ?int
     {
         return $this->lineNumber;
@@ -109,15 +121,19 @@ class InterventionQuoteLine
         return $this;
     }
 
-    public function getDescription(): ?string
+    public function getDisplayName(): string
     {
-        return $this->description;
+        if (!$this->supply) {
+            return 'Fourniture';
+        }
+        
+        // Privilégier le nom simple
+        return $this->supply->getName() ?: $this->supply->getReference() ?: 'Fourniture';
     }
 
-    public function setDescription(string $description): static
+    public function getDescription(): ?string
     {
-        $this->description = $description;
-        return $this;
+        return $this->supply ? $this->supply->getDescription() : null;
     }
 
     public function getQuantity(): ?string
@@ -140,6 +156,17 @@ class InterventionQuoteLine
     {
         $this->unitPrice = $unitPrice;
         return $this;
+    }
+
+    public function getEffectiveUnitPrice(): string
+    {
+        // Si un prix unitaire est défini dans la ligne, l'utiliser
+        if ($this->unitPrice) {
+            return $this->unitPrice;
+        }
+        
+        // Sinon, utiliser le prix de la supply
+        return $this->supply ? $this->supply->getUnitPrice() : '0.00';
     }
 
     public function getDiscountPercentage(): ?string
@@ -210,7 +237,7 @@ class InterventionQuoteLine
 
     public function calculateLineTotal(): string
     {
-        $subtotal = (float) $this->quantity * (float) $this->unitPrice;
+        $subtotal = (float) $this->quantity * (float) $this->getEffectiveUnitPrice();
         
         // Appliquer la remise
         if ($this->discountPercentage) {

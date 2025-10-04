@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\InterventionWorkAuthorization;
+use App\Entity\Tenant;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,119 +17,114 @@ class InterventionWorkAuthorizationRepository extends ServiceEntityRepository
         parent::__construct($registry, InterventionWorkAuthorization::class);
     }
 
-    public function save(InterventionWorkAuthorization $entity, bool $flush = false): void
-    {
-        $this->getEntityManager()->persist($entity);
-
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
-    }
-
-    public function remove(InterventionWorkAuthorization $entity, bool $flush = false): void
-    {
-        $this->getEntityManager()->remove($entity);
-
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
-    }
-
-    public function findByIntervention(int $interventionId): ?InterventionWorkAuthorization
+    /**
+     * Trouve toutes les autorisations de travail pour un tenant donné
+     */
+    public function findByTenant(Tenant $tenant): array
     {
         return $this->createQueryBuilder('iwa')
-            ->andWhere('iwa.intervention = :interventionId')
-            ->setParameter('interventionId', $interventionId)
-            ->orderBy('iwa.authorizationDate', 'DESC')
-            ->setMaxResults(1)
+            ->join('iwa.intervention', 'vi')
+            ->where('vi.tenant = :tenant')
+            ->setParameter('tenant', $tenant)
+            ->orderBy('iwa.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve une autorisation par ID et tenant
+     */
+    public function findByIdAndTenant(int $id, Tenant $tenant): ?InterventionWorkAuthorization
+    {
+        return $this->createQueryBuilder('iwa')
+            ->join('iwa.intervention', 'vi')
+            ->where('iwa.id = :id')
+            ->andWhere('vi.tenant = :tenant')
+            ->setParameter('id', $id)
+            ->setParameter('tenant', $tenant)
             ->getQuery()
             ->getOneOrNullResult();
     }
 
-    public function findUrgent(): array
+    /**
+     * Trouve les autorisations pour une intervention donnée
+     */
+    public function findByIntervention(int $interventionId): array
     {
         return $this->createQueryBuilder('iwa')
-            ->andWhere('iwa.isUrgent = :urgent')
-            ->setParameter('urgent', true)
+            ->where('iwa.intervention = :interventionId')
+            ->setParameter('interventionId', $interventionId)
+            ->orderBy('iwa.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les autorisations urgentes pour un tenant
+     */
+    public function findUrgentByTenant(Tenant $tenant): array
+    {
+        return $this->createQueryBuilder('iwa')
+            ->join('iwa.intervention', 'vi')
+            ->where('vi.tenant = :tenant')
+            ->andWhere('iwa.isUrgent = :isUrgent')
+            ->setParameter('tenant', $tenant)
+            ->setParameter('isUrgent', true)
+            ->orderBy('iwa.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les autorisations expirées
+     */
+    public function findExpiredByTenant(Tenant $tenant, int $validityDays = 30): array
+    {
+        $expiryDate = new \DateTime();
+        $expiryDate->modify('-' . $validityDays . ' days');
+
+        return $this->createQueryBuilder('iwa')
+            ->join('iwa.intervention', 'vi')
+            ->where('vi.tenant = :tenant')
+            ->andWhere('iwa.authorizationDate < :expiryDate')
+            ->setParameter('tenant', $tenant)
+            ->setParameter('expiryDate', $expiryDate)
             ->orderBy('iwa.authorizationDate', 'ASC')
             ->getQuery()
             ->getResult();
     }
 
-    public function findValidated(): array
+    /**
+     * Compte les autorisations par statut pour un tenant
+     */
+    public function countByStatusForTenant(Tenant $tenant): array
     {
-        return $this->createQueryBuilder('iwa')
-            ->andWhere('iwa.authorizationDate IS NOT NULL')
-            ->orderBy('iwa.authorizationDate', 'DESC')
+        $total = $this->createQueryBuilder('iwa')
+            ->select('COUNT(iwa.id)')
+            ->join('iwa.intervention', 'vi')
+            ->where('vi.tenant = :tenant')
+            ->setParameter('tenant', $tenant)
             ->getQuery()
-            ->getResult();
-    }
+            ->getSingleScalarResult();
 
-    public function findPending(): array
-    {
-        return $this->createQueryBuilder('iwa')
-            ->andWhere('iwa.authorizationDate IS NULL')
-            ->orderBy('iwa.createdAt', 'ASC')
+        $urgent = $this->createQueryBuilder('iwa')
+            ->select('COUNT(iwa.id)')
+            ->join('iwa.intervention', 'vi')
+            ->where('vi.tenant = :tenant')
+            ->andWhere('iwa.isUrgent = :isUrgent')
+            ->setParameter('tenant', $tenant)
+            ->setParameter('isUrgent', true)
             ->getQuery()
-            ->getResult();
-    }
+            ->getSingleScalarResult();
 
-    public function findExpired(int $validityDays = 30): array
-    {
-        $date = new \DateTime();
-        $date->sub(new \DateInterval('P' . $validityDays . 'D'));
+        $expired = $this->findExpiredByTenant($tenant);
+        $expiredCount = count($expired);
 
-        return $this->createQueryBuilder('iwa')
-            ->andWhere('iwa.authorizationDate < :date')
-            ->setParameter('date', $date)
-            ->orderBy('iwa.authorizationDate', 'ASC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    public function findByAuthorizedBy(int $authorizedBy): array
-    {
-        return $this->createQueryBuilder('iwa')
-            ->andWhere('iwa.authorizedBy = :authorizedBy')
-            ->setParameter('authorizedBy', $authorizedBy)
-            ->orderBy('iwa.authorizationDate', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    public function findByDateRange(\DateTimeInterface $startDate, \DateTimeInterface $endDate): array
-    {
-        return $this->createQueryBuilder('iwa')
-            ->andWhere('iwa.authorizationDate BETWEEN :startDate AND :endDate')
-            ->setParameter('startDate', $startDate)
-            ->setParameter('endDate', $endDate)
-            ->orderBy('iwa.authorizationDate', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    public function findByBudgetRange(float $minAmount, float $maxAmount): array
-    {
-        return $this->createQueryBuilder('iwa')
-            ->andWhere('iwa.maxAmount BETWEEN :minAmount AND :maxAmount')
-            ->setParameter('minAmount', $minAmount)
-            ->setParameter('maxAmount', $maxAmount)
-            ->orderBy('iwa.maxAmount', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    public function getStatistics(): array
-    {
-        $qb = $this->createQueryBuilder('iwa')
-            ->select([
-                'COUNT(iwa.id) as total',
-                'SUM(CASE WHEN iwa.isUrgent = true THEN 1 ELSE 0 END) as urgent',
-                'SUM(CASE WHEN iwa.authorizationDate IS NOT NULL THEN 1 ELSE 0 END) as validated',
-                'SUM(CASE WHEN iwa.authorizationDate IS NULL THEN 1 ELSE 0 END) as pending',
-                'AVG(iwa.maxAmount) as avgMaxAmount'
-            ]);
-
-        return $qb->getQuery()->getSingleResult();
+        return [
+            'total' => $total,
+            'urgent' => $urgent,
+            'expired' => $expiredCount,
+            'active' => $total - $expiredCount
+        ];
     }
 }

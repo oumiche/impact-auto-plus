@@ -147,6 +147,86 @@
     position: relative;
 }
 
+/* Recherche de fourniture */
+.supply-search-container {
+    position: relative;
+}
+
+.supply-search-input {
+    position: relative;
+}
+
+.supply-search-input input {
+    width: 100%;
+    padding-right: 60px;
+}
+
+.supply-search-input i {
+    position: absolute;
+    right: 35px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+.supply-search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.supply-results {
+    padding: 8px 0;
+}
+
+.supply-item {
+    padding: 12px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+    transition: background-color 0.2s ease;
+}
+
+.supply-item:hover {
+    background: #f8f9fa;
+}
+
+.supply-item:last-child {
+    border-bottom: none;
+}
+
+.supply-reference {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.supply-name {
+    color: #495057;
+    font-size: 13px;
+    margin: 2px 0;
+}
+
+.supply-brand {
+    color: #6c757d;
+    font-size: 12px;
+    margin: 2px 0;
+}
+
+.supply-price {
+    color: #007bff;
+    font-weight: 600;
+    font-size: 12px;
+}
+
 .intervention-search-input {
     position: relative;
 }
@@ -297,11 +377,28 @@
     color: #6c757d;
 }
 
-.line-type {
+.line-reference {
     background: #e9ecef;
     padding: 2px 8px;
     border-radius: 12px;
-    text-transform: capitalize;
+    font-weight: 500;
+    color: #495057;
+}
+
+.line-discount {
+    background: #d4edda;
+    color: #155724;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+}
+
+.line-tax {
+    background: #fff3cd;
+    color: #856404;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
 }
 
 .line-total {
@@ -390,11 +487,12 @@
 
 /* Actions du formulaire */
 .form-actions-bottom {
-    margin-top: 30px;
-    padding-top: 20px;
+    margin-top: 50px;
+    padding: 30px 25px;
     border-top: 1px solid #e9ecef;
     display: flex;
     justify-content: flex-end;
+    background: #f8f9fa;
 }
 
 .form-actions {
@@ -449,6 +547,8 @@
     
     .form-actions-bottom {
         flex-direction: column;
+        padding: 25px 20px;
+        margin-top: 40px;
     }
     
     .form-actions {
@@ -483,5 +583,138 @@
     
     .upload-area {
         padding: 20px 15px;
+    }
+    
+    .form-actions-bottom {
+        padding: 20px 15px;
+        margin-top: 30px;
+    }
+}
+
+/* Section financière par type de travaux */
+.financial-summary {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.work-type-summary {
+    background: white;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 4px solid #007bff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.work-type-summary:nth-child(1) {
+    border-left-color: #28a745; /* Vert pour Main d'œuvre */
+}
+
+.work-type-summary:nth-child(2) {
+    border-left-color: #17a2b8; /* Bleu pour Fournitures */
+}
+
+.work-type-summary:nth-child(3) {
+    border-left-color: #ffc107; /* Jaune pour Divers */
+}
+
+.work-type-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.work-type-header h4 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.work-type-total {
+    font-size: 18px;
+    font-weight: 700;
+    color: #28a745;
+}
+
+.work-type-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.line-count {
+    font-style: italic;
+}
+
+.total-summary {
+    background: #2c3e50;
+    border-radius: 6px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.total-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.total-header h3 {
+    margin: 0;
+    color: white;
+    font-size: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.total-amount {
+    font-size: 24px;
+    font-weight: 700;
+    color: #28a745;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Responsive pour la section financière */
+@media (max-width: 768px) {
+    .work-type-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .total-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .total-amount {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .financial-summary {
+        padding: 15px;
+    }
+    
+    .work-type-summary {
+        padding: 12px;
+    }
+    
+    .total-summary {
+        padding: 15px;
     }
 }

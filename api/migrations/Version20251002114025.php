@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20251001234335 extends AbstractMigration
+final class Version20251002114025 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -51,6 +51,7 @@ final class Version20251001234335 extends AbstractMigration
         $this->addSql('ALTER TABLE intervention_quote_lines ADD CONSTRAINT FK_3C0D8030DB805178 FOREIGN KEY (quote_id) REFERENCES intervention_quotes (id)');
         $this->addSql('ALTER TABLE intervention_quote_lines ADD CONSTRAINT FK_3C0D8030FF28C0D8 FOREIGN KEY (supply_id) REFERENCES supplies (id)');
         $this->addSql('ALTER TABLE intervention_quotes ADD CONSTRAINT FK_4B15AAE08EAE3863 FOREIGN KEY (intervention_id) REFERENCES vehicle_interventions (id)');
+        $this->addSql('ALTER TABLE intervention_quotes ADD CONSTRAINT FK_4B15AAE0C4FFF555 FOREIGN KEY (garage_id) REFERENCES garages (id)');
         $this->addSql('ALTER TABLE intervention_reception_reports ADD CONSTRAINT FK_C98C88538EAE3863 FOREIGN KEY (intervention_id) REFERENCES vehicle_interventions (id)');
         $this->addSql('ALTER TABLE intervention_supplies ADD CONSTRAINT FK_D1BE274B8EAE3863 FOREIGN KEY (intervention_id) REFERENCES vehicle_interventions (id)');
         $this->addSql('ALTER TABLE intervention_supplies ADD CONSTRAINT FK_D1BE274BFF28C0D8 FOREIGN KEY (supply_id) REFERENCES supplies (id)');
@@ -129,6 +130,7 @@ final class Version20251001234335 extends AbstractMigration
         $this->addSql('ALTER TABLE intervention_quote_lines DROP FOREIGN KEY FK_3C0D8030DB805178');
         $this->addSql('ALTER TABLE intervention_quote_lines DROP FOREIGN KEY FK_3C0D8030FF28C0D8');
         $this->addSql('ALTER TABLE intervention_quotes DROP FOREIGN KEY FK_4B15AAE08EAE3863');
+        $this->addSql('ALTER TABLE intervention_quotes DROP FOREIGN KEY FK_4B15AAE0C4FFF555');
         $this->addSql('ALTER TABLE intervention_reception_reports DROP FOREIGN KEY FK_C98C88538EAE3863');
         $this->addSql('ALTER TABLE intervention_supplies DROP FOREIGN KEY FK_D1BE274B8EAE3863');
         $this->addSql('ALTER TABLE intervention_supplies DROP FOREIGN KEY FK_D1BE274BFF28C0D8');

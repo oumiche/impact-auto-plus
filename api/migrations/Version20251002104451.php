@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20251001182033 extends AbstractMigration
+final class Version20251002104451 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -47,9 +47,12 @@ final class Version20251001182033 extends AbstractMigration
         $this->addSql('ALTER TABLE intervention_invoices ADD CONSTRAINT FK_57BC5436DB805178 FOREIGN KEY (quote_id) REFERENCES intervention_quotes (id)');
         $this->addSql('ALTER TABLE intervention_prediagnostic_items ADD CONSTRAINT FK_C4D9AF84B841FE26 FOREIGN KEY (prediagnostic_id) REFERENCES intervention_prediagnostics (id)');
         $this->addSql('ALTER TABLE intervention_prediagnostics ADD CONSTRAINT FK_2756ABA98EAE3863 FOREIGN KEY (intervention_id) REFERENCES vehicle_interventions (id)');
+        $this->addSql('ALTER TABLE intervention_prediagnostics ADD CONSTRAINT FK_2756ABA9C5568CE4 FOREIGN KEY (expert_id) REFERENCES collaborateurs (id)');
+        $this->addSql('ALTER TABLE intervention_quote_lines ADD work_type VARCHAR(20) NOT NULL');
         $this->addSql('ALTER TABLE intervention_quote_lines ADD CONSTRAINT FK_3C0D8030DB805178 FOREIGN KEY (quote_id) REFERENCES intervention_quotes (id)');
         $this->addSql('ALTER TABLE intervention_quote_lines ADD CONSTRAINT FK_3C0D8030FF28C0D8 FOREIGN KEY (supply_id) REFERENCES supplies (id)');
         $this->addSql('ALTER TABLE intervention_quotes ADD CONSTRAINT FK_4B15AAE08EAE3863 FOREIGN KEY (intervention_id) REFERENCES vehicle_interventions (id)');
+        $this->addSql('ALTER TABLE intervention_quotes ADD CONSTRAINT FK_4B15AAE0C4FFF555 FOREIGN KEY (garage_id) REFERENCES garages (id)');
         $this->addSql('ALTER TABLE intervention_reception_reports ADD CONSTRAINT FK_C98C88538EAE3863 FOREIGN KEY (intervention_id) REFERENCES vehicle_interventions (id)');
         $this->addSql('ALTER TABLE intervention_supplies ADD CONSTRAINT FK_D1BE274B8EAE3863 FOREIGN KEY (intervention_id) REFERENCES vehicle_interventions (id)');
         $this->addSql('ALTER TABLE intervention_supplies ADD CONSTRAINT FK_D1BE274BFF28C0D8 FOREIGN KEY (supply_id) REFERENCES supplies (id)');
@@ -86,7 +89,6 @@ final class Version20251001182033 extends AbstractMigration
         $this->addSql('ALTER TABLE vehicle_interventions ADD CONSTRAINT FK_D0AF0B58EA2F8F6 FOREIGN KEY (intervention_type_id) REFERENCES intervention_types (id)');
         $this->addSql('ALTER TABLE vehicle_maintenances ADD CONSTRAINT FK_7B1FFE5B9033212A FOREIGN KEY (tenant_id) REFERENCES tenants (id)');
         $this->addSql('ALTER TABLE vehicle_maintenances ADD CONSTRAINT FK_7B1FFE5B545317D1 FOREIGN KEY (vehicle_id) REFERENCES vehicles (id)');
-        $this->addSql('ALTER TABLE vehicles ADD tracking_id VARCHAR(100) DEFAULT NULL');
         $this->addSql('ALTER TABLE vehicles ADD CONSTRAINT FK_1FCE69FA9033212A FOREIGN KEY (tenant_id) REFERENCES tenants (id)');
         $this->addSql('ALTER TABLE vehicles ADD CONSTRAINT FK_1FCE69FA44F5D008 FOREIGN KEY (brand_id) REFERENCES brands (id)');
         $this->addSql('ALTER TABLE vehicles ADD CONSTRAINT FK_1FCE69FA7975B7E7 FOREIGN KEY (model_id) REFERENCES models (id)');
@@ -125,9 +127,12 @@ final class Version20251001182033 extends AbstractMigration
         $this->addSql('ALTER TABLE intervention_invoices DROP FOREIGN KEY FK_57BC5436DB805178');
         $this->addSql('ALTER TABLE intervention_prediagnostic_items DROP FOREIGN KEY FK_C4D9AF84B841FE26');
         $this->addSql('ALTER TABLE intervention_prediagnostics DROP FOREIGN KEY FK_2756ABA98EAE3863');
+        $this->addSql('ALTER TABLE intervention_prediagnostics DROP FOREIGN KEY FK_2756ABA9C5568CE4');
         $this->addSql('ALTER TABLE intervention_quote_lines DROP FOREIGN KEY FK_3C0D8030DB805178');
         $this->addSql('ALTER TABLE intervention_quote_lines DROP FOREIGN KEY FK_3C0D8030FF28C0D8');
+        $this->addSql('ALTER TABLE intervention_quote_lines DROP work_type');
         $this->addSql('ALTER TABLE intervention_quotes DROP FOREIGN KEY FK_4B15AAE08EAE3863');
+        $this->addSql('ALTER TABLE intervention_quotes DROP FOREIGN KEY FK_4B15AAE0C4FFF555');
         $this->addSql('ALTER TABLE intervention_reception_reports DROP FOREIGN KEY FK_C98C88538EAE3863');
         $this->addSql('ALTER TABLE intervention_supplies DROP FOREIGN KEY FK_D1BE274B8EAE3863');
         $this->addSql('ALTER TABLE intervention_supplies DROP FOREIGN KEY FK_D1BE274BFF28C0D8');
@@ -170,6 +175,5 @@ final class Version20251001182033 extends AbstractMigration
         $this->addSql('ALTER TABLE vehicles DROP FOREIGN KEY FK_1FCE69FA7ADA1FB5');
         $this->addSql('ALTER TABLE vehicles DROP FOREIGN KEY FK_1FCE69FA12469DE2');
         $this->addSql('ALTER TABLE vehicles DROP FOREIGN KEY FK_1FCE69FA6A70FE35');
-        $this->addSql('ALTER TABLE vehicles DROP tracking_id');
     }
 }

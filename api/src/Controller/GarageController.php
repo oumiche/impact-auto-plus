@@ -36,6 +36,87 @@ class GarageController extends AbstractTenantController
         $this->validator = $validator;
     }
 
+    #[Route('', name: 'garage_list', methods: ['GET'])]
+    public function index(Request $request): JsonResponse
+    {
+        try {
+            // Vérifier l'authentification
+            $this->checkAuthentication();
+            
+            // Récupérer le tenant courant
+            $currentTenant = $this->tenantService->getCurrentTenant($request, $this->getUser());
+            if (!$currentTenant) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Aucun tenant accessible trouvé. Veuillez contacter l\'administrateur.',
+                    'code' => 403
+                ], 403);
+            }
+
+            $page = max(1, (int) $request->query->get('page', 1));
+            $limit = max(1, min(100, (int) $request->query->get('limit', 50)));
+            $search = $request->query->get('search', '');
+
+            $queryBuilder = $this->garageRepository->createQueryBuilder('g')
+                ->where('g.tenant = :tenant')
+                ->andWhere('g.isActive = :active')
+                ->setParameter('tenant', $currentTenant)
+                ->setParameter('active', true);
+
+            if (!empty($search)) {
+                $queryBuilder->andWhere('g.name LIKE :search OR g.address LIKE :search OR g.phone LIKE :search OR g.email LIKE :search OR g.contactPerson LIKE :search')
+                    ->setParameter('search', '%' . $search . '%');
+            }
+
+            $queryBuilder->orderBy('g.name', 'ASC');
+
+            $totalQuery = clone $queryBuilder;
+            $total = $totalQuery->select('COUNT(g.id)')->getQuery()->getSingleScalarResult();
+
+            $garages = $queryBuilder
+                ->setFirstResult(($page - 1) * $limit)
+                ->setMaxResults($limit)
+                ->getQuery()
+                ->getResult();
+
+            $data = array_map(function($garage) {
+                return [
+                    'id' => $garage->getId(),
+                    'name' => $garage->getName(),
+                    'address' => $garage->getAddress(),
+                    'phone' => $garage->getPhone(),
+                    'email' => $garage->getEmail(),
+                    'contactPerson' => $garage->getContactPerson(),
+                    'specializations' => $garage->getSpecializations(),
+                    'rating' => $garage->getRating(),
+                    'isActive' => $garage->isActive(),
+                    'createdAt' => $garage->getCreatedAt()->format('Y-m-d H:i:s'),
+                    'updatedAt' => $garage->getUpdatedAt() ? $garage->getUpdatedAt()->format('Y-m-d H:i:s') : null
+                ];
+            }, $garages);
+
+            return new JsonResponse([
+                'success' => true,
+                'data' => $data,
+                'pagination' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total' => $total,
+                    'pages' => ceil($total / $limit),
+                    'totalPages' => ceil($total / $limit),
+                    'hasNext' => $page < ceil($total / $limit),
+                    'hasPrev' => $page > 1
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors du chargement des garages: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     #[Route('/debug/user-tenants', name: 'garage_debug_user_tenants', methods: ['GET'])]
     public function debugUserTenants(Request $request): JsonResponse
     {

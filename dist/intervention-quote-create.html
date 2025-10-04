@@ -11,8 +11,11 @@
     <link rel="stylesheet" href="css/vehicle-interventions.css">
     <link rel="stylesheet" href="css/intervention-quote-form.css">
     <link rel="stylesheet" href="css/attachment-gallery.css">
+    <link rel="stylesheet" href="css/ocr-processor.css">
     <!-- Vue.js CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <!-- Tesseract.js CDN -->
+    <script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 </head>
 <body>
     <div id="app"></div>
@@ -23,6 +26,7 @@
     <script src="js/services/NotificationService.js"></script>
     <script src="js/services/FileUploadService.js"></script>
     <script src="js/components/AttachmentGallery.js"></script>
+    <script src="js/components/OCRProcessor.js"></script>
     <script src="js/intervention-quote-form-vue.js"></script>
     <script>
         const { createApp } = Vue;

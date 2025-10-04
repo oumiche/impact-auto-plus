@@ -180,6 +180,12 @@ class InterventionWorkAuthorization
         return $this;
     }
 
+    public function setValidatedAt(?\DateTimeInterface $validatedAt): self
+    {
+        $this->authorizationDate = $validatedAt;
+        return $this;
+    }
+
     public function isExpired(int $validityDays = 30): bool
     {
         if (!$this->authorizationDate) {

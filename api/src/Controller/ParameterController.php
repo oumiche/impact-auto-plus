@@ -330,7 +330,7 @@ class ParameterController extends AbstractController
             // Si pas trouvé pour le tenant, chercher le paramètre global
             if (!$parameter && $tenantId) {
                 $parameter = $this->entityManager->getRepository(SystemParameter::class)
-                    ->findOneBy(['parameterKey' => 'currency', 'tenant' => null]);
+                    ->findOneBy(['parameterKey' => 'app.currency', 'tenant' => null]);
             }
             
             // Valeur par défaut si aucun paramètre trouvé

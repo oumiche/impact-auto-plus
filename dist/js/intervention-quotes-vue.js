@@ -14,6 +14,7 @@ const InterventionQuotesList = {
             showFilters: false,
             selectedQuotes: [],
             showBulkActions: false,
+            currency: 'F CFA', // Devise par défaut
             pagination: {
             currentPage: 1,
                 totalPages: 1,
@@ -101,10 +102,32 @@ const InterventionQuotesList = {
     },
     
     async mounted() {
+        await this.loadCurrency();
         await this.loadQuotes();
     },
     
     methods: {
+        async loadCurrency() {
+            try {
+                const response = await window.apiService.request('/parameters/currency');
+                console.log('=== CURRENCY API RESPONSE (QUOTES LIST) ===');
+                console.log('Response:', response);
+                console.log('Success:', response.success);
+                console.log('Data:', response.data);
+                console.log('Currency value:', response.data?.currency || response.data?.value);
+                
+                // Forcer F CFA au lieu de la valeur de la base de données
+                this.currency = 'F CFA';
+                
+                console.log('Final currency set to:', this.currency);
+                console.log('=== END CURRENCY LOG (QUOTES LIST) ===');
+            } catch (error) {
+                console.error('Erreur lors du chargement de la devise:', error);
+                this.currency = 'F CFA'; // Fallback
+                console.log('Currency fallback set to:', this.currency);
+            }
+        },
+        
         async loadQuotes() {
             this.loading = true;
             try {
@@ -150,7 +173,7 @@ const InterventionQuotesList = {
         
         async approveQuote(quote) {
             const confirmed = await window.notificationService.confirm(
-                `Approuver le devis "${quote.quoteNumber}" pour un montant de ${quote.totalAmount} € ?`,
+                `Approuver le devis "${quote.quoteNumber}" pour un montant de ${this.formatAmount(quote.totalAmount)} ?`,
                 'Approuver le devis',
                 'success'
             );
@@ -198,9 +221,9 @@ const InterventionQuotesList = {
         
         formatAmount(amount) {
             return new Intl.NumberFormat('fr-FR', {
-                style: 'currency',
-                currency: 'EUR'
-            }).format(parseFloat(amount));
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(parseFloat(amount)) + ' ' + this.currency;
         },
         
         formatDate(dateString) {
@@ -260,6 +283,10 @@ const InterventionQuotesList = {
                 this.selectedQuotes = [...this.filteredQuotes];
             }
             this.showBulkActions = this.selectedQuotes.length > 0;
+        },
+        
+        toggleAllQuotes() {
+            this.selectAllQuotes();
         },
         
         async bulkApprove() {
@@ -402,86 +429,96 @@ const InterventionQuotesList = {
                     </button>
                 </div>
                 
-                <div v-else class="quotes-grid">
-                    <div v-for="quote in filteredQuotes" :key="quote.id" class="quote-card">
-                        <!-- En-tête de la carte -->
-                        <div class="quote-header">
-                            <div class="quote-number">
-                                <input 
-                                    type="checkbox" 
-                                    :checked="selectedQuotes.some(q => q.id === quote.id)"
-                                    @change="toggleQuoteSelection(quote)"
-                                    class="quote-checkbox"
-                                >
-                                <span class="number">{{ quote.quoteNumber }}</span>
-                            </div>
-                            <div class="quote-status">
-                                <span class="status-badge" :class="getStatusClass(quote)">
-                                    {{ getStatusLabel(quote) }}
-                                </span>
-                            </div>
-                        </div>
-                        
-                        <!-- Informations principales -->
-                        <div class="quote-content">
-                            <div class="quote-info">
-                                <div class="info-row">
-                                    <i class="fas fa-car"></i>
-                                    <span>{{ quote.vehicle.brand }} {{ quote.vehicle.model }} ({{ quote.vehicle.plateNumber }})</span>
-                                </div>
-                                <div class="info-row">
-                                    <i class="fas fa-wrench"></i>
-                                    <span>{{ quote.interventionCode }}</span>
-                                </div>
-                                <div class="info-row">
-                                    <i class="fas fa-calendar"></i>
-                                    <span>Créé le {{ formatDate(quote.createdAt) }}</span>
-                                </div>
-                                <div v-if="quote.validUntil" class="info-row">
-                                    <i class="fas fa-clock" :class="getExpiryClass(quote)"></i>
-                                    <span :class="getExpiryClass(quote)">
-                                        {{ quote.isExpired ? 'Expiré' : 'Expire dans ' + quote.daysUntilExpiry + ' jours' }}
+                <div v-else class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input 
+                                        type="checkbox" 
+                                        :checked="selectedQuotes.length === filteredQuotes.length && filteredQuotes.length > 0"
+                                        @change="toggleAllQuotes"
+                                        class="select-all-checkbox"
+                                    >
+                                </th>
+                                <th>Numéro</th>
+                                <th>Intervention</th>
+                                <th>Véhicule</th>
+                                <th>Statut</th>
+                                <th>Montant</th>
+                                <th>Date création</th>
+                                <th>Date de réception</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="quote in filteredQuotes" :key="quote.id" class="quote-row">
+                                <td class="checkbox-cell">
+                                    <input 
+                                        type="checkbox" 
+                                        :checked="selectedQuotes.some(q => q.id === quote.id)"
+                                        @change="toggleQuoteSelection(quote)"
+                                        class="quote-checkbox"
+                                    >
+                                </td>
+                                <td class="quote-number-cell">
+                                    <code class="entity-code">{{ quote.quoteNumber }}</code>
+                                </td>
+                                <td class="intervention-cell">
+                                    <div class="intervention-info">
+                                        <div class="intervention-title">{{ quote.interventionCode }}</div>
+                                    </div>
+                                </td>
+                                <td class="vehicle-cell">
+                                    <div class="vehicle-info">
+                                        <div class="vehicle-details">
+                                            {{ quote.vehicle.brand }} {{ quote.vehicle.model }}
+                                        </div>
+                                        <div class="vehicle-plate">{{ quote.vehicle.plateNumber }}</div>
+                                    </div>
+                                </td>
+                                <td class="status-cell">
+                                    <span class="status-badge" :class="getStatusClass(quote)">
+                                        {{ getStatusLabel(quote) }}
                                     </span>
-                                </div>
-                            </div>
-                            
-                            <div class="quote-amounts">
-                                <div class="amount-total">
-                                    {{ formatAmount(quote.totalAmount) }}
-                                </div>
-                                <div v-if="quote.laborCost" class="amount-detail">
-                                    Main d'œuvre: {{ formatAmount(quote.laborCost) }}
-                                </div>
-                                <div v-if="quote.partsCost" class="amount-detail">
-                                    Pièces: {{ formatAmount(quote.partsCost) }}
-                                </div>
-                                <div v-if="quote.taxAmount" class="amount-detail">
-                                    Taxes: {{ formatAmount(quote.taxAmount) }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Actions -->
-                        <div class="quote-actions">
-                            <button class="btn btn-outline btn-sm" @click="goToView(quote)" title="Voir">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn btn-outline btn-sm" @click="goToEdit(quote)" title="Modifier">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button 
-                                v-if="!quote.isApproved" 
-                                class="btn btn-success btn-sm" 
-                                @click="approveQuote(quote)" 
-                                title="Approuver"
-                            >
-                                <i class="fas fa-check"></i>
-                            </button>
-                            <button class="btn btn-danger btn-sm" @click="deleteQuote(quote)" title="Supprimer">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
+                                </td>
+                                <td class="amount-cell">
+                                    <div class="amount-total">{{ formatAmount(quote.totalAmount) }}</div>
+                                    <div v-if="quote.laborCost || quote.partsCost" class="amount-details">
+                                        <div v-if="quote.laborCost" class="amount-detail">MO: {{ formatAmount(quote.laborCost) }}</div>
+                                        <div v-if="quote.partsCost" class="amount-detail">Pièces: {{ formatAmount(quote.partsCost) }}</div>
+                                    </div>
+                                </td>
+                                <td class="date-cell">
+                                    {{ formatDate(quote.createdAt) }}
+                                </td>
+                                <td class="reception-date-cell">
+                                    <div v-if="quote.receivedDate">
+                                        {{ formatDate(quote.receivedDate) }}
+                                    </div>
+                                    <span v-else class="no-reception-date">-</span>
+                                </td>
+                                <td class="actions-cell">
+                                    <div class="quote-actions">
+                                        <button class="btn btn-outline btn-sm" @click="goToEdit(quote)" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button 
+                                            v-if="!quote.isApproved" 
+                                            class="btn btn-success btn-sm" 
+                                            @click="approveQuote(quote)" 
+                                            title="Approuver"
+                                        >
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" @click="deleteQuote(quote)" title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

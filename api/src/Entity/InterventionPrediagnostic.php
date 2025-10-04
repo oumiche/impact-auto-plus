@@ -52,15 +52,11 @@ class InterventionPrediagnostic
     #[ORM\OneToMany(mappedBy: 'prediagnostic', targetEntity: InterventionPrediagnosticItem::class, cascade: ['persist'])]
     private Collection $items;
 
-    #[ORM\OneToMany(targetEntity: Attachment::class, mappedBy: 'entityType', cascade: ['persist'])]
-    private Collection $attachments;
-
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->prediagnosticDate = new \DateTime();
         $this->items = new ArrayCollection();
-        $this->attachments = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -195,30 +191,4 @@ class InterventionPrediagnostic
         return $this;
     }
 
-    /**
-     * @return Collection<int, Attachment>
-     */
-    public function getAttachments(): Collection
-    {
-        return $this->attachments;
-    }
-
-    public function addAttachment(Attachment $attachment): static
-    {
-        if (!$this->attachments->contains($attachment)) {
-            $this->attachments->add($attachment);
-            $attachment->setEntityType('intervention_prediagnostic');
-            $attachment->setEntityId($this->getId());
-        }
-        return $this;
-    }
-
-    public function removeAttachment(Attachment $attachment): static
-    {
-        if ($this->attachments->removeElement($attachment)) {
-            // The attachment relationship is managed by the FileUploadService
-            // No need to manually set entityType/entityId to null
-        }
-        return $this;
-    }
 }

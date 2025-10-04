@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20251001225809 extends AbstractMigration
+final class Version20251002114751 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -46,15 +46,12 @@ final class Version20251001225809 extends AbstractMigration
         $this->addSql('ALTER TABLE intervention_invoices ADD CONSTRAINT FK_57BC54368EAE3863 FOREIGN KEY (intervention_id) REFERENCES vehicle_interventions (id)');
         $this->addSql('ALTER TABLE intervention_invoices ADD CONSTRAINT FK_57BC5436DB805178 FOREIGN KEY (quote_id) REFERENCES intervention_quotes (id)');
         $this->addSql('ALTER TABLE intervention_prediagnostic_items ADD CONSTRAINT FK_C4D9AF84B841FE26 FOREIGN KEY (prediagnostic_id) REFERENCES intervention_prediagnostics (id)');
-        $this->addSql('ALTER TABLE intervention_prediagnostics ADD technician_id INT DEFAULT NULL, ADD expert_id INT DEFAULT NULL, DROP technician_name, DROP expert_name');
         $this->addSql('ALTER TABLE intervention_prediagnostics ADD CONSTRAINT FK_2756ABA98EAE3863 FOREIGN KEY (intervention_id) REFERENCES vehicle_interventions (id)');
-        $this->addSql('ALTER TABLE intervention_prediagnostics ADD CONSTRAINT FK_2756ABA9E6C5D496 FOREIGN KEY (technician_id) REFERENCES collaborateurs (id)');
         $this->addSql('ALTER TABLE intervention_prediagnostics ADD CONSTRAINT FK_2756ABA9C5568CE4 FOREIGN KEY (expert_id) REFERENCES collaborateurs (id)');
-        $this->addSql('CREATE INDEX IDX_2756ABA9E6C5D496 ON intervention_prediagnostics (technician_id)');
-        $this->addSql('CREATE INDEX IDX_2756ABA9C5568CE4 ON intervention_prediagnostics (expert_id)');
         $this->addSql('ALTER TABLE intervention_quote_lines ADD CONSTRAINT FK_3C0D8030DB805178 FOREIGN KEY (quote_id) REFERENCES intervention_quotes (id)');
         $this->addSql('ALTER TABLE intervention_quote_lines ADD CONSTRAINT FK_3C0D8030FF28C0D8 FOREIGN KEY (supply_id) REFERENCES supplies (id)');
         $this->addSql('ALTER TABLE intervention_quotes ADD CONSTRAINT FK_4B15AAE08EAE3863 FOREIGN KEY (intervention_id) REFERENCES vehicle_interventions (id)');
+        $this->addSql('ALTER TABLE intervention_quotes ADD CONSTRAINT FK_4B15AAE0C4FFF555 FOREIGN KEY (garage_id) REFERENCES garages (id)');
         $this->addSql('ALTER TABLE intervention_reception_reports ADD CONSTRAINT FK_C98C88538EAE3863 FOREIGN KEY (intervention_id) REFERENCES vehicle_interventions (id)');
         $this->addSql('ALTER TABLE intervention_supplies ADD CONSTRAINT FK_D1BE274B8EAE3863 FOREIGN KEY (intervention_id) REFERENCES vehicle_interventions (id)');
         $this->addSql('ALTER TABLE intervention_supplies ADD CONSTRAINT FK_D1BE274BFF28C0D8 FOREIGN KEY (supply_id) REFERENCES supplies (id)');
@@ -129,14 +126,11 @@ final class Version20251001225809 extends AbstractMigration
         $this->addSql('ALTER TABLE intervention_invoices DROP FOREIGN KEY FK_57BC5436DB805178');
         $this->addSql('ALTER TABLE intervention_prediagnostic_items DROP FOREIGN KEY FK_C4D9AF84B841FE26');
         $this->addSql('ALTER TABLE intervention_prediagnostics DROP FOREIGN KEY FK_2756ABA98EAE3863');
-        $this->addSql('ALTER TABLE intervention_prediagnostics DROP FOREIGN KEY FK_2756ABA9E6C5D496');
         $this->addSql('ALTER TABLE intervention_prediagnostics DROP FOREIGN KEY FK_2756ABA9C5568CE4');
-        $this->addSql('DROP INDEX IDX_2756ABA9E6C5D496 ON intervention_prediagnostics');
-        $this->addSql('DROP INDEX IDX_2756ABA9C5568CE4 ON intervention_prediagnostics');
-        $this->addSql('ALTER TABLE intervention_prediagnostics ADD technician_name VARCHAR(100) DEFAULT NULL, ADD expert_name VARCHAR(100) DEFAULT NULL, DROP technician_id, DROP expert_id');
         $this->addSql('ALTER TABLE intervention_quote_lines DROP FOREIGN KEY FK_3C0D8030DB805178');
         $this->addSql('ALTER TABLE intervention_quote_lines DROP FOREIGN KEY FK_3C0D8030FF28C0D8');
         $this->addSql('ALTER TABLE intervention_quotes DROP FOREIGN KEY FK_4B15AAE08EAE3863');
+        $this->addSql('ALTER TABLE intervention_quotes DROP FOREIGN KEY FK_4B15AAE0C4FFF555');
         $this->addSql('ALTER TABLE intervention_reception_reports DROP FOREIGN KEY FK_C98C88538EAE3863');
         $this->addSql('ALTER TABLE intervention_supplies DROP FOREIGN KEY FK_D1BE274B8EAE3863');
         $this->addSql('ALTER TABLE intervention_supplies DROP FOREIGN KEY FK_D1BE274BFF28C0D8');

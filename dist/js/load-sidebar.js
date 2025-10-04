@@ -56,6 +56,18 @@ class SidebarLoader {
             <a href="/interventions.html" class="nav-item" data-page="interventions">
               <i class="fas fa-wrench"></i> Interventions
             </a>
+            <a href="/intervention-quotes.html" class="nav-item" data-page="intervention-quotes">
+              <i class="fas fa-file-invoice-dollar"></i> Devis d'Intervention
+            </a>
+            <a href="/intervention-work-authorizations.html" class="nav-item" data-page="intervention-work-authorizations">
+              <i class="fas fa-clipboard-check"></i> Autorisations de Travail
+            </a>
+            <a href="/intervention-invoices.html" class="nav-item" data-page="intervention-invoices">
+              <i class="fas fa-file-invoice"></i> Factures d'Intervention
+            </a>
+            <a href="/intervention-reception-reports.html" class="nav-item" data-page="intervention-reception-reports">
+              <i class="fas fa-clipboard-list"></i> Rapports de Réception
+            </a>
             <a href="/maintenance.html" class="nav-item" data-page="maintenance">
               <i class="fas fa-tools"></i> Maintenance
             </a>

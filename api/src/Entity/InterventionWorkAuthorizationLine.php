@@ -26,6 +26,10 @@ class InterventionWorkAuthorizationLine
     #[Groups(['work_auth_line:read'])]
     private ?Supply $supply = null;
 
+    #[ORM\Column(type: Types::STRING, length: 20)]
+    #[Groups(['work_auth_line:read', 'work_auth_line:write'])]
+    private ?string $workType = null;
+
     #[ORM\Column(type: Types::INTEGER)]
     #[Groups(['work_auth_line:read', 'work_auth_line:write'])]
     private ?int $lineNumber = null;
@@ -95,6 +99,17 @@ class InterventionWorkAuthorizationLine
     public function setSupply(?Supply $supply): static
     {
         $this->supply = $supply;
+        return $this;
+    }
+
+    public function getWorkType(): ?string
+    {
+        return $this->workType;
+    }
+
+    public function setWorkType(?string $workType): static
+    {
+        $this->workType = $workType;
         return $this;
     }
 

@@ -72,6 +72,9 @@ class VehicleIntervention
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $closedDate = null;
 
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $invoicedAt = null;
+
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $notes = null;
 
@@ -190,7 +193,7 @@ class VehicleIntervention
             'reported', 'in_prediagnostic', 'prediagnostic_completed', 
             'in_quote', 'quote_received', 'in_approval', 'approved', 
             'in_repair', 'repair_completed', 'in_reception', 
-            'vehicle_received', 'cancelled'
+            'vehicle_received', 'invoiced', 'cancelled'
         ];
         if (!in_array($currentStatus, $validStatuses)) {
             throw new \InvalidArgumentException("Invalid status: {$currentStatus}");
@@ -291,6 +294,17 @@ class VehicleIntervention
     public function setClosedDate(?\DateTimeInterface $closedDate): self
     {
         $this->closedDate = $closedDate;
+        return $this;
+    }
+
+    public function getInvoicedAt(): ?\DateTimeInterface
+    {
+        return $this->invoicedAt;
+    }
+
+    public function setInvoicedAt(?\DateTimeInterface $invoicedAt): self
+    {
+        $this->invoicedAt = $invoicedAt;
         return $this;
     }
 

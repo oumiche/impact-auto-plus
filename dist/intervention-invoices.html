@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factures d'Intervention - Impact Auto</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/intervention-invoices.css">
+    <link rel="stylesheet" href="css/notification.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="header-text">
+                        <h1>Factures d'Intervention</h1>
+                        <p>Gestion des factures d'intervention</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-primary" @click="createInvoice">
+                        <i class="fas fa-plus"></i>
+                        Nouvelle Facture
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <div class="search-bar">
+                <div class="search-input-container">
+                    <i class="fas fa-search"></i>
+                    <input 
+                        type="text" 
+                        v-model="searchQuery" 
+                        @input="debounceSearch"
+                        placeholder="Rechercher par numéro, véhicule, intervention..."
+                        class="search-input"
+                    >
+                </div>
+            </div>
+            
+            <div class="filters-panel">
+                <div class="filter-group">
+                    <label>Statut de paiement</label>
+                    <select v-model="selectedStatus" @change="applyFilters" class="filter-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="pending">En attente</option>
+                        <option value="paid">Payé</option>
+                        <option value="overdue">En retard</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Tri par</label>
+                    <select v-model="sortBy" @change="applyFilters" class="filter-select">
+                        <option value="invoiceDate">Date de facture</option>
+                        <option value="dueDate">Date d'échéance</option>
+                        <option value="totalAmount">Montant total</option>
+                        <option value="invoiceNumber">Numéro de facture</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Ordre</label>
+                    <select v-model="sortOrder" @change="applyFilters" class="filter-select">
+                        <option value="DESC">Décroissant</option>
+                        <option value="ASC">Croissant</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div v-if="selectedInvoices.length > 0" class="bulk-actions">
+            <div class="bulk-info">
+                {{ selectedInvoices.length }} facture(s) sélectionnée(s)
+            </div>
+            <div class="bulk-buttons">
+                <button class="btn btn-secondary" @click="markSelectedAsPaid">
+                    <i class="fas fa-check"></i>
+                    Marquer comme payé
+                </button>
+                <button class="btn btn-outline" @click="exportSelectedInvoices">
+                    <i class="fas fa-download"></i>
+                    Exporter
+                </button>
+                <button class="btn btn-outline" @click="clearSelection">
+                    <i class="fas fa-times"></i>
+                    Annuler
+                </button>
+            </div>
+        </div>
+
+        <!-- Invoices List -->
+        <div class="invoices-list">
+            <!-- Loading State -->
+            <div v-if="loading" class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Chargement des factures...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else-if="invoices.length === 0" class="empty-state">
+                <i class="fas fa-file-invoice"></i>
+                <h3>Aucune facture trouvée</h3>
+                <p v-if="hasActiveFilters">
+                    Aucune facture ne correspond à vos critères de recherche.
+                    <button @click="clearFilters" class="btn-link">Effacer les filtres</button>
+                </p>
+                <p v-else>
+                    Aucune facture n'a encore été créée.
+                    <button @click="createInvoice" class="btn-link">Créer la première facture</button>
+                </p>
+            </div>
+
+            <!-- Data Table -->
+            <div v-else class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell">
+                                <input 
+                                    type="checkbox" 
+                                    v-model="selectAll"
+                                    @change="toggleSelectAll"
+                                    class="select-all-checkbox"
+                                >
+                            </th>
+                            <th>Numéro</th>
+                            <th>Date</th>
+                            <th>Échéance</th>
+                            <th>Intervention</th>
+                            <th>Véhicule</th>
+                            <th>Montant</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="invoice in invoices" :key="invoice.id" class="invoice-row">
+                            <td class="checkbox-cell">
+                                <input 
+                                    type="checkbox" 
+                                    v-model="selectedInvoices"
+                                    :value="invoice.id"
+                                    class="invoice-checkbox"
+                                >
+                            </td>
+                            
+                            <!-- Numéro de facture -->
+                            <td class="invoice-number-cell">
+                                <div class="invoice-number">{{ invoice.invoiceNumber }}</div>
+                            </td>
+                            
+                            <!-- Date de facture -->
+                            <td class="date-cell">
+                                <div class="invoice-date">{{ formatDate(invoice.invoiceDate) }}</div>
+                            </td>
+                            
+                            <!-- Date d'échéance -->
+                            <td class="due-date-cell">
+                                <div 
+                                    class="due-date"
+                                    :class="{ 'overdue': isOverdue(invoice.dueDate) }"
+                                >
+                                    {{ formatDate(invoice.dueDate) }}
+                                </div>
+                            </td>
+                            
+                            <!-- Intervention -->
+                            <td class="intervention-cell">
+                                <div class="intervention-info">
+                                    <div class="intervention-number">{{ invoice.intervention.interventionNumber }}</div>
+                                    <div class="intervention-title">{{ invoice.intervention.title }}</div>
+                                </div>
+                            </td>
+                            
+                            <!-- Véhicule -->
+                            <td class="vehicle-cell">
+                                <div class="vehicle-info">
+                                    <div class="vehicle-plate">{{ invoice.intervention.vehicle.plateNumber }}</div>
+                                    <div class="vehicle-details">
+                                        {{ invoice.intervention.vehicle.brand }} {{ invoice.intervention.vehicle.model }}
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <!-- Montant -->
+                            <td class="amount-cell">
+                                <div class="amount-total">{{ formatCurrency(invoice.totalAmount) }}</div>
+                                <div class="amount-details">
+                                    <div class="amount-detail">
+                                        HT: {{ formatCurrency(invoice.subtotal) }}
+                                    </div>
+                                    <div class="amount-detail">
+                                        TVA: {{ formatCurrency(invoice.taxAmount) }}
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <!-- Statut de paiement -->
+                            <td class="status-cell">
+                                <span 
+                                    class="status-badge"
+                                    :class="getPaymentStatusClass(invoice.paymentStatus)"
+                                >
+                                    {{ getPaymentStatusLabel(invoice.paymentStatus) }}
+                                </span>
+                                <div v-if="invoice.paidAt" class="payment-date">
+                                    Payé le {{ formatDate(invoice.paidAt) }}
+                                </div>
+                            </td>
+                            
+                            <!-- Actions -->
+                            <td class="actions-cell">
+                                <div class="invoice-actions">
+                                    <button 
+                                        class="btn btn-sm btn-primary"
+                                        @click="viewInvoice(invoice.id)"
+                                        title="Voir la facture"
+                                    >
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button 
+                                        class="btn btn-sm btn-secondary"
+                                        @click="editInvoice(invoice.id)"
+                                        title="Modifier"
+                                    >
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button 
+                                        v-if="invoice.paymentStatus === 'pending'"
+                                        class="btn btn-sm btn-success"
+                                        @click="markAsPaid(invoice.id)"
+                                        title="Marquer comme payé"
+                                    >
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button 
+                                        class="btn btn-sm btn-info"
+                                        @click="generatePdf(invoice.id)"
+                                        title="Générer PDF"
+                                    >
+                                        <i class="fas fa-file-pdf"></i>
+                                    </button>
+                                    <button 
+                                        v-if="invoice.paymentStatus !== 'paid'"
+                                        class="btn btn-sm btn-danger"
+                                        @click="deleteInvoice(invoice.id)"
+                                        title="Supprimer"
+                                    >
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="totalPages > 1" class="pagination">
+                <button 
+                    class="btn btn-outline"
+                    :disabled="currentPage === 1"
+                    @click="changePage(currentPage - 1)"
+                >
+                    <i class="fas fa-chevron-left"></i>
+                    Précédent
+                </button>
+                
+                <div class="pagination-info">
+                    Page {{ currentPage }} sur {{ totalPages }}
+                    ({{ totalItems }} facture(s))
+                </div>
+                
+                <button 
+                    class="btn btn-outline"
+                    :disabled="currentPage === totalPages"
+                    @click="changePage(currentPage + 1)"
+                >
+                    Suivant
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/vue.global.prod.js"></script>
+    <script src="js/services/ApiService.js"></script>
+    <script src="js/auth/auth-guard.js"></script>
+    <script src="js/sidebar-component.js"></script>
+    <script src="js/load-sidebar.js"></script>
+    <script src="js/services/NotificationService.js"></script>
+    <script src="js/intervention-invoices-vue.js"></script>
+
+    <script>
+        // Initialize Vue app
+        const { createApp } = Vue;
+        
+        createApp(window.InterventionInvoicesApp).mount('#app');
+    </script>
+</body>
+</html>

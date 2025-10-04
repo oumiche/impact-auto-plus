@@ -333,8 +333,36 @@ class SupplyCategoryController extends AbstractController
     #[Route('/active', name: 'supply_category_active', methods: ['GET'])]
     public function active(): JsonResponse
     {
-        $categories = $this->supplyCategoryRepository->findAll();
-        return $this->json($categories, 200, [], ['groups' => 'supply_category:read']);
+        try {
+            $categories = $this->supplyCategoryRepository->findAll();
+            
+            $data = array_map(function($category) {
+                return [
+                    'id' => $category->getId(),
+                    'name' => $category->getName(),
+                    'description' => $category->getDescription(),
+                    'icon' => $category->getIcon(),
+                    'parent' => $category->getParent() ? [
+                        'id' => $category->getParent()->getId(),
+                        'name' => $category->getParent()->getName()
+                    ] : null,
+                    'createdAt' => $category->getCreatedAt()->format('Y-m-d H:i:s')
+                ];
+            }, $categories);
+            
+            return new JsonResponse([
+                'success' => true,
+                'data' => $data,
+                'code' => 200
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des catégories actives: ' . $e->getMessage(),
+                'code' => 500
+            ], 500);
+        }
     }
 
 

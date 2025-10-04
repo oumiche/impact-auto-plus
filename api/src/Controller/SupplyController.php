@@ -33,6 +33,76 @@ class SupplyController extends AbstractController
         $this->validator = $validator;
     }
 
+    #[Route('', name: 'supply_list', methods: ['GET'])]
+    public function index(Request $request): JsonResponse
+    {
+        try {
+            $page = max(1, (int) $request->query->get('page', 1));
+            $limit = max(1, min(100, (int) $request->query->get('limit', 50)));
+            $search = $request->query->get('search', '');
+
+            $queryBuilder = $this->supplyRepository->createQueryBuilder('s')
+                ->leftJoin('s.category', 'c')
+                ->addSelect('c')
+                ->where('s.isActive = :active')
+                ->setParameter('active', true);
+
+            if (!empty($search)) {
+                $queryBuilder->andWhere('s.name LIKE :search OR s.reference LIKE :search OR s.oemReference LIKE :search OR s.brand LIKE :search')
+                    ->setParameter('search', '%' . $search . '%');
+            }
+
+            $queryBuilder->orderBy('s.name', 'ASC');
+
+            $totalQuery = clone $queryBuilder;
+            $total = $totalQuery->select('COUNT(s.id)')->getQuery()->getSingleScalarResult();
+
+            $supplies = $queryBuilder
+                ->setFirstResult(($page - 1) * $limit)
+                ->setMaxResults($limit)
+                ->getQuery()
+                ->getResult();
+
+            $data = array_map(function($supply) {
+                return [
+                    'id' => $supply->getId(),
+                    'reference' => $supply->getReference(),
+                    'oemReference' => $supply->getOemReference(),
+                    'name' => $supply->getName(),
+                    'description' => $supply->getDescription(),
+                    'brand' => $supply->getBrand(),
+                    'modelCompatibility' => $supply->getModelCompatibility(),
+                    'unitPrice' => $supply->getUnitPrice(),
+                    'isActive' => $supply->isActive(),
+                    'category' => $supply->getCategory() ? [
+                        'id' => $supply->getCategory()->getId(),
+                        'name' => $supply->getCategory()->getName(),
+                        'icon' => $supply->getCategory()->getIcon()
+                    ] : null
+                ];
+            }, $supplies);
+
+            return new JsonResponse([
+                'success' => true,
+                'data' => $data,
+                'pagination' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total' => $total,
+                    'pages' => ceil($total / $limit),
+                    'hasNext' => $page < ceil($total / $limit),
+                    'hasPrev' => $page > 1
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des fournitures: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     #[Route('/admin', name: 'supply_admin_list', methods: ['GET'])]
     public function adminList(Request $request): JsonResponse
     {
