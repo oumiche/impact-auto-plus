@@ -487,6 +487,22 @@ En cas de problème, vérifier :
 4. La configuration SSL
 5. Les modules Apache activés
 
+## 🎯 Vue.js Local
+
+### Avantages de Vue.js Local
+- ✅ **Indépendance CDN** - Pas de dépendance externe
+- ✅ **Performance améliorée** - Chargement plus rapide
+- ✅ **Sécurité renforcée** - Contrôle total des dépendances
+- ✅ **Fonctionnement hors ligne** - Pas besoin d'Internet pour Vue.js
+- ✅ **Même logique** - Pas de compilation nécessaire
+
+### Fichiers Vue.js
+- **`dist/js/vue.global.prod.js`** - Version production (147 KB)
+- **`dist/js/vue.global.js`** - Version développement (507 KB)
+
+### Configuration Apache pour Vue.js
+Apache sert directement les fichiers Vue.js depuis `/var/www/html/impact-auto/dist/js/` avec mise en cache optimisée.
+
 ---
 
 **Note :** Ce guide suppose que LAMP est déjà installé et configuré sur Ubuntu Server 24.04. Adaptez les chemins et configurations selon votre environnement spécifique.

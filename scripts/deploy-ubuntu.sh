@@ -105,7 +105,25 @@ fi
 
 git clone https://github.com/oumiche/impact-auto-plus.git "$PROJECT_PATH"
 
-# 7. Configuration des permissions
+# 7. Nettoyage des fichiers de développement
+print_message "Nettoyage des fichiers de développement..."
+# Supprimer node_modules (pas nécessaire en production)
+rm -rf "$PROJECT_PATH/dist/node_modules"
+rm -f "$PROJECT_PATH/dist/package.json"
+rm -f "$PROJECT_PATH/dist/package-lock.json"
+rm -f "$PROJECT_PATH/dist/start-dev.bat"
+rm -f "$PROJECT_PATH/dist/start.bat"
+
+# S'assurer que Vue.js local est présent
+if [ ! -f "$PROJECT_PATH/dist/js/vue.global.prod.js" ]; then
+    print_message "Téléchargement de Vue.js local..."
+    mkdir -p "$PROJECT_PATH/dist/js"
+    curl -L -o "$PROJECT_PATH/dist/js/vue.global.prod.js" https://unpkg.com/vue@3.4.21/dist/vue.global.prod.js
+    curl -L -o "$PROJECT_PATH/dist/js/vue.global.js" https://unpkg.com/vue@3.4.21/dist/vue.global.js
+    print_success "Vue.js local téléchargé"
+fi
+
+# 8. Configuration des permissions
 print_message "Configuration des permissions..."
 chown -R www-data:www-data "$PROJECT_PATH"
 chmod -R 755 "$PROJECT_PATH"
