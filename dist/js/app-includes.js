@@ -18,7 +18,8 @@
             'css/impact-auto.css',
             'css/parametres-vue.css',
             'css/intervention-types.css',
-            'css/vehicle-interventions.css'
+            'css/vehicle-interventions.css',
+            'css/intervention-prediagnostics.css'
         ],
         js: [
             'js/services/ApiService.js',
