@@ -9,37 +9,17 @@
     <script src="js/app-includes.js"></script>
     
     <!-- CSS spécifiques à la page -->
-    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/homepage.css">
 </head>
 <body>
-    <div id="app"></div>
-    
     <!-- Script de la page -->
-    <script src="js/dashboard-vue.js"></script>
+    <script src="js/dashboard/dashboard.js"></script>
     
-    <!-- Initialisation Vue.js -->
+    <!-- Initialisation du dashboard -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Attendre que Vue.js soit chargé
-            const checkVue = setInterval(() => {
-                if (window.Vue) {
-                    clearInterval(checkVue);
-                    
-                    const { createApp } = Vue;
-                    const app = createApp({
-                        components: {
-                            DashboardVue
-                        },
-                        template: `
-                            <div class="main-content">
-                                <DashboardVue />
-                            </div>
-                        `
-                    });
-                    
-                    app.mount('#app');
-                }
-            }, 100);
+            // Initialiser le dashboard classique
+            new ImpactAutoDashboard();
         });
     </script>
 </body>
