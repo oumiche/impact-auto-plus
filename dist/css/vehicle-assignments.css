@@ -9,37 +9,60 @@
 /* Page Header */
 .page-header {
     margin-bottom: 30px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 20px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+}
+
+.header-text {
+    flex: 1;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .section-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--text-primary, #333);
-    margin: 0 0 8px 0;
+    font-size: 28px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0 0 5px 0;
 }
 
 .page-subtitle {
-    color: var(--text-secondary, #666);
-    font-size: 1rem;
+    color: #6c757d;
+    font-size: 14px;
     margin: 0;
 }
 
-/* Search and Filter Bar */
 .search-filter-bar {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 15px;
     margin-bottom: 30px;
-    padding: 20px;
-    background: var(--bg-secondary, #f8f9fa);
-    border-radius: 12px;
-    flex-wrap: wrap;
+    width: 100%;
 }
 
 .search-box {
     position: relative;
     flex: 1;
-    min-width: 250px;
+    min-width: 300px;
 }
 
 .search-box i {
@@ -64,32 +87,27 @@
     border-color: var(--primary-color, #007bff);
 }
 
-.filter-buttons {
+.filter-group {
     display: flex;
+    align-items: center;
     gap: 10px;
+    flex: 0 0 auto;
 }
 
-.filter-btn {
-    padding: 10px 20px;
+.filter-select {
+    padding: 12px 16px;
     border: 2px solid var(--border-color, #ddd);
     border-radius: 8px;
-    background: white;
-    color: var(--text-primary, #333);
     font-size: 14px;
-    font-weight: 500;
+    background: white;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: border-color 0.3s ease;
+    min-width: 180px;
 }
 
-.filter-btn:hover {
+.filter-select:focus {
+    outline: none;
     border-color: var(--primary-color, #007bff);
-    color: var(--primary-color, #007bff);
-}
-
-.filter-btn.active {
-    background: var(--primary-color, #007bff);
-    border-color: var(--primary-color, #007bff);
-    color: white;
 }
 
 /* Loading Indicator */
@@ -633,6 +651,26 @@
         padding: 15px;
     }
     
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .header-left {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .header-right {
+        width: 100%;
+    }
+    
+    .header-right .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
     .search-filter-bar {
         flex-direction: column;
         align-items: stretch;
@@ -643,9 +681,12 @@
         min-width: auto;
     }
     
-    .filter-buttons {
-        justify-content: center;
-        flex-wrap: wrap;
+    .filter-group {
+        width: 100%;
+    }
+    
+    .filter-select {
+        width: 100%;
     }
     
     .data-table {

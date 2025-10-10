@@ -99,7 +99,7 @@ const InterventionPrediagnosticForm = {
                                                 <div class="intervention-code">{{ intervention.code || 'INT-' + intervention.id }}</div>
                                                 <div class="intervention-title">{{ intervention.title }}</div>
                                                 <div class="intervention-vehicle">
-                                                    {{ intervention.vehicle.brand }} {{ intervention.vehicle.model }} 
+                                                    {{ intervention.vehicle.brand.name }} {{ intervention.vehicle.model.name }} 
                                                     ({{ intervention.vehicle.plateNumber }})
                                                 </div>
                                                 <div class="intervention-status">
@@ -114,7 +114,7 @@ const InterventionPrediagnosticForm = {
                                 <div v-if="selectedIntervention" class="intervention-info">
                                     <div class="info-item">
                                         <span class="label">Véhicule:</span>
-                                        <span class="value">{{ selectedIntervention.vehicle.plateNumber }} - {{ selectedIntervention.vehicle.brand }} {{ selectedIntervention.vehicle.model }}</span>
+                                        <span class="value">{{ selectedIntervention.vehicle.plateNumber }} - {{ selectedIntervention.vehicle.brand.name }} {{ selectedIntervention.vehicle.model.name }}</span>
                                     </div>
                                     <div class="info-item">
                                         <span class="label">Motif:</span>
@@ -128,7 +128,7 @@ const InterventionPrediagnosticForm = {
                             <div class="form-group">
                                 <label for="prediagnostic-date">Date du prédiagnostic</label>
                                 <input 
-                                    type="datetime-local" 
+                                    type="date" 
                                     id="prediagnostic-date"
                                     v-model="form.prediagnosticDate" 
                                     class="form-control"
@@ -473,12 +473,22 @@ const InterventionPrediagnosticForm = {
     },
     
     async mounted() {
+        console.log('Composant monté - Props:', {
+            mode: this.mode,
+            prediagnosticId: this.prediagnosticId,
+            isEditMode: this.isEditMode
+        });
+        
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
         await this.loadInterventions();
         await this.loadCollaborators();
         
         if (this.isEditMode && this.prediagnosticId) {
+            console.log('Mode édition détecté, chargement du prédiagnostic');
             await this.loadPrediagnostic();
         } else {
+            console.log('Mode création ou pas d\'ID, utilisation des valeurs par défaut');
             // Définir la date actuelle par défaut
             this.form.prediagnosticDate = this.formatDateForInput(new Date());
         }
@@ -495,6 +505,21 @@ const InterventionPrediagnosticForm = {
     },
     
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadInterventions(search = '') {
             this.loading = true;
             try {
@@ -513,7 +538,7 @@ const InterventionPrediagnosticForm = {
                     // Ajouter le displayText pour chaque intervention
                     this.availableInterventions = interventions.map(intervention => ({
                         ...intervention,
-                        displayText: `${intervention.code || 'INT-' + intervention.id} - ${intervention.vehicle.brand || ''} ${intervention.vehicle.model || ''} (${intervention.vehicle.plateNumber}) - ${intervention.title}`,
+                        displayText: `${intervention.code || 'INT-' + intervention.id} - ${intervention.vehicle.brand?.name || ''} ${intervention.vehicle.model?.name || ''} (${intervention.vehicle.plateNumber}) - ${intervention.title}`,
                         statusLabel: this.getStatusLabel(intervention.currentStatus)
                     }));
                 } else {
@@ -531,8 +556,12 @@ const InterventionPrediagnosticForm = {
         },
         
         async loadPrediagnostic() {
-            if (!this.prediagnosticId) return;
+            if (!this.prediagnosticId) {
+                console.log('Aucun ID de prédiagnostic fourni');
+                return;
+            }
             
+            console.log('Chargement du prédiagnostic ID:', this.prediagnosticId);
             this.loading = true;
             try {
                 const response = await window.apiService.request(`/intervention-prediagnostics/${this.prediagnosticId}`);
@@ -627,22 +656,30 @@ const InterventionPrediagnosticForm = {
             
             this.saving = true;
             try {
+                // Nettoyer et valider les données avant envoi
                 const prediagnosticData = {
-                    interventionId: this.form.interventionId,
+                    interventionId: parseInt(this.form.interventionId) || null,
                     prediagnosticDate: this.form.prediagnosticDate || null,
-                    expertId: this.form.expertId || null,
-                    signatureExpert: this.form.signatureExpert || null,
-                    signatureRepairer: this.form.signatureRepairer || null,
-                    signatureInsured: this.form.signatureInsured || null,
+                    expertId: this.form.expertId ? parseInt(this.form.expertId) : null,
+                    signatureExpert: this.form.signatureExpert || '',
+                    signatureRepairer: this.form.signatureRepairer || '',
+                    signatureInsured: this.form.signatureInsured || '',
                     items: this.form.items.map((item, index) => ({
-                        operationLabel: item.operationLabel,
-                        isExchange: item.isExchange,
-                        isControl: item.isControl,
-                        isRepair: item.isRepair,
-                        isPainting: item.isPainting,
+                        operationLabel: item.operationLabel || '',
+                        isExchange: Boolean(item.isExchange),
+                        isControl: Boolean(item.isControl),
+                        isRepair: Boolean(item.isRepair),
+                        isPainting: Boolean(item.isPainting),
                         orderIndex: index + 1
                     }))
                 };
+                
+                // Supprimer les propriétés vides ou null
+                Object.keys(prediagnosticData).forEach(key => {
+                    if (prediagnosticData[key] === null || prediagnosticData[key] === '') {
+                        delete prediagnosticData[key];
+                    }
+                });
                 
                 console.log('Données à envoyer:', prediagnosticData);
                 console.log('Items à envoyer:', prediagnosticData.items);
@@ -677,7 +714,16 @@ const InterventionPrediagnosticForm = {
                 }
             } catch (error) {
                 console.error('Erreur lors de la sauvegarde:', error);
-                this.showNotification('Erreur lors de la sauvegarde: ' + error.message, 'error');
+                
+                // Message d'erreur plus clair
+                let errorMessage = 'Erreur lors de la sauvegarde';
+                if (error.message && error.message.includes('API Error')) {
+                    errorMessage = 'Erreur serveur lors de la sauvegarde. Veuillez réessayer.';
+                } else if (error.message) {
+                    errorMessage = 'Erreur: ' + error.message;
+                }
+                
+                this.showNotification(errorMessage, 'error');
             } finally {
                 this.saving = false;
             }
@@ -693,10 +739,8 @@ const InterventionPrediagnosticForm = {
             const year = d.getFullYear();
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
-            const hours = String(d.getHours()).padStart(2, '0');
-            const minutes = String(d.getMinutes()).padStart(2, '0');
             
-            return `${year}-${month}-${day}T${hours}:${minutes}`;
+            return `${year}-${month}-${day}`;
         },
         
         formatDate(date) {
@@ -712,11 +756,53 @@ const InterventionPrediagnosticForm = {
         },
         
         
+        // Méthodes de notification utilisant le système centralisé (comme vehicle-interventions)
         showNotification(message, type = 'info') {
-            if (window.notificationService) {
-                window.notificationService.show(message, type);
+            // Utiliser les mêmes méthodes que vehicle-interventions
+            switch (type) {
+                case 'success':
+                    this.$notifySuccess(message);
+                    break;
+                case 'error':
+                    this.$notifyError(message);
+                    break;
+                case 'warning':
+                    this.$notifyWarning(message);
+                    break;
+                default:
+                    this.$notifyInfo(message);
+            }
+        },
+
+        $notifySuccess(message, options = {}) {
+            if (window.notifySuccess) {
+                return window.notifySuccess(message, options);
             } else {
-                alert(message);
+                console.log('[SUCCESS]', message);
+            }
+        },
+
+        $notifyError(message, options = {}) {
+            if (window.notifyError) {
+                return window.notifyError(message, options);
+            } else {
+                console.log('[ERROR]', message);
+            }
+        },
+
+        $notifyWarning(message, options = {}) {
+            if (window.notifyWarning) {
+                return window.notifyWarning(message, options);
+            } else {
+                console.log('[WARNING]', message);
+            }
+        },
+
+        $notifyInfo(message, options = {}) {
+            if (window.notifyInfo) {
+                return window.notifyInfo(message, options);
+            } else {
+                console.log('[INFO]', message);
             }
         },
         
@@ -736,18 +822,25 @@ const InterventionPrediagnosticForm = {
         
         async removeItem(index) {
             const item = this.form.items[index];
-            const confirmed = await window.notificationService.confirm(
-                `Êtes-vous sûr de vouloir supprimer l'opération "${item.operationLabel || 'sans libellé'}" ?`,
-                'Supprimer l\'opération',
-                'delete'
-            );
-            
-            if (confirmed) {
-                this.form.items.splice(index, 1);
-                // Réorganiser les index
-                this.form.items.forEach((item, idx) => {
-                    item.orderIndex = idx + 1;
+            try {
+                // Utiliser le système de confirmation centralisé
+                const confirmed = await window.confirmDestructive({
+                    title: 'Supprimer l\'opération',
+                    message: `Êtes-vous sûr de vouloir supprimer l'opération "${item.operationLabel || 'sans libellé'}" ?`,
+                    confirmText: 'Supprimer',
+                    cancelText: 'Annuler'
                 });
+
+                if (confirmed) {
+                    this.form.items.splice(index, 1);
+                    // Réorganiser les index
+                    this.form.items.forEach((item, idx) => {
+                        item.orderIndex = idx + 1;
+                    });
+                }
+            } catch (error) {
+                console.error('Erreur lors de la confirmation:', error);
+                this.showNotification('Erreur lors de la confirmation', 'error');
             }
         },
         
@@ -868,8 +961,8 @@ const InterventionPrediagnosticForm = {
         getStatusLabel(status) {
             const statusLabels = {
                 'reported': 'Signalé',
-                'in_prediagnostic': 'En prédiagnostique',
-                'prediagnostic_completed': 'Prédiagnostique terminé',
+                'in_prediagnostic': 'En prédiagnostic',
+                'prediagnostic_completed': 'Prédiagnostic terminé',
                 'in_quote': 'En devis',
                 'quote_received': 'Devis reçu',
                 'in_approval': 'En accord',
@@ -878,6 +971,7 @@ const InterventionPrediagnosticForm = {
                 'repair_completed': 'Réparation terminée',
                 'in_reception': 'En réception',
                 'vehicle_received': 'Véhicule reçu',
+                'invoiced': 'Facturé',
                 'cancelled': 'Annulé'
             };
             return statusLabels[status] || status;
@@ -900,6 +994,12 @@ const InterventionPrediagnosticForm = {
         // Méthodes pour les pièces jointes
         async loadAttachments() {
             if (!this.isEditMode || !this.form.id) return;
+            
+            // Vérifier que le service est disponible
+            if (!window.fileUploadService) {
+                console.warn('FileUploadService non disponible');
+                return;
+            }
             
             try {
                 this.attachments = await window.fileUploadService.getFiles('intervention_prediagnostic', this.form.id);
@@ -1001,3 +1101,11 @@ const InterventionPrediagnosticForm = {
         }
     }
 };
+
+// Exposer le composant globalement
+window.InterventionPrediagnosticForm = InterventionPrediagnosticForm;
+
+// Export pour les modules
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = InterventionPrediagnosticForm;
+}

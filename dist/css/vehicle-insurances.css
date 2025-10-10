@@ -65,26 +65,54 @@
 
 .page-header {
   margin-bottom: 30px;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 20px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .section-title {
-  font-size: 2rem;
+  font-size: 28px;
   font-weight: 600;
-  color: var(--text-primary, #333);
-  margin-bottom: 8px;
+  color: #2c3e50;
+  margin: 0 0 5px 0;
 }
 
 .page-subtitle {
-  color: var(--text-secondary, #666);
-  font-size: 1rem;
+  color: #6c757d;
+  font-size: 14px;
+  margin: 0;
 }
 
 .search-filter-bar {
   display: flex;
-  align-items: center;
-  gap: 20px;
+  align-items: stretch;
+  gap: 15px;
   margin-bottom: 30px;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
 .search-box {
@@ -121,6 +149,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 0 0 auto;
 }
 
 .filter-select {
@@ -131,7 +160,7 @@
   background: white;
   cursor: pointer;
   transition: border-color 0.3s ease;
-  min-width: 200px;
+  min-width: 220px;
 }
 
 .filter-select:focus {
@@ -516,7 +545,57 @@
   min-height: 80px;
 }
 
-/* Checkbox styles are inherited from intervention-types.css */
+/* Checkbox */
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-primary, #333);
+  margin: 0;
+  padding: 8px 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+  display: none !important;
+}
+
+.checkmark {
+  width: 20px !important;
+  height: 20px !important;
+  border: 2px solid var(--border-color, #ddd) !important;
+  border-radius: 4px !important;
+  position: relative;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+  background: var(--primary-color, #1e3c72) !important;
+  border-color: var(--primary-color, #1e3c72) !important;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+  content: '✓' !important;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  display: block !important;
+}
+
+.checkbox-text {
+  color: var(--text-primary, #333) !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+}
 
 /* Searchable Select */
 .searchable-select {
@@ -687,6 +766,26 @@
     padding: 15px;
   }
   
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .header-left {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .header-right {
+    width: 100%;
+  }
+  
+  .header-right .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
   .search-filter-bar {
     flex-direction: column;
     gap: 15px;
@@ -694,6 +793,14 @@
   
   .search-box {
     min-width: auto;
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+  
+  .filter-select {
+    width: 100%;
   }
   
   .form-row {

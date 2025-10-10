@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collaborateurs - Impact Auto</title>
+    
+    <!-- Inclusion automatique de tous les assets -->
+    <script src="js/app-includes.js"></script>
+    
+    <!-- CSS spécifiques à la page -->
+    <link rel="stylesheet" href="css/parametres-vue.css">
+    <link rel="stylesheet" href="css/collaborateurs.css">
+</head>
+<body>
+    <div id="app"></div>
+    
+    <!-- Script de la page -->
+    <script src="js/collaborateurs-vue.js"></script>
+    
+    <!-- Initialisation Vue.js -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attendre que Vue.js soit chargé
+            const checkVue = setInterval(() => {
+                if (window.Vue) {
+                    clearInterval(checkVue);
+                    
+                    const { createApp } = Vue;
+                    const app = createApp({
+                        components: {
+                            CollaborateurCrud: window.CollaborateurCrud
+                        },
+                        template: `
+                            <div class="main-content">
+                                <CollaborateurCrud />
+                            </div>
+                        `
+                    });
+                    
+                    app.mount('#app');
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>
+

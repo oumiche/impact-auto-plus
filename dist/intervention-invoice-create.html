@@ -3,16 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Création de Facture - Impact Auto</title>
+    <title>Créer une Facture - Impact Auto</title>
     
     <!-- Inclusion automatique de tous les assets -->
     <script src="js/app-includes.js"></script>
     
     <!-- CSS spécifiques à la page -->
     <link rel="stylesheet" href="css/intervention-invoice-form.css">
+    <link rel="stylesheet" href="css/intervention-search-unified.css">
+    <link rel="stylesheet" href="css/attachment-gallery.css">
 </head>
 <body>
     <div id="app"></div>
+    
+    <!-- Scripts spécifiques à la page -->
+    <script src="js/components/AttachmentGallery.js"></script>
     
     <!-- Script de la page -->
     <script src="js/intervention-invoice-form-vue.js"></script>
@@ -20,19 +25,30 @@
     <!-- Initialisation Vue.js -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Attendre que Vue.js soit chargé
-            const checkVue = setInterval(() => {
-                if (window.Vue) {
-                    clearInterval(checkVue);
+            // Attendre que Vue.js et les composants soient chargés
+            const checkComponents = setInterval(() => {
+                console.log('Vérification des composants:', {
+                    Vue: !!window.Vue,
+                    InterventionInvoiceForm: !!window.InterventionInvoiceForm,
+                    AttachmentGallery: !!window.AttachmentGallery,
+                    OCRProcessor: !!window.OCRProcessor,
+                    FileUploadService: !!window.fileUploadService
+                });
+                
+                if (window.Vue && window.InterventionInvoiceForm) {
+                    clearInterval(checkComponents);
+                    console.log('Composants prêts, montage de l\'application');
                     
                     const { createApp } = Vue;
                     const app = createApp({
                         components: {
-                            InterventionInvoiceForm
+                            InterventionInvoiceForm: window.InterventionInvoiceForm,
+                            AttachmentGallery: window.AttachmentGallery,
+                            OCRProcessor: window.OCRProcessor
                         },
                         template: `
                             <div class="main-content">
-                                <InterventionInvoiceForm />
+                                <InterventionInvoiceForm mode="create" />
                             </div>
                         `
                     });
@@ -40,6 +56,32 @@
                     app.mount('#app');
                 }
             }, 100);
+            
+            // Timeout de sécurité après 5 secondes
+            setTimeout(() => {
+                if (checkComponents) {
+                    clearInterval(checkComponents);
+                    console.warn('Timeout: montage de Vue sans tous les composants');
+                    
+                    if (window.Vue && window.InterventionInvoiceForm) {
+                        const { createApp } = Vue;
+                        const app = createApp({
+                            components: {
+                                InterventionInvoiceForm: window.InterventionInvoiceForm,
+                                AttachmentGallery: window.AttachmentGallery,
+                                OCRProcessor: window.OCRProcessor
+                            },
+                            template: `
+                                <div class="main-content">
+                                    <InterventionInvoiceForm mode="create" />
+                                </div>
+                            `
+                        });
+                        
+                        app.mount('#app');
+                    }
+                }
+            }, 5000);
         });
     </script>
 </body>

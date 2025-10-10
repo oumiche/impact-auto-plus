@@ -1196,6 +1196,9 @@ body {
     max-width: 500px;
     animation: slideInRight 0.3s ease-out;
     transition: var(--transition);
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
 }
 
 .notification i {

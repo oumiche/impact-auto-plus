@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Création d'Autorisation - Impact Auto</title>
+    <title>Création d'Accord Travaux - Impact Auto</title>
     
     <!-- Inclusion automatique de tous les assets -->
     <script src="js/app-includes.js"></script>
     
     <!-- CSS spécifiques à la page -->
     <link rel="stylesheet" href="css/intervention-work-authorization-form.css">
+    <link rel="stylesheet" href="css/intervention-search-unified.css">
 </head>
 <body>
     <div id="app"></div>
     
     <!-- Script de la page -->
+    <script src="js/components/AttachmentGallery.js"></script>
     <script src="js/intervention-work-authorization-form-vue.js"></script>
     
     <!-- Initialisation Vue.js -->
@@ -22,13 +24,19 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Attendre que Vue.js soit chargé
             const checkVue = setInterval(() => {
-                if (window.Vue) {
+                if (window.Vue && window.InterventionWorkAuthorizationForm && window.AttachmentGallery) {
                     clearInterval(checkVue);
+                    
+                    console.log('All components loaded:', {
+                        Vue: !!window.Vue,
+                        InterventionWorkAuthorizationForm: !!window.InterventionWorkAuthorizationForm,
+                        AttachmentGallery: !!window.AttachmentGallery
+                    });
                     
                     const { createApp } = Vue;
                     const app = createApp({
                         components: {
-                            InterventionWorkAuthorizationForm,
+                            InterventionWorkAuthorizationForm: window.InterventionWorkAuthorizationForm,
                             AttachmentGallery: window.AttachmentGallery
                         },
                         template: `

@@ -1,12 +1,7 @@
 /**
  * Impact Auto - Fuel Types Vue.js
- * Version compilée du composant FuelTypeCrud pour une utilisation simple
+ * Composant CRUD pour la gestion des types de carburant
  */
-
-// Vérifier que Vue.js est disponible
-if (typeof window.Vue === 'undefined') {
-    console.error('Vue.js n\'est pas chargé. Veuillez inclure Vue.js avant ce script.');
-}
 
 // Définir le composant FuelTypeCrud
 const FuelTypeCrud = {
@@ -87,10 +82,27 @@ const FuelTypeCrud = {
     },
     
     async mounted() {
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
         await this.loadFuelTypes();
     },
     
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadFuelTypes() {
             this.loading = true;
             try {

@@ -16,6 +16,9 @@
         css: [
             'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
             'css/impact-auto.css',
+            'css/unified-tables.css',
+            'css/intervention-search-unified.css',
+            /*'css/homepage.css',*/
             'css/parametres-vue.css',
             'css/intervention-types.css',
             'css/vehicle-interventions.css',
@@ -23,10 +26,27 @@
         ],
         js: [
             'js/services/ApiService.js',
+            'js/services/FileUploadService.js',
             'js/auth/auth-guard.js', 
             'js/sidebar-component.js',
             'js/load-sidebar.js',
-            'js/services/NotificationService.js'
+            'js/notification-service.js',
+            'js/components/NotificationMixin.js',
+            'js/confirmation-service-v2.js',
+            'js/components/ConfirmationMixin.js',
+            'js/components/AttachmentGallery.js',
+            'js/components/InterventionSearch.js',
+            'js/components/GarageSearch.js',
+            'js/components/SimpleInterventionSearch.js',
+            'js/components/SimpleGarageSearch.js',
+            'js/config/entity-configs.js',
+            'js/components/EntitySearch.js',
+            'js/components/VehicleSearch.js',
+            'js/components/InterventionSearchAdvanced.js',
+            'js/components/QuoteSearch.js',
+            'js/components/InvoiceSearch.js',
+            'js/components/CustomerSearch.js',
+            'js/components/SupplySearch.js'
         ]
     };
     
@@ -82,11 +102,26 @@
             document.addEventListener('DOMContentLoaded', async () => {
                 await loadVue();
                 await loadAllScripts();
+                
+                // Initialiser le sidebar après le chargement des scripts
+                if (window.SidebarLoader) {
+                    new window.SidebarLoader();
+                    window.sidebarLoaderInitialized = true;
+                }
+                
                 console.log('Impact Auto - Assets chargés');
             });
         } else {
             // DOM déjà chargé
-            loadVue().then(() => loadAllScripts());
+            loadVue().then(async () => {
+                await loadAllScripts();
+                
+                // Initialiser le sidebar après le chargement des scripts
+                if (window.SidebarLoader) {
+                    new window.SidebarLoader();
+                    window.sidebarLoaderInitialized = true;
+                }
+            });
         }
     }
     

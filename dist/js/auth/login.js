@@ -82,30 +82,12 @@ class ImpactAutoLogin {
             );
 
             if (data.token) {
-                // Stocker le token JWT
-                window.apiService.setToken(data.token);
-                
-                // Adapter la structure de données pour handleLoginSuccess
-                const adaptedData = {
+                // Utiliser directement les données de l'API (pas de données hardcodées)
+                const loginData = {
                     token: data.token,
-                    user: {
-                        id: 1, // TODO: Récupérer depuis l'API
-                        email: this.emailInput.value.trim(),
-                        username: this.emailInput.value.trim(),
-                        first_name: 'Administrateur',
-                        last_name: 'Impact Auto',
-                        user_type: 'super_admin'
-                    },
-                    tenants: [
-                        {
-                            id: 1,
-                            name: 'Impact Auto Demo',
-                            logo_url: null
-                        }
-                    ]
+                    user: data.user // Utiliser les vraies données de l'API
                 };
-                
-                this.handleLoginSuccess(adaptedData);
+                this.handleLoginSuccess(loginData);
             } else {
                 this.showError(data.message || 'Erreur de connexion');
             }
@@ -143,9 +125,9 @@ class ImpactAutoLogin {
             // Afficher un message de succès
             this.showSuccess('Connexion réussie ! Redirection...');
             
-            // Toujours rediriger vers la sélection de tenant pour forcer la sélection
+            // Rediriger vers la sélection de tenant (les tenants seront chargés depuis l'API)
             setTimeout(() => {
-                this.redirectToTenantSelection(data);
+                window.location.href = '/tenant-selection.html';
             }, 1500);
         } catch (error) {
             console.error('Erreur lors de la sauvegarde des données:', error);
@@ -153,13 +135,6 @@ class ImpactAutoLogin {
         }
     }
 
-    redirectToTenantSelection(data) {
-        // Stocker les tenants disponibles
-        localStorage.setItem('available_tenants', JSON.stringify(data.tenants));
-        
-        // Rediriger vers la page de sélection de tenant
-        window.location.href = '/tenant-selection.html';
-    }
 
     redirectToDashboard() {
         // Rediriger vers le dashboard

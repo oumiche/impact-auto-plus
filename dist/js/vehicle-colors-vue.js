@@ -1,9 +1,7 @@
-// Vérifier que Vue.js est disponible
-if (typeof Vue === 'undefined') {
-    console.error('Vue.js n\'est pas chargé. Veuillez inclure Vue.js avant ce script.');
-}
-
-console.log('VehicleColorCrud script loaded');
+/**
+ * Impact Auto - Vehicle Colors Vue.js
+ * Composant CRUD pour la gestion des couleurs de véhicules
+ */
 
 // Définir le composant VehicleColorCrud
 const VehicleColorCrud = {
@@ -17,10 +15,8 @@ const VehicleColorCrud = {
             deleting: false,
             searchTerm: '',
             showModal: false,
-            showDeleteModal: false,
             isEditing: false,
             currentColor: null,
-            colorToDelete: null,
             form: {
                 name: '',
                 hexCode: '',
@@ -57,51 +53,39 @@ const VehicleColorCrud = {
         }
     },
 
-    mounted() {
-        console.log('VehicleColorCrud mounted');
-        console.log('API Service available:', typeof window.apiService);
-        console.log('Component data:', this.$data);
-        this.loadColors();
+    async mounted() {
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
+        await this.loadColors();
     },
 
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadColors() {
             this.loading = true;
             try {
-                // Test avec des données mockées si l'API n'est pas disponible
-                if (!window.apiService) {
-                    console.log('API Service non disponible, utilisation de données mockées');
-                    this.colors = [
-                        {
-                            id: 1,
-                            name: 'Rouge',
-                            hexCode: '#FF0000',
-                            description: 'Rouge vif',
-                            createdAt: new Date().toISOString()
-                        },
-                        {
-                            id: 2,
-                            name: 'Bleu',
-                            hexCode: '#0000FF',
-                            description: 'Bleu marine',
-                            createdAt: new Date().toISOString()
-                        }
-                    ];
-                    this.totalItems = 2;
-                    this.totalPages = 1;
-                    this.loading = false;
-                    return;
-                }
-                
-                console.log('Calling API with searchTerm:', this.searchTerm, 'page:', this.currentPage);
                 const data = await window.apiService.getVehicleColors(this.searchTerm, 'all', this.currentPage, this.itemsPerPage);
                 
                 if (data.success) {
                     this.colors = data.data.map(this.adaptColorData);
-                    this.totalItems = data.pagination.total;
-                    this.totalPages = data.pagination.totalPages;
+                    this.totalItems = data.totalItems || data.data.length;
+                    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
                 } else {
-                    this.showNotification('Erreur lors du chargement des couleurs: ' + data.message, 'error');
+                    this.showNotification(data.message || 'Erreur lors du chargement', 'error');
                 }
             } catch (error) {
                 console.error('Erreur lors du chargement des couleurs:', error);
@@ -142,7 +126,6 @@ const VehicleColorCrud = {
         },
 
         onSearchChange() {
-            console.log('onSearchChange called, searchTerm:', this.searchTerm);
             this.currentPage = 1; // Reset to first page when searching
             this.loadColors();
         },
@@ -309,48 +292,44 @@ const VehicleColorCrud = {
             }
         },
 
-        confirmDelete(color) {
-            console.log('confirmDelete called', color);
-            console.log('showDeleteModal before:', this.showDeleteModal);
-            this.colorToDelete = color;
-            this.showDeleteModal = true;
-            console.log('showDeleteModal after:', this.showDeleteModal);
-        },
+        async confirmDelete(color) {
+            try {
+                // Utiliser le système de confirmation centralisé
+                const confirmed = await window.confirmDestructive({
+                    title: 'Supprimer la couleur',
+                    message: `Êtes-vous sûr de vouloir supprimer la couleur "${color.name}" ?`,
+                    confirmText: 'Supprimer',
+                    cancelText: 'Annuler'
+                });
 
-        closeDeleteModal() {
-            this.showDeleteModal = false;
-            this.colorToDelete = null;
-        },
-
-        closeDeleteModalOnOverlay(event) {
-            if (event.target === event.currentTarget) {
-                this.closeDeleteModal();
+                if (confirmed) {
+                    await this.deleteColor(color);
+                }
+            } catch (error) {
+                console.error('Erreur lors de la confirmation:', error);
+                this.showNotification('Erreur lors de la confirmation', 'error');
             }
         },
 
-        async deleteColor() {
-            if (!this.colorToDelete) return;
-            
+        async deleteColor(color) {
             this.deleting = true;
             try {
                 // Test avec des données mockées si l'API n'est pas disponible
                 if (!window.apiService) {
                     console.log('API Service non disponible, simulation de suppression');
-                    const index = this.colors.findIndex(c => c.id === this.colorToDelete.id);
+                    const index = this.colors.findIndex(c => c.id === color.id);
                     if (index !== -1) {
                         this.colors.splice(index, 1);
                     }
                     this.showNotification('Couleur supprimée avec succès (simulation)', 'success');
-                    this.closeDeleteModal();
                     this.deleting = false;
                     return;
                 }
                 
-                const data = await window.apiService.deleteVehicleColor(this.colorToDelete.id);
+                const data = await window.apiService.deleteVehicleColor(color.id);
                 
                 if (data.success) {
                     this.showNotification(data.message, 'success');
-                    this.closeDeleteModal();
                     this.loadColors();
                 } else {
                     this.showNotification('Erreur: ' + data.message, 'error');
@@ -375,36 +354,57 @@ const VehicleColorCrud = {
             });
         },
 
+        // Méthodes de notification utilisant le système centralisé (comme vehicle-interventions)
         showNotification(message, type = 'info') {
-            // Créer le conteneur s'il n'existe pas
-            let container = document.querySelector('.notification-container');
-            if (!container) {
-                container = document.createElement('div');
-                container.className = 'notification-container';
-                document.body.appendChild(container);
+            // Utiliser les mêmes méthodes que vehicle-interventions
+            switch (type) {
+                case 'success':
+                    this.$notifySuccess(message);
+                    break;
+                case 'error':
+                    this.$notifyError(message);
+                    break;
+                case 'warning':
+                    this.$notifyWarning(message);
+                    break;
+                default:
+                    this.$notifyInfo(message);
             }
-
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            
-            const icon = type === 'success' ? 'check-circle' : 
-                       type === 'error' ? 'exclamation-circle' : 
-                       type === 'warning' ? 'exclamation-triangle' : 'info-circle';
-            
-            notification.innerHTML = `
-                <i class="fas fa-${icon}"></i>
-                <span>${message}</span>
-            `;
-            
-            container.appendChild(notification);
-            
-            // Supprimer la notification après 5 secondes
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 5000);
         },
+
+        $notifySuccess(message, options = {}) {
+            if (window.notifySuccess) {
+                return window.notifySuccess(message, options);
+            } else {
+                console.log('[SUCCESS]', message);
+            }
+        },
+
+        $notifyError(message, options = {}) {
+            if (window.notifyError) {
+                return window.notifyError(message, options);
+            } else {
+                console.log('[ERROR]', message);
+            }
+        },
+
+        $notifyWarning(message, options = {}) {
+            if (window.notifyWarning) {
+                return window.notifyWarning(message, options);
+            } else {
+                console.log('[WARNING]', message);
+            }
+        },
+
+        $notifyInfo(message, options = {}) {
+            if (window.notifyInfo) {
+                return window.notifyInfo(message, options);
+            } else {
+                console.log('[INFO]', message);
+            }
+        },
+
+
 
         // Méthodes pour le color picker
         updateColorPreview(event) {
@@ -636,39 +636,6 @@ const VehicleColorCrud = {
                 </div>
             </div>
 
-            <!-- Delete Confirmation Modal -->
-            <div :class="['modal', { show: showDeleteModal }]" @click="closeDeleteModalOnOverlay">
-                <div class="modal-content modal-sm" @click.stop>
-                    <div class="modal-header">
-                        <h3>Confirmer la suppression</h3>
-                        <button class="modal-close" @click="closeDeleteModal">&times;</button>
-                    </div>
-                    
-                    <div class="modal-body">
-                        <div class="delete-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <p>Êtes-vous sûr de vouloir supprimer la couleur <strong>{{ colorToDelete?.name }}</strong> ?</p>
-                            <p class="text-muted">Cette action est irréversible.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @click="closeDeleteModal">
-                            Annuler
-                        </button>
-                        <button 
-                            type="button" 
-                            class="btn btn-danger" 
-                            @click="deleteColor"
-                            :disabled="deleting"
-                        >
-                            <i v-if="deleting" class="fas fa-spinner fa-spin"></i>
-                            <i v-else class="fas fa-trash"></i>
-                            {{ deleting ? 'Suppression...' : 'Supprimer' }}
-                        </button>
-                    </div>
-                </div>
-            </div>
         </div>
     `
 };
@@ -679,6 +646,5 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 // Enregistrer le composant globalement pour Vue
-if (typeof window !== 'undefined' && window.Vue) {
-    window.VehicleColorCrud = VehicleColorCrud;
-}
+// Exposer le composant globalement
+window.VehicleColorCrud = VehicleColorCrud;

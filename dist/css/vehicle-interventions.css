@@ -75,6 +75,37 @@
     gap: 12px;
 }
 
+.selected-item-details {
+    margin-top: 12px;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 4px 0;
+}
+
+.info-item .label {
+    font-weight: 600;
+    color: #495057;
+    margin-right: 8px;
+    white-space: nowrap;
+}
+
+.info-item .value {
+    color: #212529;
+    text-align: right;
+    flex: 1;
+}
+
 .details-btn {
     background: none;
     border: none;
@@ -304,6 +335,30 @@
 
 .page-header {
     margin-bottom: 30px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 20px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.header-left {
+    flex: 1;
+}
+
+.header-text {
+    flex: 1;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .section-title {
@@ -625,7 +680,9 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     max-width: 90vw;
     max-height: 90vh;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .modal-lg {
@@ -645,7 +702,13 @@
     justify-content: space-between;
     align-items: center;
     padding: 20px 24px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid #e0e0e0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .modal-header h3 {
@@ -672,6 +735,9 @@
 
 .modal-body {
     padding: 24px;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .modal-footer {
@@ -679,7 +745,13 @@
     justify-content: flex-end;
     gap: 12px;
     padding: 20px 24px;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid #e0e0e0;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    flex-shrink: 0;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .form-group {
@@ -744,37 +816,6 @@
     font-size: 14px;
 }
 
-.notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 12px 16px;
-    border-radius: 6px;
-    color: white;
-    font-weight: 500;
-    z-index: 1001;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.notification-success {
-    background: #28a745;
-}
-
-.notification-error {
-    background: #dc3545;
-}
-
-.notification-warning {
-    background: #ffc107;
-    color: #212529;
-}
-
-.notification-info {
-    background: #17a2b8;
-}
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -808,6 +849,7 @@
     .data-table td {
         padding: 8px 6px;
     }
+    
 }
 
 /* Styles pour le kilométrage */
@@ -994,6 +1036,12 @@
     color: #1b5e20;
 }
 
+.status-invoiced {
+    background: #e8f5e8;
+    color: #1b5e20;
+    border: 1px solid #a5d6a7;
+}
+
 .vehicle-interventions-table .status-in-approval,
 #app .status-in-approval {
     background: #fff8e1 !important;
@@ -1065,4 +1113,167 @@
 
 .workflow-modal .modal-body {
     padding: 0;
+}
+
+/* Barre de recherche simple */
+.search-bar-container {
+    flex: 1;
+    position: relative;
+}
+
+.search-bar-container .form-control {
+    width: 100%;
+    padding: 12px 16px 12px 40px;
+    font-size: 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.search-bar-container .form-control:focus {
+    outline: none;
+    border-color: #1e3c72;
+    box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+}
+
+.search-bar-container .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    pointer-events: none;
+}
+
+/* Badge de compteur */
+.badge-count {
+    background: #dc3545;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Overlay pour le panneau de filtres */
+.filters-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9998;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Panneau de filtres latéral */
+.filters-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background: white;
+    box-shadow: -2px 0 20px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s ease-out;
+}
+
+.filters-panel-open {
+    right: 0;
+}
+
+.filters-panel-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8f9fa;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.filters-panel-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.filters-panel-body {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.filter-section {
+    margin-bottom: 24px;
+}
+
+.filter-section .form-label {
+    display: block;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+}
+
+.filter-section .form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+}
+
+.filters-panel-actions {
+    padding: 16px 24px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    gap: 12px;
+    background: #f8f9fa;
+}
+
+.filters-panel-actions .btn {
+    flex: 1;
+}
+
+/* Bouton icône pour fermer */
+.btn-icon {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background: #e9ecef;
+    color: #212529;
+}
+
+/* Responsive pour filtres */
+@media (max-width: 768px) {
+    .filters-panel {
+        width: 100%;
+        right: -100%;
+    }
 }

@@ -65,26 +65,54 @@
 
 .page-header {
   margin-bottom: 30px;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 20px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .section-title {
-  font-size: 2rem;
+  font-size: 28px;
   font-weight: 600;
-  color: var(--text-primary, #333);
-  margin-bottom: 8px;
+  color: #2c3e50;
+  margin: 0 0 5px 0;
 }
 
 .page-subtitle {
-  color: var(--text-secondary, #666);
-  font-size: 1rem;
+  color: #6c757d;
+  font-size: 14px;
+  margin: 0;
 }
 
 .search-filter-bar {
   display: flex;
-  align-items: center;
-  gap: 20px;
+  align-items: stretch;
+  gap: 15px;
   margin-bottom: 30px;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
 .search-box {
@@ -121,6 +149,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 0 0 auto;
 }
 
 .filter-select {
@@ -131,7 +160,7 @@
   background: white;
   cursor: pointer;
   transition: border-color 0.3s ease;
-  min-width: 200px;
+  min-width: 180px;
 }
 
 .filter-select:focus {
@@ -628,6 +657,26 @@
     padding: 15px;
   }
   
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .header-left {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .header-right {
+    width: 100%;
+  }
+  
+  .header-right .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
   .search-filter-bar {
     flex-direction: column;
     gap: 15px;
@@ -635,6 +684,14 @@
   
   .search-box {
     min-width: auto;
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+  
+  .filter-select {
+    width: 100%;
   }
   
   .form-row {

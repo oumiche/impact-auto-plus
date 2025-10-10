@@ -10,9 +10,15 @@
     
     <!-- CSS spécifiques à la page -->
     <link rel="stylesheet" href="css/intervention-reception-report-form.css">
+    
+    <!-- Assets pour les pièces jointes -->
+    <link rel="stylesheet" href="css/attachment-gallery.css">
 </head>
 <body>
     <div id="app"></div>
+    
+    <!-- Scripts spécifiques à la page -->
+    <script src="js/components/AttachmentGallery.js"></script>
     
     <!-- Script de la page -->
     <script src="js/intervention-reception-report-form-vue.js"></script>
@@ -20,10 +26,20 @@
     <!-- Initialisation Vue.js -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Attendre que Vue.js soit chargé
-            const checkVue = setInterval(() => {
-                if (window.Vue) {
-                    clearInterval(checkVue);
+            // Attendre que tous les composants soient chargés
+            const checkComponents = setInterval(() => {
+                const components = {
+                    Vue: !!window.Vue,
+                    InterventionReceptionReportForm: !!window.InterventionReceptionReportForm,
+                    ApiService: !!window.apiService,
+                    AttachmentGallery: !!window.AttachmentGallery,
+                    FileUploadService: !!window.fileUploadService
+                };
+                
+                console.log('Vérification des composants:', components);
+                
+                if (components.Vue && components.InterventionReceptionReportForm && components.ApiService) {
+                    clearInterval(checkComponents);
                     
                     const { createApp } = Vue;
                     const app = createApp({
@@ -38,8 +54,17 @@
                     });
                     
                     app.mount('#app');
+                    console.log('Application Vue montée pour intervention-reception-report-create');
                 }
             }, 100);
+            
+            // Timeout de sécurité
+            setTimeout(() => {
+                if (document.getElementById('app').__vue__ === undefined) {
+                    console.warn('Timeout: montage de Vue sans tous les composants');
+                    clearInterval(checkComponents);
+                }
+            }, 5000);
         });
     </script>
 </body>

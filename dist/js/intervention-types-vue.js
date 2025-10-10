@@ -1,4 +1,7 @@
-const { createApp } = Vue;
+/**
+ * Impact Auto - Types d'Intervention Vue.js
+ * Composant CRUD pour la gestion des types d'intervention
+ */
 
 const InterventionTypeCrud = {
     template: `
@@ -50,52 +53,63 @@ const InterventionTypeCrud = {
                     <p>Commencez par créer votre premier type d'intervention.</p>
                 </div>
                 
-                <div v-else class="data-table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Nom</th>
-                                <th>Description</th>
-                                <th>Statut</th>
-                                <th>Créé le</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="interventionType in interventionTypes" :key="interventionType.id">
-                                <td>
-                                    <div class="intervention-type-name">
-                                        {{ interventionType.name }}
+                <div v-else class="parameters-grid">
+                    <div 
+                        v-for="interventionType in interventionTypes" 
+                        :key="interventionType.id"
+                        class="parameter-card"
+                    >
+                        <div class="parameter-header">
+                            <div class="intervention-type-info">
+                                <div class="parameter-key">{{ interventionType.name }}</div>
+                            </div>
+                            <div :class="['parameter-category', interventionType.isActive ? 'active' : 'inactive']">
+                                {{ interventionType.isActive ? 'Actif' : 'Inactif' }}
+                            </div>
+                        </div>
+                        
+                        <div class="parameter-body">
+                            <div class="parameter-value">
+                                <div class="intervention-type-details">
+                                    <div class="intervention-type-duration" v-if="interventionType.estimatedDuration">
+                                        <strong>Durée estimée:</strong> {{ interventionType.estimatedDuration }} heures
                                     </div>
-                                </td>
-                                <td>
-                                    <div class="intervention-type-description">
-                                        {{ interventionType.description || '-' }}
+                                    <div class="intervention-type-cost" v-if="interventionType.estimatedCost">
+                                        <strong>Coût estimé:</strong> {{ formatPrice(interventionType.estimatedCost) }}
                                     </div>
-                                </td>
-                                <td>
-                                    <span :class="['status-badge', interventionType.isActive ? 'status-active' : 'status-inactive']">
-                                        {{ interventionType.isActive ? 'Actif' : 'Inactif' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="date-info">
-                                        {{ formatDate(interventionType.createdAt) }}
+                                    <div class="intervention-type-code" v-if="interventionType.code">
+                                        <strong>Code:</strong> {{ interventionType.code }}
                                     </div>
-                                </td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn btn-sm btn-outline" @click="editInterventionType(interventionType)" title="Modifier">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" @click="deleteInterventionType(interventionType)" title="Supprimer">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                </div>
+                            </div>
+                            <div class="parameter-description">
+                                {{ interventionType.description || 'Aucune description' }}
+                            </div>
+                            
+                            <div class="parameter-meta">
+                                <div class="parameter-type">Créé le {{ formatDate(interventionType.createdAt) }}</div>
+                                <div class="parameter-status">
+                                    <div :class="['status-indicator', interventionType.isActive ? 'active' : 'inactive']"></div>
+                                    {{ interventionType.isActive ? 'Actif' : 'Inactif' }}
+                                </div>
+                            </div>
+                            
+                            <div class="parameter-actions">
+                                <button 
+                                    class="button btn-outline btn-sm" 
+                                    @click="editInterventionType(interventionType)"
+                                >
+                                    <i class="fas fa-edit"></i> Modifier
+                                </button>
+                                <button 
+                                    class="button btn-danger btn-sm" 
+                                    @click="deleteInterventionType(interventionType)"
+                                >
+                                    <i class="fas fa-trash"></i> Supprimer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -235,11 +249,34 @@ const InterventionTypeCrud = {
         };
     },
     
-    mounted() {
-        this.loadInterventionTypes();
+    computed: {
+        hasInterventionTypes() {
+            return this.interventionTypes && this.interventionTypes.length > 0;
+        }
+    },
+    
+    async mounted() {
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
+        await this.loadInterventionTypes();
     },
     
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadInterventionTypes() {
             this.loading = true;
             try {
@@ -392,6 +429,14 @@ const InterventionTypeCrud = {
                     notification.parentNode.removeChild(notification);
                 }
             }, 5000);
+        },
+        
+        formatPrice(price) {
+            if (!price) return 'N/A';
+            return new Intl.NumberFormat('fr-FR', {
+                style: 'currency',
+                currency: 'XOF'
+            }).format(price);
         }
     }
 };
@@ -401,3 +446,4 @@ if (typeof window !== 'undefined') {
     window.InterventionTypeCrud = InterventionTypeCrud;
     console.log('InterventionTypeCrud component registered globally');
 }
+

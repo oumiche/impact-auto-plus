@@ -20,15 +20,27 @@
     <!-- Initialisation Vue.js -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Attendre que Vue.js soit chargé
-            const checkVue = setInterval(() => {
-                if (window.Vue) {
-                    clearInterval(checkVue);
+            // Attendre que Vue.js et tous les services soient chargés
+            const checkComponents = setInterval(() => {
+                const components = {
+                    Vue: !!window.Vue,
+                    InterventionQuotesList: !!window.InterventionQuotesList,
+                    AttachmentGallery: !!window.AttachmentGallery,
+                    ApiService: !!window.apiService,
+                    NotificationService: !!window.NotificationService,
+                    ConfirmationServiceV2: !!window.ConfirmationServiceV2
+                };
+                
+                console.log('Vérification des composants:', components);
+                
+                if (components.Vue && components.InterventionQuotesList && components.ApiService) {
+                    clearInterval(checkComponents);
+                    console.log('Composants prêts, montage de l\'application');
                     
                     const { createApp } = Vue;
                     const app = createApp({
                         components: {
-                            InterventionQuotesList,
+                            InterventionQuotesList: window.InterventionQuotesList,
                             AttachmentGallery: window.AttachmentGallery
                         },
                         template: `
@@ -41,6 +53,14 @@
                     app.mount('#app');
                 }
             }, 100);
+            
+            // Timeout de sécurité après 10 secondes
+            setTimeout(() => {
+                if (document.getElementById('app').innerHTML === '') {
+                    console.log('Timeout: montage de Vue sans tous les services');
+                    clearInterval(checkComponents);
+                }
+            }, 10000);
         });
     </script>
 </body>

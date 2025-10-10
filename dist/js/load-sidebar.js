@@ -41,7 +41,7 @@ class SidebarLoader {
         <div class="sidebar-nav">
           <div class="nav-section">
             <div class="nav-section-title">Tableau de Bord</div>
-            <a href="/dashboard.html" class="nav-item" data-page="dashboard">
+            <a href="/dashboard-vue.html" class="nav-item" data-page="dashboard">
               <i class="fas fa-home"></i> Dashboard
             </a>
           </div>
@@ -69,7 +69,7 @@ class SidebarLoader {
               <i class="fas fa-clipboard-list"></i> Rapports de Réception
             </a>
             <a href="/maintenance.html" class="nav-item" data-page="maintenance">
-              <i class="fas fa-tools"></i> Maintenance
+              <i class="fas fa-tools"></i> Entretien
             </a>
           </div>
           <div class="nav-section">
@@ -116,9 +116,24 @@ class SidebarLoader {
   }
 
   setupSidebar() {
-    // Initialiser le composant sidebar
-    if (window.SidebarComponent) {
-      new window.SidebarComponent()
+    // Si SidebarComponent existe, réinitialiser ou créer
+    if (window.sidebarComponent) {
+      // Réattacher les événements car le DOM a changé
+      if (typeof window.sidebarComponent.attachLogoutButton === 'function') {
+        window.sidebarComponent.attachLogoutButton()
+      }
+      // Mettre à jour les informations utilisateur
+      this.updateUserInfo()
+      this.setActivePage()
+    } else if (window.SidebarComponent) {
+      // Créer une nouvelle instance si elle n'existe pas
+      window.sidebarComponent = new window.SidebarComponent()
+      // Attacher le bouton logout après la création
+      if (typeof window.sidebarComponent.attachLogoutButton === 'function') {
+        window.sidebarComponent.attachLogoutButton()
+      }
+      this.updateUserInfo()
+      this.setActivePage()
     } else {
       // Fallback simple
       this.setupSimpleSidebar()
@@ -269,22 +284,19 @@ class SidebarLoader {
 
   async logout() {
     try {
-      const token = localStorage.getItem('auth_token')
-      if (token) {
-        await fetch('/api/auth/logout.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        })
+      // Utiliser apiService pour déconnecter
+      if (window.apiService) {
+        await window.apiService.logout()
       }
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error)
     } finally {
+      // Nettoyer le localStorage
       localStorage.removeItem('auth_token')
       localStorage.removeItem('current_user')
       localStorage.removeItem('current_tenant')
+      
+      // Rediriger vers la page de connexion
       window.location.href = '/login.html'
     }
   }
@@ -298,7 +310,14 @@ window.toggleSidebar = function() {
   }
 }
 
-// Initialiser le chargement du sidebar
+// Exposer la classe globalement
+window.SidebarLoader = SidebarLoader
+
+// Initialiser le chargement du sidebar (seulement si pas déjà fait par app-includes.js)
 document.addEventListener('DOMContentLoaded', () => {
-  new SidebarLoader()
+  // Vérifier si le sidebar n'est pas déjà chargé
+  if (!document.getElementById('sidebar') && !window.sidebarLoaderInitialized) {
+    new SidebarLoader()
+    window.sidebarLoaderInitialized = true
+  }
 })

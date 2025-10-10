@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modification de Facture - Impact Auto</title>
+    <title>Modifier une Facture - Impact Auto</title>
     
     <!-- Inclusion automatique de tous les assets -->
     <script src="js/app-includes.js"></script>
     
     <!-- CSS spécifiques à la page -->
-    <link rel='stylesheet' href='css/intervention-invoice-form.css'>
+    <link rel="stylesheet" href="css/intervention-invoice-form.css">
+    <link rel="stylesheet" href="css/intervention-search-unified.css">
+    
+    <!-- Assets pour les pièces jointes -->
+    <link rel="stylesheet" href="css/attachment-gallery.css">
+    <script src="js/components/AttachmentGallery.js"></script>
 </head>
 <body>
     <div id="app"></div>
@@ -20,26 +25,55 @@
     <!-- Initialisation Vue.js -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Attendre que Vue.js soit chargé
-            const checkVue = setInterval(() => {
-                if (window.Vue) {
-                    clearInterval(checkVue);
+            // Récupérer l'ID de la facture depuis l'URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const invoiceId = urlParams.get('id');
+            
+            // Attendre que tous les composants soient chargés
+            const checkComponents = setInterval(() => {
+                const components = {
+                    Vue: !!window.Vue,
+                    InterventionInvoiceForm: !!window.InterventionInvoiceForm,
+                    ApiService: !!window.apiService,
+                    NotificationService: !!window.NotificationService,
+                    ConfirmationServiceV2: !!window.ConfirmationServiceV2,
+                    FileUploadService: !!window.fileUploadService,
+                    AttachmentGallery: !!window.AttachmentGallery
+                };
+                
+                console.log('Vérification des composants:', components);
+                console.log('Invoice ID:', invoiceId);
+                
+                if (components.Vue && components.InterventionInvoiceForm && components.ApiService) {
+                    clearInterval(checkComponents);
                     
                     const { createApp } = Vue;
                     const app = createApp({
                         components: {
-                                                        InterventionInvoiceForm
+                            InterventionInvoiceForm
                         },
                         template: `
                             <div class="main-content">
-                                <InterventionInvoiceForm />
+                                <InterventionInvoiceForm 
+                                    mode="edit" 
+                                    :invoice-id="${invoiceId || 'null'}"
+                                />
                             </div>
                         `
                     });
                     
                     app.mount('#app');
+                    console.log('Application Vue montée pour intervention-invoice-edit');
                 }
             }, 100);
+            
+            // Timeout de sécurité
+            setTimeout(() => {
+                if (document.getElementById('app').__vue__ === undefined) {
+                    console.warn('Timeout: montage de Vue sans tous les composants');
+                    clearInterval(checkComponents);
+                }
+            }, 5000);
         });
     </script>
 </body>

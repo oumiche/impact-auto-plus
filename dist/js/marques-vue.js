@@ -3,11 +3,6 @@
  * Composant CRUD pour la gestion des marques de véhicules
  */
 
-// Vérifier que Vue.js est disponible
-if (typeof Vue === 'undefined') {
-    console.error('Vue.js n\'est pas chargé. Veuillez inclure Vue.js avant ce script.');
-}
-
 // Définir le composant MarqueCrud
 const MarqueCrud = {
     name: 'MarqueCrud',
@@ -85,10 +80,27 @@ const MarqueCrud = {
     },
     
     async mounted() {
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
         await this.loadMarques();
     },
     
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadMarques() {
             this.loading = true;
             try {
@@ -598,26 +610,5 @@ const MarqueCrud = {
     `
 };
 
-// Initialiser l'application Vue.js
-document.addEventListener('DOMContentLoaded', () => {
-    // Vérifier que Vue.js est disponible
-    if (typeof Vue === 'undefined') {
-        console.error('Vue.js n\'est pas chargé. Veuillez inclure Vue.js avant ce script.');
-        return;
-    }
-
-    // Créer l'application Vue
-    const app = Vue.createApp({
-        components: {
-            MarqueCrud
-        },
-        template: `
-            <div class="main-content">
-                <MarqueCrud />
-            </div>
-        `
-    });
-
-    // Monter l'application
-    app.mount('#app');
-});
+// Exposer le composant globalement
+window.MarqueCrud = MarqueCrud;

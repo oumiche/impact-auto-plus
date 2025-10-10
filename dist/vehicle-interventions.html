@@ -4,38 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interventions Véhicules - Impact Auto</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="css/impact-auto.css">
+    
+    <!-- Inclusion automatique de tous les assets -->
+    <script src="js/app-includes.js"></script>
+    
+    <!-- CSS spécifiques à la page -->
     <link rel="stylesheet" href="css/parametres-vue.css">
     <link rel="stylesheet" href="css/intervention-types.css">
     <link rel="stylesheet" href="css/vehicle-interventions.css">
     <link rel="stylesheet" href="css/workflow-manager.css">
-    <!-- Vue.js CDN -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 </head>
 <body>
     <div id="app"></div>
-    <script src="js/services/ApiService.js"></script>
-    <script src="js/auth/auth-guard.js"></script>
-    <script src="js/sidebar-component.js"></script>
-    <script src="js/load-sidebar.js"></script>
-    <script src="js/services/NotificationService.js"></script>
+    
+    <!-- Scripts spécifiques à la page -->
     <script src="js/components/WorkflowManager.js"></script>
     <script src="js/vehicle-interventions-vue.js"></script>
+    
+    <!-- Initialisation Vue.js -->
     <script>
-        const { createApp } = Vue;
-        const app = createApp({
-            components: {
-                VehicleInterventionCrud
-            },
-            template: `
-                <div class="main-content">
-                    <VehicleInterventionCrud />
-                </div>
-            `
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attendre que Vue.js et tous les services soient chargés
+            const checkServices = setInterval(() => {
+                if (window.Vue && window.notificationService && window.apiService) {
+                    clearInterval(checkServices);
+                    
+                    const { createApp } = Vue;
+                    const app = createApp({
+                        components: {
+                            VehicleInterventionCrud: window.VehicleInterventionCrud
+                        },
+                        template: `
+                            <div class="main-content">
+                                <VehicleInterventionCrud />
+                            </div>
+                        `
+                    });
+                    
+                    app.mount('#app');
+                }
+            }, 100);
         });
-        
-        app.mount('#app');
     </script>
 </body>
 </html>

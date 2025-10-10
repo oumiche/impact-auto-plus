@@ -27,6 +27,8 @@ class ImpactAutoTenantSelection {
         const userData = localStorage.getItem('current_user');
         const token = localStorage.getItem('auth_token');
         
+        
+        
         if (!userData || !token) {
             this.showError('Données de session manquantes. Veuillez vous reconnecter.');
             setTimeout(() => {
@@ -49,19 +51,32 @@ class ImpactAutoTenantSelection {
 
     async loadTenants() {
         try {
-            console.log('Loading tenants...');
             const result = await window.apiService.getAvailableTenants();
-            console.log('Tenants result:', result);
 
             if (result.success) {
                 this.tenants = result.tenants || [];
-                console.log('Tenants loaded:', this.tenants);
             } else {
                 this.showError('Erreur lors du chargement des organisations: ' + result.message);
             }
         } catch (error) {
-            this.showError('Erreur de connexion au serveur');
             console.error('Error loading tenants:', error);
+            
+            // Vérifier si c'est une erreur d'authentification
+            if (error.message && (
+                error.message.includes('JWT Token not found') || 
+                error.message.includes('Token expiré') || 
+                error.message.includes('Token invalide') ||
+                error.message.includes('Authentication required') ||
+                error.message.includes('Unauthorized')
+            )) {
+                // Token expiré ou invalide
+                // ApiService.js gère déjà la redirection via handleAuthError()
+                // On affiche juste un message ici
+                console.log('Token expiré ou invalide - ApiService gère la redirection');
+                this.showError('Votre session a expiré. Redirection en cours...');
+            } else {
+                this.showError('Erreur de connexion au serveur. Veuillez réessayer.');
+            }
         }
     }
 

@@ -3,16 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Création de Devis - Impact Auto</title>
+    <title>Créer un Devis - Impact Auto</title>
     
     <!-- Inclusion automatique de tous les assets -->
     <script src="js/app-includes.js"></script>
     
     <!-- CSS spécifiques à la page -->
     <link rel="stylesheet" href="css/intervention-quote-form.css">
+    <link rel="stylesheet" href="css/attachment-gallery.css">
 </head>
 <body>
     <div id="app"></div>
+    
+    <!-- Scripts spécifiques à la page -->
+    <script src="js/services/FileUploadService.js"></script>
+    <script src="js/components/AttachmentGallery.js"></script>
     
     <!-- Script de la page -->
     <script src="js/intervention-quote-form-vue.js"></script>
@@ -20,28 +25,70 @@
     <!-- Initialisation Vue.js -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Attendre que Vue.js soit chargé
-            const checkVue = setInterval(() => {
-                if (window.Vue) {
-                    clearInterval(checkVue);
-                    
-                    const { createApp } = Vue;
-                    const app = createApp({
-                        components: {
-                            InterventionQuoteForm,
-                            AttachmentGallery: window.AttachmentGallery,
-                            OCRProcessor: window.OCRProcessor
-                        },
-                        template: `
-                            <div class="main-content">
-                                <InterventionQuoteForm />
-                            </div>
-                        `
-                    });
-                    
-                    app.mount('#app');
+            let appMounted = false;
+            let checkComponents;
+            
+            function mountApp() {
+                if (appMounted) return; // Éviter le double montage
+                
+                appMounted = true;
+                console.log('Montage de l\'application Vue.js');
+                
+                const { createApp } = Vue;
+                const app = createApp({
+                    components: {
+                        InterventionQuoteForm: window.InterventionQuoteForm,
+                        AttachmentGallery: window.AttachmentGallery || null,
+                        OCRProcessor: window.OCRProcessor || null
+                    },
+                    template: `
+                        <div class="main-content">
+                            <InterventionQuoteForm mode="create" />
+                        </div>
+                    `
+                });
+                
+                app.mount('#app');
+            }
+            
+            // Attendre que Vue.js et les composants soient chargés
+            checkComponents = setInterval(() => {
+                const componentsStatus = {
+                    Vue: !!window.Vue,
+                    InterventionQuoteForm: !!window.InterventionQuoteForm,
+                    AttachmentGallery: !!window.AttachmentGallery,
+                    OCRProcessor: !!window.OCRProcessor,
+                    FileUploadService: !!window.fileUploadService
+                };
+                
+                console.log('Vérification des composants:', componentsStatus);
+                
+                // Composants essentiels requis
+                if (window.Vue && window.InterventionQuoteForm) {
+                    clearInterval(checkComponents);
+                    console.log('Composants essentiels prêts, montage de l\'application');
+                    mountApp();
                 }
             }, 100);
+            
+            // Timeout de sécurité après 5 secondes
+            setTimeout(() => {
+                if (checkComponents) {
+                    clearInterval(checkComponents);
+                    console.warn('Timeout de sécurité: montage de Vue avec les composants disponibles');
+                    
+                    if (window.Vue && window.InterventionQuoteForm) {
+                        mountApp();
+                    } else {
+                        console.error('Impossible de monter l\'application: Vue.js ou InterventionQuoteForm manquants');
+                        document.getElementById('app').innerHTML = `
+                            <div class="notification is-danger">
+                                <p>Erreur de chargement: Impossible de charger l'application. Veuillez recharger la page.</p>
+                            </div>
+                        `;
+                    }
+                }
+            }, 5000);
         });
     </script>
 </body>

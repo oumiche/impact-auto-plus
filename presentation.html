@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impact Auto Plus - Présentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
+
+        .presentation {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 60px;
+            color: white;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .slide.prev {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+        /* Slide Title */
+        .slide-title {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .slide-subtitle {
+            font-size: 2rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            text-align: center;
+        }
+
+        .slide-content {
+            max-width: 1200px;
+            width: 100%;
+            font-size: 1.5rem;
+            line-height: 1.8;
+        }
+
+        /* Logo */
+        .logo {
+            font-size: 6rem;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .feature-card i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ffc107;
+        }
+
+        .feature-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+
+        /* List */
+        .slide-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .slide-list li {
+            padding: 20px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            border-left: 5px solid #ffc107;
+            font-size: 1.4rem;
+        }
+
+        .slide-list li i {
+            margin-right: 15px;
+            color: #ffc107;
+        }
+
+        /* Navigation */
+        .nav-controls {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 5px;
+            background: #ffc107;
+            transition: width 0.3s ease;
+            z-index: 1000;
+        }
+
+        /* Slide Counter */
+        .slide-counter {
+            position: fixed;
+            bottom: 40px;
+            left: 40px;
+            font-size: 1.2rem;
+            color: white;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Tech Stack */
+        .tech-stack {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .tech-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            min-width: 150px;
+        }
+
+        .tech-item i {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .tech-item span {
+            font-size: 1.2rem;
+            display: block;
+        }
+
+        /* Timeline */
+        .timeline {
+            margin-top: 40px;
+            padding-left: 40px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 20px 0 20px 60px;
+            border-left: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 25px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffc107;
+            border: 3px solid #1e3c72;
+        }
+
+        .timeline-item h3 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #ffc107;
+        }
+
+        .timeline-item p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+
+        /* Highlight box */
+        .highlight-box {
+            background: rgba(255, 193, 7, 0.2);
+            border: 2px solid #ffc107;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            font-size: 1.4rem;
+        }
+
+        .highlight-box strong {
+            color: #ffc107;
+            font-size: 1.6rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .slide-title { font-size: 3rem; }
+            .slide-subtitle { font-size: 1.5rem; }
+            .slide-content { font-size: 1.2rem; }
+            .features-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* Demo section */
+        .demo-screenshot {
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .demo-screenshot img {
+            max-width: 100%;
+            border-radius: 10px;
+        }
+
+        /* Key Features */
+        .key-features {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .key-feature {
+            background: rgba(255, 193, 7, 0.2);
+            padding: 15px 30px;
+            border-radius: 25px;
+            border: 2px solid #ffc107;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation">
+        <!-- Slide 1: Page de titre -->
+        <div class="slide active" data-slide="1">
+            <div class="logo">
+                <i class="fas fa-car-side"></i>
+            </div>
+            <h1 class="slide-title">Impact Auto Plus</h1>
+            <p class="slide-subtitle">Système de Gestion Intégré pour Garage Automobile</p>
+            <div class="key-features">
+                <span class="key-feature"><i class="fas fa-wrench"></i> Interventions</span>
+                <span class="key-feature"><i class="fas fa-chart-line"></i> Rapports</span>
+                <span class="key-feature"><i class="fas fa-tags"></i> Prix</span>
+                <span class="key-feature"><i class="fas fa-car"></i> Flotte</span>
+            </div>
+        </div>
+
+        <!-- Slide 2: Vue d'ensemble -->
+        <div class="slide" data-slide="2">
+            <h2 class="slide-title">Vue d'ensemble</h2>
+            <div class="slide-content">
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-tools"></i>
+                        <h3>Gestion des Interventions</h3>
+                        <p>Suivi complet du cycle de vie des interventions véhicules</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-users"></i>
+                        <h3>Multi-tenant</h3>
+                        <p>Support de plusieurs garages avec isolation des données</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-chart-bar"></i>
+                        <h3>Rapports Analytiques</h3>
+                        <p>5 rapports détaillés pour le pilotage d'activité</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>Sécurisé</h3>
+                        <p>Authentification JWT, gestion des rôles et permissions</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Architecture Technique -->
+        <div class="slide" data-slide="3">
+            <h2 class="slide-title">Architecture Technique</h2>
+            <div class="slide-content">
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <i class="fab fa-symfony" style="color: #000000;"></i>
+                        <span>Symfony 6.4</span>
+                    </div>
+                    <div class="tech-item">
+                        <i class="fab fa-vuejs" style="color: #42b883;"></i>
+                        <span>Vue.js 3</span>
+                    </div>
+                    <div class="tech-item">
+                        <i class="fas fa-database" style="color: #00758f;"></i>
+                        <span>MySQL / MariaDB</span>
+                    </div>
+                    <div class="tech-item">
+                        <i class="fas fa-lock" style="color: #ffc107;"></i>
+                        <span>JWT Auth</span>
+                    </div>
+                    <div class="tech-item">
+                        <i class="fab fa-php" style="color: #777bb4;"></i>
+                        <span>PHP 8.1+</span>
+                    </div>
+                </div>
+                <div class="highlight-box">
+                    <strong>Architecture RESTful</strong><br>
+                    API Backend Symfony + Frontend Vue.js découplé<br>
+                    Design moderne et responsive
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Fonctionnalités Principales -->
+        <div class="slide" data-slide="4">
+            <h2 class="slide-title">Fonctionnalités Principales</h2>
+            <div class="slide-content">
+                <ul class="slide-list">
+                    <li><i class="fas fa-clipboard-check"></i> <strong>Pré-diagnostic & Réception</strong> - Inspection initiale détaillée</li>
+                    <li><i class="fas fa-file-invoice"></i> <strong>Devis & Facturation</strong> - Génération automatique et validation</li>
+                    <li><i class="fas fa-signature"></i> <strong>Bon d'Autorisation (BA)</strong> - Workflow de validation client</li>
+                    <li><i class="fas fa-boxes"></i> <strong>Gestion Pièces</strong> - Stock et historique des fournitures</li>
+                    <li><i class="fas fa-truck"></i> <strong>Gestion Flotte</strong> - Véhicules, conducteurs, assignations</li>
+                    <li><i class="fas fa-gas-pump"></i> <strong>Carnet de Bord</strong> - Suivi carburant et kilométrage</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 5: Système de Rapports -->
+        <div class="slide" data-slide="5">
+            <h2 class="slide-title">Système de Rapports</h2>
+            <p class="slide-subtitle">5 Rapports Opérationnels</p>
+            <div class="slide-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value"><i class="fas fa-chart-line"></i></div>
+                        <div class="stat-label">Synthèse Générale</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value"><i class="fas fa-money-bill-wave"></i></div>
+                        <div class="stat-label">Analyse Coûts</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value"><i class="fas fa-clock"></i></div>
+                        <div class="stat-label">Délais</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value"><i class="fas fa-cars"></i></div>
+                        <div class="stat-label">Flotte</div>
+                    </div>
+                </div>
+                <div class="highlight-box">
+                    <i class="fas fa-exclamation-triangle"></i> <strong>Nouveau !</strong><br>
+                    Rapport "Analyse des Pannes" - Identification des pièces et pannes récurrentes
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Registre des Prix -->
+        <div class="slide" data-slide="6">
+            <h2 class="slide-title">Registre des Prix</h2>
+            <p class="slide-subtitle">Innovation Majeure</p>
+            <div class="slide-content">
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-robot"></i>
+                        <h3>Alimentation Auto</h3>
+                        <p>Capture automatique des prix lors de la validation des BA</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-hand-pointer"></i>
+                        <h3>Saisie Manuelle</h3>
+                        <p>Ajout manuel de prix avec recherche intelligente</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-globe"></i>
+                        <h3>Base Globale</h3>
+                        <p>Registre partagé entre tous les tenants</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-lightbulb"></i>
+                        <h3>Suggestions Prix</h3>
+                        <p>Analyse temps réel avec détection d'anomalies</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Analyse des Prix -->
+        <div class="slide" data-slide="7">
+            <h2 class="slide-title">Intelligence Tarifaire</h2>
+            <div class="slide-content">
+                <ul class="slide-list">
+                    <li><i class="fas fa-calculator"></i> <strong>Calcul Moyennes</strong> - Prix moyen, min, max par pièce/modèle</li>
+                    <li><i class="fas fa-exclamation-circle"></i> <strong>Détection Anomalies</strong> - Alertes sur écarts > 30%</li>
+                    <li><i class="fas fa-trophy"></i> <strong>Ranking</strong> - Classement des prix (TOP 10%, 25%, etc.)</li>
+                    <li><i class="fas fa-chart-line"></i> <strong>Évolution</strong> - Suivi de l'inflation et tendances</li>
+                    <li><i class="fas fa-balance-scale"></i> <strong>Comparaison</strong> - Analyse multi-fournisseurs</li>
+                </ul>
+                <div class="highlight-box">
+                    <i class="fas fa-magic"></i> <strong>Intégration Devis</strong><br>
+                    Suggestions automatiques lors de la création de lignes de devis
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Workflow Intervention -->
+        <div class="slide" data-slide="8">
+            <h2 class="slide-title">Workflow Intervention</h2>
+            <div class="slide-content">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <h3>1. Réception</h3>
+                        <p>Inspection véhicule + Pré-diagnostic</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>2. Devis</h3>
+                        <p>Création avec suggestions de prix</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>3. Autorisation</h3>
+                        <p>Validation client (BA) → Capture prix</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>4. Intervention</h3>
+                        <p>Réalisation travaux + Suivi</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>5. Facturation</h3>
+                        <p>Génération facture + Paiement</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Statistiques Projet -->
+        <div class="slide" data-slide="9">
+            <h2 class="slide-title">En Chiffres</h2>
+            <div class="slide-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">15+</div>
+                        <div class="stat-label">Entités Métier</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">50+</div>
+                        <div class="stat-label">Endpoints API</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">5</div>
+                        <div class="stat-label">Rapports Avancés</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">Responsive</div>
+                    </div>
+                </div>
+                <div class="highlight-box" style="margin-top: 60px;">
+                    <i class="fas fa-code"></i> <strong>Architecture Moderne</strong><br>
+                    Code propre, documenté, maintenable<br>
+                    Tests, migrations, versioning
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Points Forts -->
+        <div class="slide" data-slide="10">
+            <h2 class="slide-title">Points Forts</h2>
+            <div class="slide-content">
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-rocket"></i>
+                        <h3>Performance</h3>
+                        <p>Optimisations Doctrine, cache, requêtes efficaces</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>Sécurité</h3>
+                        <p>JWT, RBAC, validation, protection CSRF</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-paint-brush"></i>
+                        <h3>UX/UI</h3>
+                        <p>Interface intuitive, recherche instantanée, feedback visuel</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-sync-alt"></i>
+                        <h3>Évolutif</h3>
+                        <p>Architecture modulaire, extensible, documentée</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Démonstration -->
+        <div class="slide" data-slide="11">
+            <h2 class="slide-title">Démonstration</h2>
+            <p class="slide-subtitle">Parcours Utilisateur</p>
+            <div class="slide-content">
+                <ul class="slide-list">
+                    <li><i class="fas fa-sign-in-alt"></i> Connexion sécurisée (JWT)</li>
+                    <li><i class="fas fa-tachometer-alt"></i> Tableau de bord avec KPIs</li>
+                    <li><i class="fas fa-file-alt"></i> Création intervention complète</li>
+                    <li><i class="fas fa-chart-pie"></i> Consultation rapports analytiques</li>
+                    <li><i class="fas fa-tags"></i> Registre des prix et suggestions</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 12: Prochaines Étapes -->
+        <div class="slide" data-slide="12">
+            <h2 class="slide-title">Prochaines Étapes</h2>
+            <div class="slide-content">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <h3>Phase 2 - Rapports</h3>
+                        <p>Implémenter les 4 rapports restants (Satisfaction, Productivité, etc.)</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>Optimisations</h3>
+                        <p>Cache avancé, indexation, pagination optimisée</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>Mobile App</h3>
+                        <p>Application mobile pour les techniciens (React Native / Flutter)</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>Intégrations</h3>
+                        <p>ERP, comptabilité, SMS, notifications push</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Conclusion -->
+        <div class="slide" data-slide="13">
+            <div class="logo">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h1 class="slide-title">Merci !</h1>
+            <p class="slide-subtitle">Questions & Démonstration Live</p>
+            <div class="key-features" style="margin-top: 60px;">
+                <span class="key-feature"><i class="fas fa-envelope"></i> contact@impactauto.com</span>
+                <span class="key-feature"><i class="fas fa-globe"></i> www.impactauto.com</span>
+            </div>
+        </div>
+
+        <!-- Navigation Controls -->
+        <div class="nav-controls">
+            <button class="nav-btn" id="prevBtn" onclick="prevSlide()">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="nav-btn" id="nextBtn" onclick="nextSlide()">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar" id="progressBar"></div>
+
+        <!-- Slide Counter -->
+        <div class="slide-counter">
+            <span id="currentSlide">1</span> / <span id="totalSlides">13</span>
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const progressBar = document.getElementById('progressBar');
+        const currentSlideEl = document.getElementById('currentSlide');
+        const totalSlidesEl = document.getElementById('totalSlides');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        totalSlidesEl.textContent = totalSlides;
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active', 'prev');
+                if (index === currentSlideIndex) {
+                    slide.classList.add('active');
+                } else if (index < currentSlideIndex) {
+                    slide.classList.add('prev');
+                }
+            });
+
+            // Update progress bar
+            const progress = ((currentSlideIndex + 1) / totalSlides) * 100;
+            progressBar.style.width = progress + '%';
+
+            // Update counter
+            currentSlideEl.textContent = currentSlideIndex + 1;
+
+            // Update button states
+            prevBtn.disabled = currentSlideIndex === 0;
+            nextBtn.disabled = currentSlideIndex === totalSlides - 1;
+        }
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlides - 1) {
+                currentSlideIndex++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                updateSlide();
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                currentSlideIndex = 0;
+                updateSlide();
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                currentSlideIndex = totalSlides - 1;
+                updateSlide();
+            }
+        });
+
+        // Touch swipe support
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                nextSlide();
+            }
+            if (touchEndX > touchStartX + 50) {
+                prevSlide();
+            }
+        }
+
+        // Click on slide to advance (optional)
+        document.querySelectorAll('.slide').forEach(slide => {
+            slide.addEventListener('click', (e) => {
+                if (e.target === slide || e.target.classList.contains('slide-content')) {
+                    nextSlide();
+                }
+            });
+        });
+
+        // Initialize
+        updateSlide();
+    </script>
+</body>
+</html>

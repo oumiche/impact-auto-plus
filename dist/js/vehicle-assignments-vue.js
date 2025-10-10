@@ -3,11 +3,6 @@
  * Composant CRUD pour la gestion des assignations de véhicules
  */
 
-// Vérifier que Vue.js est disponible
-if (typeof Vue === 'undefined') {
-    console.error('Vue.js n\'est pas chargé. Veuillez inclure Vue.js avant ce script.');
-}
-
 // Définir le composant VehicleAssignmentCrud
 const VehicleAssignmentCrud = {
     name: 'VehicleAssignmentCrud',
@@ -16,8 +11,20 @@ const VehicleAssignmentCrud = {
         <div class="parameter-crud">
             <!-- Page Header -->
             <div class="page-header">
-                <h1 class="section-title">Assignations de Véhicules</h1>
-                <p class="page-subtitle">Gérez les assignations de véhicules aux conducteurs</p>
+                <div class="header-content">
+                    <div class="header-left">
+                        <div class="header-text">
+                            <h1 class="section-title">Assignations de Véhicules</h1>
+                            <p class="page-subtitle">Gérez les assignations de véhicules aux conducteurs</p>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <button class="btn btn-primary" @click="openCreateModal">
+                            <i class="fas fa-plus"></i>
+                            Nouvelle Assignation
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Search and Filter Bar -->
@@ -28,40 +35,18 @@ const VehicleAssignmentCrud = {
                         type="text" 
                         v-model="searchTerm"
                         @input="debouncedSearch"
-                        placeholder="Rechercher une assignation..."
+                        placeholder="Rechercher par véhicule, conducteur..."
                     >
                 </div>
                 
-                <div class="filter-buttons">
-                    <button 
-                        :class="['filter-btn', { active: activeFilter === 'all' }]"
-                        @click="setActiveFilter('all')"
-                    >
-                        Toutes
-                    </button>
-                    <button 
-                        :class="['filter-btn', { active: activeFilter === 'active' }]"
-                        @click="setActiveFilter('active')"
-                    >
-                        Actives
-                    </button>
-                    <button 
-                        :class="['filter-btn', { active: activeFilter === 'inactive' }]"
-                        @click="setActiveFilter('inactive')"
-                    >
-                        Inactives
-                    </button>
-                    <button 
-                        :class="['filter-btn', { active: activeFilter === 'terminated' }]"
-                        @click="setActiveFilter('terminated')"
-                    >
-                        Terminées
-                    </button>
+                <div class="filter-group">
+                    <select v-model="activeFilter" @change="setActiveFilter(activeFilter)" class="filter-select">
+                        <option value="all">Toutes</option>
+                        <option value="active">Actives</option>
+                        <option value="inactive">Inactives</option>
+                        <option value="terminated">Terminées</option>
+                    </select>
                 </div>
-                
-                <button class="btn btn-primary" @click="openCreateModal">
-                    <i class="fas fa-plus"></i> Nouvelle Assignation
-                </button>
             </div>
 
             <!-- Loading Indicator -->
@@ -94,7 +79,7 @@ const VehicleAssignmentCrud = {
                                 <div class="vehicle-info">
                                     <div class="vehicle-plate">{{ assignment.vehicle.plateNumber }}</div>
                                     <div class="vehicle-details">
-                                        {{ assignment.vehicle.brand }} {{ assignment.vehicle.model }}
+                                        {{ assignment.vehicle.brand?.name }} {{ assignment.vehicle.model?.name }}
                                         <span v-if="assignment.vehicle.year">({{ assignment.vehicle.year }})</span>
                                     </div>
                                 </div>
@@ -159,7 +144,7 @@ const VehicleAssignmentCrud = {
             </div>
 
             <!-- Create/Edit Assignment Modal -->
-            <div :class="['modal-overlay', { show: showModal }]" @click="closeModal">
+            <div v-if="showModal" class="modal-overlay show" @click="closeModal">
                 <div class="modal-content modal-lg" @click.stop>
                     <div class="modal-header">
                         <h3>{{ isEditing ? "Modifier l'assignation" : "Nouvelle assignation" }}</h3>
@@ -293,7 +278,7 @@ const VehicleAssignmentCrud = {
             </div>
 
             <!-- Delete Confirmation Modal -->
-            <div :class="['modal-overlay', { show: showDeleteModal }]" @click="closeDeleteModal">
+            <div v-if="showDeleteModal" class="modal-overlay show" @click="closeDeleteModal">
                 <div class="modal-content modal-sm" @click.stop>
                     <div class="modal-header">
                         <h3>Confirmer la suppression</h3>
@@ -380,13 +365,30 @@ const VehicleAssignmentCrud = {
         }
     },
     
-    mounted() {
-        this.loadAssignments();
-        this.loadVehicles();
-        this.loadDrivers();
+    async mounted() {
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
+        await this.loadAssignments();
+        await this.loadVehicles();
+        await this.loadDrivers();
     },
     
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadAssignments() {
             this.loading = true;
             try {
@@ -469,7 +471,7 @@ const VehicleAssignmentCrud = {
                 notes: assignment.notes || ''
             };
             
-            this.selectedVehicleName = `${assignment.vehicle.plateNumber} - ${assignment.vehicle.brand} ${assignment.vehicle.model}`;
+            this.selectedVehicleName = `${assignment.vehicle.plateNumber} - ${assignment.vehicle.brand?.name} ${assignment.vehicle.model?.name}`;
             this.selectedDriverName = `${assignment.driver.firstName} ${assignment.driver.lastName}`;
             this.vehicleSearch = '';
             this.driverSearch = '';
@@ -679,12 +681,5 @@ const VehicleAssignmentCrud = {
     }
 };
 
-// Export pour utilisation dans d'autres modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = VehicleAssignmentCrud;
-}
-
-// Enregistrement global pour Vue.js
-if (typeof window !== 'undefined') {
-    window.VehicleAssignmentCrud = VehicleAssignmentCrud;
-}
+// Exposer le composant globalement
+window.VehicleAssignmentCrud = VehicleAssignmentCrud;

@@ -3,11 +3,6 @@
  * Composant CRUD pour la gestion des catégories de fournitures
  */
 
-// Vérifier que Vue.js est disponible
-if (typeof Vue === 'undefined') {
-    console.error('Vue.js n\'est pas chargé. Veuillez inclure Vue.js avant ce script.');
-}
-
 // Définir le composant SupplyCategoryCrud
 const SupplyCategoryCrud = {
     name: 'SupplyCategoryCrud',
@@ -54,10 +49,27 @@ const SupplyCategoryCrud = {
     },
     
     async mounted() {
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
         await this.loadCategories();
     },
     
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadCategories() {
             this.loading = true;
             try {
@@ -714,7 +726,5 @@ const SupplyCategoryCrud = {
     `
 };
 
-// Exporter le composant
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = SupplyCategoryCrud;
-}
+// Exposer le composant globalement
+window.SupplyCategoryCrud = SupplyCategoryCrud;

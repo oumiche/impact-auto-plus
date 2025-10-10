@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test du système de notifications - Impact Auto</title>
+    
+    <!-- Inclusion automatique de tous les assets -->
+    <script src="js/app-includes.js"></script>
+</head>
+<body>
+    <div style="padding: 20px; font-family: Arial, sans-serif;">
+        <h1>Test du système de notifications</h1>
+        
+        <div style="margin: 20px 0;">
+            <h2>Test des fonctions globales</h2>
+            <button onclick="window.notifySuccess('Test de notification de succès !')" style="margin: 5px; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Notification Succès
+            </button>
+            
+            <button onclick="window.notifyError('Test de notification d\'erreur !')" style="margin: 5px; padding: 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Notification Erreur
+            </button>
+            
+            <button onclick="window.notifyWarning('Test de notification d\'avertissement !')" style="margin: 5px; padding: 10px; background: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer;">
+                Notification Avertissement
+            </button>
+            
+            <button onclick="window.notifyInfo('Test de notification d\'information !')" style="margin: 5px; padding: 10px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Notification Info
+            </button>
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <h2>Test avec options</h2>
+            <button onclick="window.notifySuccess('Notification de 3 secondes', {duration: 3000})" style="margin: 5px; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Notification 3s
+            </button>
+            
+            <button onclick="window.notifyError('Notification non fermable', {closable: false, duration: 10000})" style="margin: 5px; padding: 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Non fermable
+            </button>
+            
+            <button onclick="window.notifyInfo('Sans barre de progression', {progress: false, duration: 5000})" style="margin: 5px; padding: 10px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Sans progression
+            </button>
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <h2>Test des erreurs API</h2>
+            <button onclick="window.notifyApiError('Erreur simple')" style="margin: 5px; padding: 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Erreur API simple
+            </button>
+            
+            <button onclick="window.notifyApiError(new Error('Erreur avec objet Error'))" style="margin: 5px; padding: 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Erreur API objet
+            </button>
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <h2>Contrôle des notifications</h2>
+            <button onclick="window.notificationService.removeAll()" style="margin: 5px; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Supprimer toutes
+            </button>
+        </div>
+        
+        <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+            <h3>Instructions</h3>
+            <p>1. Cliquez sur les boutons pour tester les différents types de notifications</p>
+            <p>2. Vérifiez que les notifications s'affichent en haut à droite</p>
+            <p>3. Testez les animations d'entrée et de sortie</p>
+            <p>4. Vérifiez que les notifications se ferment automatiquement</p>
+            <p>5. Testez la fermeture manuelle avec le bouton X</p>
+        </div>
+        
+        <div id="status" style="margin: 20px 0; padding: 10px; background: #e9ecef; border-radius: 4px;">
+            <strong>Status:</strong> <span id="status-text">Chargement...</span>
+        </div>
+    </div>
+
+    <script>
+        // Vérifier le chargement des services
+        function checkServices() {
+            const status = document.getElementById('status-text');
+            
+            if (window.notificationService) {
+                status.textContent = '✅ NotificationService chargé';
+                status.style.color = '#28a745';
+            } else {
+                status.textContent = '❌ NotificationService non disponible';
+                status.style.color = '#dc3545';
+            }
+        }
+        
+        // Vérifier après un délai pour laisser le temps au chargement
+        setTimeout(checkServices, 1000);
+        
+        // Vérifier aussi quand le DOM est prêt
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkServices);
+        } else {
+            checkServices();
+        }
+    </script>
+</body>
+</html>

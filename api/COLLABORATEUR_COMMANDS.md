@@ -87,3 +87,6 @@ php bin/console app:list-collaborateurs --with-tenants
 - Il faut les associer manuellement à un tenant pour qu'ils apparaissent dans l'API
 - Un collaborateur peut être associé à plusieurs tenants
 - Les commandes respectent le système de multi-tenant de l'application
+
+
+INSERT INTO system_parameters (parameter_key, value, category, description) VALUES ('price_history_months', '6', 'price_registry', 'Nombre de mois pour calcul moyenne'), ('price_minimum_samples', '3', 'price_registry', 'Nombre minimum échantillons pour moyenne'), ('anomaly_threshold_critical', '50', 'price_registry', 'Seuil critique anomalie (%)'), ('anomaly_threshold_high', '30', 'price_registry', 'Seuil élevé anomalie (%)'), ('anomaly_threshold_medium', '20', 'price_registry', 'Seuil moyen anomalie (%)'), ('anomaly_threshold_low', '10', 'price_registry', 'Seuil faible anomalie (%)');

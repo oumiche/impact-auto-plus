@@ -1,0 +1,274 @@
+/* Styles unifiés pour la recherche d'interventions et garages */
+
+.intervention-search-container {
+    position: relative;
+    width: 100%;
+    z-index: 1000;
+}
+
+.intervention-search-container.active {
+    z-index: 1001;
+}
+
+.intervention-search-input {
+    width: 100%;
+    padding: 12px 45px 12px 15px;
+    border: 2px solid #e1e5e9;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.intervention-search-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.intervention-search-input:disabled,
+.intervention-search-input.disabled {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+    opacity: 0.6;
+    color: #6c757d;
+}
+
+.intervention-search-container.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.intervention-search-container.disabled .intervention-search-input {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+    color: #6c757d;
+}
+
+.intervention-search-container.disabled .intervention-search-toggle {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.intervention-search-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+
+.intervention-search-toggle:hover {
+    background: #f8f9fa;
+    color: #495057;
+}
+
+.intervention-search-toggle.active {
+    background: #007bff;
+    color: white;
+}
+
+.intervention-search-toggle:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.intervention-search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e1e5e9;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1001;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.search-input-container {
+    padding: 15px;
+    border-bottom: 1px solid #e1e5e9;
+    background: #f8f9fa;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    background: white;
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.intervention-results {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.loading-message,
+.no-results {
+    padding: 20px;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.loading-message i {
+    margin-right: 8px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.intervention-result-item {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f1f3f4;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.intervention-result-item:hover {
+    background-color: #f8f9fa;
+}
+
+.intervention-result-item:last-child {
+    border-bottom: none;
+}
+
+.intervention-code {
+    font-weight: 600;
+    color: #007bff;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.intervention-title {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.intervention-vehicle {
+    font-size: 13px;
+    color: #6c757d;
+}
+
+.quote-amount {
+    font-weight: 600;
+    color: #28a745;
+    font-size: 13px;
+}
+
+.intervention-status {
+    margin-top: 4px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-badge.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.status-in-progress {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-badge.status-completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.status-cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Styles pour les garages */
+.garage-name {
+    font-weight: 600;
+    color: #007bff;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.garage-address {
+    font-size: 13px;
+    color: #6c757d;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .intervention-search-dropdown {
+        max-height: 300px;
+    }
+    
+    .intervention-results {
+        max-height: 200px;
+    }
+    
+    .intervention-result-item {
+        padding: 12px 15px;
+    }
+    
+    .intervention-code,
+    .intervention-title {
+        font-size: 13px;
+    }
+    
+    .intervention-vehicle {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .intervention-search-input {
+        padding: 10px 40px 10px 12px;
+        font-size: 13px;
+    }
+    
+    .intervention-search-toggle {
+        right: 8px;
+        padding: 6px;
+    }
+    
+    .search-input-container {
+        padding: 12px;
+    }
+    
+    .search-input {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+}

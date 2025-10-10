@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Entity\InterventionReceptionReport;
 use App\Entity\VehicleIntervention;
 use App\Service\TenantService;
+use App\Service\CodeGenerationService;
+use App\Service\FileUploadService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use App\Repository\InterventionReceptionReportRepository;
@@ -18,22 +20,28 @@ use Psr\Log\LoggerInterface;
 class InterventionReceptionReportController extends AbstractTenantController
 {
     private EntityManagerInterface $entityManager;
-    private InterventionReceptionReportRepository $reportRepository;
+    private InterventionReceptionReportRepository $receptionReportRepository;
     private VehicleInterventionRepository $vehicleInterventionRepository;
     private ValidatorInterface $validator;
+    private CodeGenerationService $codeGenerationService;
+    private FileUploadService $fileUploadService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        InterventionReceptionReportRepository $reportRepository,
+        InterventionReceptionReportRepository $receptionReportRepository,
         VehicleInterventionRepository $vehicleInterventionRepository,
         ValidatorInterface $validator,
+        CodeGenerationService $codeGenerationService,
+        FileUploadService $fileUploadService,
         TenantService $tenantService
     ) {
         parent::__construct($tenantService);
         $this->entityManager = $entityManager;
-        $this->reportRepository = $reportRepository;
+        $this->receptionReportRepository = $receptionReportRepository;
         $this->vehicleInterventionRepository = $vehicleInterventionRepository;
         $this->validator = $validator;
+        $this->codeGenerationService = $codeGenerationService;
+        $this->fileUploadService = $fileUploadService;
     }
 
     #[Route('', name: 'intervention_reception_reports_list', methods: ['GET'])]
@@ -48,65 +56,100 @@ class InterventionReceptionReportController extends AbstractTenantController
             $page = (int) $request->query->get('page', 1);
             $limit = (int) $request->query->get('limit', 10);
             $search = $request->query->get('search', '');
-            $satisfaction = $request->query->get('satisfaction', '');
             $sortBy = $request->query->get('sortBy', 'receptionDate');
             $sortOrder = $request->query->get('sortOrder', 'DESC');
 
-            $logger->info("Page: {$page}, Limit: {$limit}, Search: {$search}, Satisfaction: {$satisfaction}");
+            $logger->info("Page: {$page}, Limit: {$limit}, Search: {$search}");
             $logger->info("Sort: {$sortBy} {$sortOrder}");
 
-            $reports = $this->reportRepository->findByTenantWithFilters(
-                $currentTenant,
-                $page,
-                $limit,
-                $search,
-                $satisfaction,
-                $sortBy,
-                $sortOrder
-            );
+            $queryBuilder = $this->receptionReportRepository->createQueryBuilder('rr')
+                ->leftJoin('rr.intervention', 'i')
+                ->leftJoin('i.vehicle', 'v')
+                ->leftJoin('v.brand', 'b')
+                ->leftJoin('v.model', 'm')
+                ->addSelect('i', 'v', 'b', 'm')
+                ->where('i.tenant = :tenant')
+                ->setParameter('tenant', $currentTenant);
 
-            $total = $this->reportRepository->countByTenantWithFilters($currentTenant, $search, $satisfaction);
-            $totalPages = ceil($total / $limit);
+            // Filtres de recherche
+            if (!empty($search)) {
+                $queryBuilder->andWhere('
+                    i.interventionNumber LIKE :search OR 
+                    i.title LIKE :search OR
+                    v.plateNumber LIKE :search OR
+                    b.name LIKE :search OR
+                    m.name LIKE :search OR
+                    rr.vehicleCondition LIKE :search OR
+                    rr.workCompleted LIKE :search
+                ')->setParameter('search', '%' . $search . '%');
+            }
 
-            $reportData = [];
-            foreach ($reports as $report) {
-                $reportData[] = [
+            // Pagination et tri
+            $totalQuery = clone $queryBuilder;
+            $total = $totalQuery->select('COUNT(rr.id)')->getQuery()->getSingleScalarResult();
+
+            $validSortFields = ['receptionDate', 'createdAt'];
+            $sortField = in_array($sortBy, $validSortFields) ? $sortBy : 'receptionDate';
+            
+            $queryBuilder
+                ->orderBy('rr.' . $sortField, $sortOrder === 'ASC' ? 'ASC' : 'DESC')
+                ->setFirstResult(($page - 1) * $limit)
+                ->setMaxResults($limit);
+
+            $receptionReports = $queryBuilder->getQuery()->getResult();
+
+            $receptionReportData = [];
+            foreach ($receptionReports as $report) {
+                // Récupérer le code existant
+                $entityCode = $this->codeGenerationService->getExistingCode('reception_report', $report->getId(), $currentTenant);
+                
+                $vehicle = $report->getIntervention()->getVehicle();
+                
+                $receptionReportData[] = [
                     'id' => $report->getId(),
-                    'receptionDate' => $report->getReceptionDate()->format('Y-m-d H:i:s'),
-                    'receivedBy' => $report->getReceivedBy(),
+                    'code' => $entityCode ? $entityCode->getCode() : null,
+                    'receptionNumber' => $report->getReceptionNumber(),
+                    'receptionDate' => $report->getReceptionDate() ? $report->getReceptionDate()->format('Y-m-d') : null,
                     'vehicleCondition' => $report->getVehicleCondition(),
                     'workCompleted' => $report->getWorkCompleted(),
                     'remainingIssues' => $report->getRemainingIssues(),
                     'customerSatisfaction' => $report->getCustomerSatisfaction(),
-                    'isVehicleReady' => $report->isVehicleReady(),
-                    'createdAt' => $report->getCreatedAt()->format('Y-m-d H:i:s'),
-                    'satisfactionScore' => $report->getSatisfactionScore(),
                     'satisfactionLabel' => $report->getSatisfactionLabel(),
+                    'isVehicleReady' => $report->isVehicleReady(),
                     'isSatisfactory' => $report->isSatisfactory(),
-                    'hasRemainingIssues' => $report->hasRemainingIssues(),
                     'requiresFollowUp' => $report->requiresFollowUp(),
-                    'overallRating' => $report->getOverallRating(),
+                    'createdAt' => $report->getCreatedAt()->format('Y-m-d H:i:s'),
                     'intervention' => [
                         'id' => $report->getIntervention()->getId(),
+                        'code' => $this->codeGenerationService->getExistingCode('intervention', $report->getIntervention()->getId(), $currentTenant)?->getCode(),
                         'interventionNumber' => $report->getIntervention()->getInterventionNumber(),
                         'title' => $report->getIntervention()->getTitle(),
                         'currentStatus' => $report->getIntervention()->getCurrentStatus(),
+                        'statusLabel' => $report->getIntervention()->getStatusLabel(),
                         'vehicle' => [
-                            'id' => $report->getIntervention()->getVehicle()->getId(),
-                            'plateNumber' => $report->getIntervention()->getVehicle()->getPlateNumber(),
-                            'brand' => $report->getIntervention()->getVehicle()->getBrand()->getName(),
-                            'model' => $report->getIntervention()->getVehicle()->getModel()->getName(),
-                            'year' => $report->getIntervention()->getVehicle()->getYear()
+                            'id' => $vehicle->getId(),
+                            'plateNumber' => $vehicle->getPlateNumber(),
+                            'brand' => [
+                                'id' => $vehicle->getBrand() ? $vehicle->getBrand()->getId() : null,
+                                'name' => $vehicle->getBrand() ? $vehicle->getBrand()->getName() : null,
+                            ],
+                            'model' => [
+                                'id' => $vehicle->getModel() ? $vehicle->getModel()->getId() : null,
+                                'name' => $vehicle->getModel() ? $vehicle->getModel()->getName() : null,
+                            ],
+                            'year' => $vehicle->getYear()
                         ]
                     ]
                 ];
             }
 
-            $logger->info("Found {$total} reports, returning " . count($reportData) . " for page {$page}");
+            $totalPages = ceil($total / $limit);
+
+            $logger->info("Found {$total} reception reports, returning " . count($receptionReportData) . " for page {$page}");
 
             return new JsonResponse([
                 'success' => true,
-                'data' => $reportData,
+                'data' => $receptionReportData,
                 'pagination' => [
                     'currentPage' => $page,
                     'totalPages' => $totalPages,
@@ -136,8 +179,8 @@ class InterventionReceptionReportController extends AbstractTenantController
         try {
             $currentTenant = $this->checkAuthAndGetTenant($request);
 
-            $report = $this->reportRepository->findByIdAndTenant($id, $currentTenant);
-            if (!$report) {
+            $report = $this->receptionReportRepository->find($id);
+            if (!$report || $report->getIntervention()->getTenant() !== $currentTenant) {
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'Rapport de réception non trouvé ou non autorisé',
@@ -145,41 +188,52 @@ class InterventionReceptionReportController extends AbstractTenantController
                 ], 404);
             }
 
-            $reportData = [
+            $vehicle = $report->getIntervention()->getVehicle();
+            
+            // Récupérer le code existant
+            $entityCode = $this->codeGenerationService->getExistingCode('reception_report', $report->getId(), $currentTenant);
+
+            $receptionReportData = [
                 'id' => $report->getId(),
-                'receptionDate' => $report->getReceptionDate()->format('Y-m-d H:i:s'),
-                'receivedBy' => $report->getReceivedBy(),
+                'code' => $entityCode ? $entityCode->getCode() : null,
+                'receptionNumber' => $report->getReceptionNumber(),
+                'interventionId' => $report->getIntervention()->getId(),
+                'receptionDate' => $report->getReceptionDate() ? $report->getReceptionDate()->format('Y-m-d') : null,
                 'vehicleCondition' => $report->getVehicleCondition(),
                 'workCompleted' => $report->getWorkCompleted(),
                 'remainingIssues' => $report->getRemainingIssues(),
                 'customerSatisfaction' => $report->getCustomerSatisfaction(),
-                'isVehicleReady' => $report->isVehicleReady(),
-                'createdAt' => $report->getCreatedAt()->format('Y-m-d H:i:s'),
-                'satisfactionScore' => $report->getSatisfactionScore(),
                 'satisfactionLabel' => $report->getSatisfactionLabel(),
+                'isVehicleReady' => $report->isVehicleReady(),
                 'isSatisfactory' => $report->isSatisfactory(),
-                'hasRemainingIssues' => $report->hasRemainingIssues(),
                 'requiresFollowUp' => $report->requiresFollowUp(),
-                'overallRating' => $report->getOverallRating(),
-                'isComplete' => $report->isComplete(),
+                'createdAt' => $report->getCreatedAt()->format('Y-m-d H:i:s'),
                 'intervention' => [
                     'id' => $report->getIntervention()->getId(),
+                    'code' => $this->codeGenerationService->getExistingCode('intervention', $report->getIntervention()->getId(), $currentTenant)?->getCode(),
                     'interventionNumber' => $report->getIntervention()->getInterventionNumber(),
                     'title' => $report->getIntervention()->getTitle(),
                     'currentStatus' => $report->getIntervention()->getCurrentStatus(),
+                    'statusLabel' => $report->getIntervention()->getStatusLabel(),
                     'vehicle' => [
-                        'id' => $report->getIntervention()->getVehicle()->getId(),
-                        'plateNumber' => $report->getIntervention()->getVehicle()->getPlateNumber(),
-                        'brand' => $report->getIntervention()->getVehicle()->getBrand()->getName(),
-                        'model' => $report->getIntervention()->getVehicle()->getModel()->getName(),
-                        'year' => $report->getIntervention()->getVehicle()->getYear()
+                        'id' => $vehicle->getId(),
+                        'plateNumber' => $vehicle->getPlateNumber(),
+                        'brand' => [
+                            'id' => $vehicle->getBrand() ? $vehicle->getBrand()->getId() : null,
+                            'name' => $vehicle->getBrand() ? $vehicle->getBrand()->getName() : null,
+                        ],
+                        'model' => [
+                            'id' => $vehicle->getModel() ? $vehicle->getModel()->getId() : null,
+                            'name' => $vehicle->getModel() ? $vehicle->getModel()->getName() : null,
+                        ],
+                        'year' => $vehicle->getYear()
                     ]
                 ]
             ];
 
             return new JsonResponse([
                 'success' => true,
-                'data' => $reportData
+                'data' => $receptionReportData
             ]);
 
         } catch (\Exception $e) {
@@ -196,8 +250,13 @@ class InterventionReceptionReportController extends AbstractTenantController
     public function create(Request $request): JsonResponse
     {
         try {
+            error_log("=== CREATION RAPPORT RECEPTION DEBUG ===");
+            error_log("Request content: " . $request->getContent());
+            
             $currentTenant = $this->checkAuthAndGetTenant($request);
             $data = json_decode($request->getContent(), true);
+            
+            error_log("Data decoded: " . json_encode($data));
 
             if (!$data) {
                 return new JsonResponse([
@@ -207,10 +266,15 @@ class InterventionReceptionReportController extends AbstractTenantController
                 ], 400);
             }
 
+            error_log("=== CREATION ENTITE RAPPORT ===");
             $report = new InterventionReceptionReport();
+
+            // Générer un numéro temporaire
+            $report->setReceptionNumber('TEMP-' . uniqid());
 
             // Validation de l'intervention
             if (!isset($data['interventionId'])) {
+                error_log("Intervention ID manquant");
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'L\'ID de l\'intervention est requis',
@@ -218,8 +282,11 @@ class InterventionReceptionReportController extends AbstractTenantController
                 ], 400);
             }
 
-            $intervention = $this->vehicleInterventionRepository->findByIdAndTenant($data['interventionId'], $currentTenant);
-            if (!$intervention) {
+            error_log("=== VERIFICATION INTERVENTION ===");
+            error_log("Intervention ID: " . $data['interventionId']);
+            $intervention = $this->vehicleInterventionRepository->find($data['interventionId']);
+            error_log("Intervention found: " . ($intervention ? 'YES' : 'NO'));
+            if (!$intervention || $intervention->getTenant() !== $currentTenant) {
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'Intervention non trouvée ou non autorisée',
@@ -229,11 +296,7 @@ class InterventionReceptionReportController extends AbstractTenantController
 
             $report->setIntervention($intervention);
 
-            // Définir les données de base
-            if (isset($data['receivedBy'])) {
-                $report->setReceivedBy($data['receivedBy']);
-            }
-
+            // Définir les données
             if (isset($data['receptionDate'])) {
                 $report->setReceptionDate(new \DateTime($data['receptionDate']));
             }
@@ -255,9 +318,17 @@ class InterventionReceptionReportController extends AbstractTenantController
             }
 
             if (isset($data['isVehicleReady'])) {
-                $report->setIsVehicleReady($data['isVehicleReady']);
+                $report->setIsVehicleReady((bool) $data['isVehicleReady']);
             }
 
+            // Définir l'utilisateur qui a reçu le véhicule
+            /** @var \App\Entity\User $user */
+            $user = $this->getUser();
+            if ($user) {
+                $report->setReceivedBy($user->getId());
+            }
+
+            error_log("=== VALIDATION ENTITE ===");
             // Valider l'entité
             $errors = $this->validator->validate($report);
             if (count($errors) > 0) {
@@ -265,6 +336,7 @@ class InterventionReceptionReportController extends AbstractTenantController
                 foreach ($errors as $error) {
                     $errorMessages[] = $error->getMessage();
                 }
+                error_log("Validation errors: " . implode(', ', $errorMessages));
 
                 return new JsonResponse([
                     'success' => false,
@@ -274,15 +346,41 @@ class InterventionReceptionReportController extends AbstractTenantController
                 ], 400);
             }
 
+            error_log("=== PERSISTENCE ===");
             $this->entityManager->persist($report);
             $this->entityManager->flush();
+            error_log("Reception report persisted successfully");
+
+            // Générer automatiquement un code pour le rapport
+            try {
+                error_log("=== GENERATION CODE RAPPORT ===");
+                $entityCode = $this->codeGenerationService->generateCode(
+                    'intervention_reception_report',
+                    $report->getId(),
+                    $currentTenant,
+                    $this->getUser()
+                );
+                $reportCode = $entityCode->getCode();
+                error_log("Report code generated: " . $reportCode);
+                
+                // Utiliser le code généré comme numéro de réception
+                $report->setReceptionNumber($reportCode);
+                $this->entityManager->flush();
+            } catch (\Exception $e) {
+                error_log("Erreur génération code rapport: " . $e->getMessage());
+                // Fallback : utiliser un numéro séquentiel basique
+                $reportCode = 'RR-' . str_pad((string)$report->getId(), 6, '0', STR_PAD_LEFT);
+                $report->setReceptionNumber($reportCode);
+                $this->entityManager->flush();
+            }
 
             return new JsonResponse([
                 'success' => true,
                 'message' => 'Rapport de réception créé avec succès',
                 'data' => [
                     'id' => $report->getId(),
-                    'receptionDate' => $report->getReceptionDate()->format('Y-m-d H:i:s')
+                    'code' => $reportCode,
+                    'receptionNumber' => $report->getReceptionNumber()
                 ]
             ], 201);
 
@@ -300,8 +398,13 @@ class InterventionReceptionReportController extends AbstractTenantController
     public function update(Request $request, int $id): JsonResponse
     {
         try {
+            error_log("=== MISE A JOUR RAPPORT RECEPTION DEBUG ===");
+            error_log("Request content: " . $request->getContent());
+            
             $currentTenant = $this->checkAuthAndGetTenant($request);
             $data = json_decode($request->getContent(), true);
+            
+            error_log("Data decoded: " . json_encode($data));
 
             if (!$data) {
                 return new JsonResponse([
@@ -311,8 +414,8 @@ class InterventionReceptionReportController extends AbstractTenantController
                 ], 400);
             }
 
-            $report = $this->reportRepository->findByIdAndTenant($id, $currentTenant);
-            if (!$report) {
+            $report = $this->receptionReportRepository->find($id);
+            if (!$report || $report->getIntervention()->getTenant() !== $currentTenant) {
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'Rapport de réception non trouvé ou non autorisé',
@@ -342,7 +445,7 @@ class InterventionReceptionReportController extends AbstractTenantController
             }
 
             if (isset($data['isVehicleReady'])) {
-                $report->setIsVehicleReady($data['isVehicleReady']);
+                $report->setIsVehicleReady((bool) $data['isVehicleReady']);
             }
 
             // Valider l'entité
@@ -361,15 +464,16 @@ class InterventionReceptionReportController extends AbstractTenantController
                 ], 400);
             }
 
+            error_log("=== PERSISTENCE UPDATE ===");
             $this->entityManager->persist($report);
             $this->entityManager->flush();
+            error_log("Rapport de réception mis à jour avec succès");
 
             return new JsonResponse([
                 'success' => true,
                 'message' => 'Rapport de réception mis à jour avec succès',
                 'data' => [
-                    'id' => $report->getId(),
-                    'receptionDate' => $report->getReceptionDate()->format('Y-m-d H:i:s')
+                    'id' => $report->getId()
                 ]
             ]);
 
@@ -389,8 +493,8 @@ class InterventionReceptionReportController extends AbstractTenantController
         try {
             $currentTenant = $this->checkAuthAndGetTenant($request);
 
-            $report = $this->reportRepository->findByIdAndTenant($id, $currentTenant);
-            if (!$report) {
+            $report = $this->receptionReportRepository->find($id);
+            if (!$report || $report->getIntervention()->getTenant() !== $currentTenant) {
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'Rapport de réception non trouvé ou non autorisé',
@@ -416,14 +520,15 @@ class InterventionReceptionReportController extends AbstractTenantController
         }
     }
 
-    #[Route('/{id}/complete', name: 'intervention_reception_report_complete', methods: ['POST'])]
-    public function markAsComplete(Request $request, int $id): JsonResponse
+    // Méthodes pour les pièces jointes
+    #[Route('/{id}/attachments', name: 'intervention_reception_report_attachments', methods: ['POST'])]
+    public function uploadAttachment(Request $request, int $id): JsonResponse
     {
         try {
             $currentTenant = $this->checkAuthAndGetTenant($request);
 
-            $report = $this->reportRepository->findByIdAndTenant($id, $currentTenant);
-            if (!$report) {
+            $report = $this->receptionReportRepository->find($id);
+            if (!$report || $report->getIntervention()->getTenant() !== $currentTenant) {
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'Rapport de réception non trouvé ou non autorisé',
@@ -431,53 +536,190 @@ class InterventionReceptionReportController extends AbstractTenantController
                 ], 404);
             }
 
-            // Marquer l'intervention comme terminée (vehicle_received)
-            $intervention = $report->getIntervention();
-            $intervention->setCurrentStatus('vehicle_received');
-            $intervention->setCompletedDate(new \DateTime());
+            $uploadedFile = $request->files->get('file');
+            if (!$uploadedFile) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Aucun fichier fourni',
+                    'code' => 400
+                ], 400);
+            }
 
-            $this->entityManager->persist($intervention);
-            $this->entityManager->flush();
+            $description = $request->request->get('description', '');
+            $uploadedBy = $this->getUser();
+
+            $attachment = $this->fileUploadService->uploadFile(
+                $uploadedFile,
+                'intervention_reception_report',
+                $report->getId(),
+                $currentTenant,
+                $description,
+                $uploadedBy
+            );
+
+            $response = $this->fileUploadService->createUploadResponse($attachment);
+            return new JsonResponse($response, 201);
+
+        } catch (\InvalidArgumentException $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => 400
+            ], 400);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'upload: ' . $e->getMessage(),
+                'code' => 500
+            ], 500);
+        }
+    }
+
+    #[Route('/{id}/attachments', name: 'intervention_reception_report_list_attachments', methods: ['GET'])]
+    public function listAttachments(Request $request, int $id): JsonResponse
+    {
+        try {
+            $currentTenant = $this->checkAuthAndGetTenant($request);
+
+            $report = $this->receptionReportRepository->find($id);
+            if (!$report || $report->getIntervention()->getTenant() !== $currentTenant) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Rapport de réception non trouvé ou non autorisé',
+                    'code' => 404
+                ], 404);
+            }
+
+            $attachments = $this->fileUploadService->getEntityFiles(
+                'intervention_reception_report',
+                $report->getId()
+            );
+
+            $response = $this->fileUploadService->createFileListResponse($attachments);
+            return new JsonResponse($response);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des fichiers: ' . $e->getMessage(),
+                'code' => 500
+            ], 500);
+        }
+    }
+
+    #[Route('/{id}/attachments/{fileId}', name: 'intervention_reception_report_delete_attachment', methods: ['DELETE'])]
+    public function deleteAttachment(Request $request, int $id, int $fileId): JsonResponse
+    {
+        try {
+            $currentTenant = $this->checkAuthAndGetTenant($request);
+
+            $report = $this->receptionReportRepository->find($id);
+            if (!$report || $report->getIntervention()->getTenant() !== $currentTenant) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Rapport de réception non trouvé ou non autorisé',
+                    'code' => 404
+                ], 404);
+            }
+
+            $this->fileUploadService->deleteFile($fileId, $currentTenant);
 
             return new JsonResponse([
                 'success' => true,
-                'message' => 'Intervention marquée comme terminée avec succès',
+                'message' => 'Fichier supprimé avec succès'
+            ]);
+
+        } catch (\InvalidArgumentException $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => 400
+            ], 400);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression du fichier: ' . $e->getMessage(),
+                'code' => 500
+            ], 500);
+        }
+    }
+
+    #[Route('/{id}/attachments/{fileId}/download', name: 'intervention_reception_report_download_attachment', methods: ['GET'])]
+    public function downloadAttachment(Request $request, int $id, int $fileId): JsonResponse
+    {
+        try {
+            $currentTenant = $this->checkAuthAndGetTenant($request);
+
+            $report = $this->receptionReportRepository->find($id);
+            if (!$report || $report->getIntervention()->getTenant() !== $currentTenant) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Rapport de réception non trouvé ou non autorisé',
+                    'code' => 404
+                ], 404);
+            }
+
+            $fileInfo = $this->fileUploadService->getFileInfo($fileId, $currentTenant);
+            if (!$fileInfo) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Fichier non trouvé',
+                    'code' => 404
+                ], 404);
+            }
+
+            return new JsonResponse([
+                'success' => true,
                 'data' => [
-                    'id' => $report->getId(),
-                    'interventionStatus' => 'vehicle_received'
+                    'url' => '/uploads/intervention_reception_report/' . $report->getId() . '/' . $fileInfo['fileName'],
+                    'fileName' => $fileInfo['fileName'],
+                    'originalName' => $fileInfo['originalName']
                 ]
             ]);
 
         } catch (\Exception $e) {
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Erreur lors du marquage de l\'intervention comme terminée',
-                'error' => $e->getMessage(),
+                'message' => 'Erreur lors du téléchargement du fichier: ' . $e->getMessage(),
                 'code' => 500
             ], 500);
         }
     }
 
-    #[Route('/statistics', name: 'intervention_reception_reports_statistics', methods: ['GET'])]
-    public function getStatistics(Request $request): JsonResponse
+    #[Route('/{id}/pdf', name: 'intervention_reception_report_pdf', methods: ['GET'])]
+    public function generatePdf(Request $request, int $id): JsonResponse
     {
         try {
             $currentTenant = $this->checkAuthAndGetTenant($request);
 
-            $statistics = $this->reportRepository->getStatistics($currentTenant);
+            $report = $this->receptionReportRepository->find($id);
+            if (!$report || $report->getIntervention()->getTenant() !== $currentTenant) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Rapport de réception non trouvé ou non autorisé',
+                    'code' => 404
+                ], 404);
+            }
 
+            // TODO: Implémenter la génération de PDF
+            // Pour l'instant, retourner un message d'information
             return new JsonResponse([
                 'success' => true,
-                'data' => $statistics
+                'message' => 'Génération de PDF à implémenter',
+                'data' => [
+                    'id' => $report->getId(),
+                    'intervention' => $report->getIntervention()->getInterventionNumber()
+                ]
             ]);
 
         } catch (\Exception $e) {
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Erreur lors du chargement des statistiques',
+                'message' => 'Erreur lors de la génération du PDF',
                 'error' => $e->getMessage(),
                 'code' => 500
             ], 500);
         }
     }
 }
+

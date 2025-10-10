@@ -59,21 +59,6 @@ class InterventionWorkAuthorizationRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /**
-     * Trouve les autorisations urgentes pour un tenant
-     */
-    public function findUrgentByTenant(Tenant $tenant): array
-    {
-        return $this->createQueryBuilder('iwa')
-            ->join('iwa.intervention', 'vi')
-            ->where('vi.tenant = :tenant')
-            ->andWhere('iwa.isUrgent = :isUrgent')
-            ->setParameter('tenant', $tenant)
-            ->setParameter('isUrgent', true)
-            ->orderBy('iwa.createdAt', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
 
     /**
      * Trouve les autorisations expirées
@@ -107,22 +92,11 @@ class InterventionWorkAuthorizationRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
 
-        $urgent = $this->createQueryBuilder('iwa')
-            ->select('COUNT(iwa.id)')
-            ->join('iwa.intervention', 'vi')
-            ->where('vi.tenant = :tenant')
-            ->andWhere('iwa.isUrgent = :isUrgent')
-            ->setParameter('tenant', $tenant)
-            ->setParameter('isUrgent', true)
-            ->getQuery()
-            ->getSingleScalarResult();
-
         $expired = $this->findExpiredByTenant($tenant);
         $expiredCount = count($expired);
 
         return [
             'total' => $total,
-            'urgent' => $urgent,
             'expired' => $expiredCount,
             'active' => $total - $expiredCount
         ];

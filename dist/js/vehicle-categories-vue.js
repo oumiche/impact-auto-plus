@@ -3,11 +3,6 @@
  * Composant CRUD pour la gestion des catégories de véhicules
  */
 
-// Vérifier que Vue.js est disponible
-if (typeof Vue === 'undefined') {
-    console.error('Vue.js n\'est pas chargé. Veuillez inclure Vue.js avant ce script.');
-}
-
 // Définir le composant VehicleCategoryCrud
 const VehicleCategoryCrud = {
     name: 'VehicleCategoryCrud',
@@ -45,10 +40,27 @@ const VehicleCategoryCrud = {
     },
     
     async mounted() {
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
         await this.loadCategories();
     },
     
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadCategories() {
             this.loading = true;
             try {
@@ -574,3 +586,6 @@ const VehicleCategoryCrud = {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = VehicleCategoryCrud;
 }
+
+// Exposer le composant globalement
+window.VehicleCategoryCrud = VehicleCategoryCrud;

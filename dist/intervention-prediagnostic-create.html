@@ -17,8 +17,6 @@
     <div id="app"></div>
     
     <!-- Scripts spécifiques à la page -->
-    <script src="js/services/FileUploadService.js"></script>
-    <script src="js/components/DateTimePicker.js"></script>
     <script src="js/components/AttachmentGallery.js"></script>
     
     <!-- Script de la page -->
@@ -35,7 +33,7 @@
                     const { createApp } = Vue;
                     const app = createApp({
                         components: {
-                            InterventionPrediagnosticForm,
+                            InterventionPrediagnosticForm: window.InterventionPrediagnosticForm,
                             AttachmentGallery: window.AttachmentGallery,
                             DateTimePicker: window.DateTimePicker
                         },

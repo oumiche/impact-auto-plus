@@ -1,130 +1,59 @@
 /**
- * Configuration centralisée pour Impact Auto
- * Ce fichier contient toutes les URLs et configurations communes
+ * Configuration de l'application Impact Auto
+ * Ce fichier centralise les paramètres d'environnement
  */
 
-window.ImpactAutoConfig = {
-    // Version de l'application
-    version: '1.0.0',
+const AppConfig = {
+    // Configuration des URL de l'API selon l'environnement
+    API_URLS: {
+        development: 'https://127.0.0.1:8000/api',
+        production: 'https://iautobackend.zeddev01.com/api'
+    },
     
-    // Configuration Vue.js
-    vue: {
-        // Utiliser Vue.js local ou CDN
-        useLocal: true,
+    /**
+     * Obtenir l'URL de l'API en fonction de l'environnement actuel
+     */
+    getApiUrl() {
+        const hostname = window.location.hostname;
         
-        // URLs pour Vue.js
-        local: {
-            prod: 'js/vue.global.prod.js',
-            dev: 'js/vue.global.js'
-        },
-        
-        cdn: {
-            prod: 'https://unpkg.com/vue@3/dist/vue.global.prod.js',
-            dev: 'https://unpkg.com/vue@3/dist/vue.global.js'
+        // Environnement de développement
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return this.API_URLS.development;
         }
+        
+        // Environnement de production
+        if (hostname.includes('zeddev01.com')) {
+            return this.API_URLS.production;
+        }
+        
+        // Fallback par défaut
+        console.warn('Environnement non reconnu, utilisation de l\'URL de production par défaut');
+        return this.API_URLS.production;
     },
     
-    // Configuration API
-    api: {
-        baseUrl: '/api',
-        timeout: 30000
+    /**
+     * Vérifier si on est en environnement de développement
+     */
+    isDevelopment() {
+        const hostname = window.location.hostname;
+        return hostname === 'localhost' || hostname === '127.0.0.1';
     },
     
-    // Configuration des assets
-    assets: {
-        css: [
-            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
-            'css/impact-auto.css'
-        ],
-        js: [
-            'js/services/ApiService.js',
-            'js/auth/auth-guard.js',
-            'js/sidebar-component.js',
-            'js/load-sidebar.js',
-            'js/services/NotificationService.js'
-        ]
+    /**
+     * Vérifier si on est en environnement de production
+     */
+    isProduction() {
+        return !this.isDevelopment();
     }
 };
 
-/**
- * Fonction pour charger Vue.js dynamiquement
- */
-window.loadVue = function() {
-    const config = window.ImpactAutoConfig.vue;
-    const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
-    
-    const vueUrl = config.useLocal 
-        ? (isProduction ? config.local.prod : config.local.dev)
-        : (isProduction ? config.cdn.prod : config.cdn.dev);
-    
-    return new Promise((resolve, reject) => {
-        if (window.Vue) {
-            resolve(window.Vue);
-            return;
-        }
-        
-        const script = document.createElement('script');
-        script.src = vueUrl;
-        script.onload = () => resolve(window.Vue);
-        script.onerror = reject;
-        document.head.appendChild(script);
-    });
-};
+// Exposer la configuration globalement
+window.AppConfig = AppConfig;
 
-/**
- * Fonction pour charger tous les assets CSS
- */
-window.loadCSS = function() {
-    const config = window.ImpactAutoConfig.assets.css;
-    
-    config.forEach(href => {
-        if (!document.querySelector(`link[href="${href}"]`)) {
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = href;
-            document.head.appendChild(link);
-        }
-    });
-};
-
-/**
- * Fonction pour charger tous les scripts JS
- */
-window.loadScripts = function() {
-    const config = window.ImpactAutoConfig.assets.js;
-    
-    return Promise.all(config.map(src => {
-        return new Promise((resolve, reject) => {
-            if (document.querySelector(`script[src="${src}"]`)) {
-                resolve();
-                return;
-            }
-            
-            const script = document.createElement('script');
-            script.src = src;
-            script.onload = resolve;
-            script.onerror = reject;
-            document.body.appendChild(script);
-        });
-    }));
-};
-
-/**
- * Fonction d'initialisation complète
- */
-window.initializeApp = async function() {
-    try {
-        // Charger CSS
-        window.loadCSS();
-        
-        // Charger Vue.js
-        await window.loadVue();
-        
-        // Charger scripts
-        await window.loadScripts();
-        
-        console.log('Impact Auto - Application initialisée');
-    } catch (error) {
-        console.error('Erreur lors de l\'initialisation:', error);
-    }
-};
+// Log pour debug
+console.log('AppConfig loaded:', {
+    hostname: window.location.hostname,
+    apiUrl: AppConfig.getApiUrl(),
+    isDevelopment: AppConfig.isDevelopment(),
+    isProduction: AppConfig.isProduction()
+});

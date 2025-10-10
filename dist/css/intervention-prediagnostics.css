@@ -118,14 +118,26 @@
 /* Boutons d'action */
 .action-buttons {
     display: flex;
-    gap: 4px;
+    gap: 8px;
     align-items: center;
+    justify-content: center;
 }
 
 .action-buttons .btn {
-    padding: 6px 8px;
-    font-size: 12px;
-    min-width: 32px;
+    padding: 10px 12px;
+    font-size: 14px;
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 /* Filtres */
@@ -293,7 +305,14 @@
     
     .action-buttons {
         flex-direction: column;
-        gap: 2px;
+        gap: 4px;
+    }
+    
+    .action-buttons .btn {
+        padding: 8px 10px;
+        font-size: 12px;
+        min-width: 36px;
+        height: 36px;
     }
 }
 
@@ -394,6 +413,172 @@
     letter-spacing: 0.5px;
 }
 
+/* Header left et right */
+.header-left {
+    flex: 1;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Barre de recherche simple */
+.search-bar-container {
+    flex: 1;
+    position: relative;
+}
+
+.search-bar-container .form-control {
+    width: 100%;
+    padding: 12px 16px 12px 40px;
+    font-size: 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.search-bar-container .form-control:focus {
+    outline: none;
+    border-color: #1e3c72;
+    box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+}
+
+.search-bar-container .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    pointer-events: none;
+}
+
+/* Badge de compteur */
+.badge-count {
+    background: #dc3545;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Overlay pour le panneau de filtres */
+.filters-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9998;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Panneau de filtres latéral */
+.filters-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background: white;
+    box-shadow: -2px 0 20px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s ease-out;
+}
+
+.filters-panel-open {
+    right: 0;
+}
+
+.filters-panel-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8f9fa;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.filters-panel-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.filters-panel-body {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.filter-section {
+    margin-bottom: 24px;
+}
+
+.filter-section .form-label {
+    display: block;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+}
+
+.filter-section .form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+}
+
+.filters-panel-actions {
+    padding: 16px 24px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    gap: 12px;
+    background: #f8f9fa;
+}
+
+.filters-panel-actions .btn {
+    flex: 1;
+}
+
+/* Bouton icône pour fermer */
+.btn-icon {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background: #e9ecef;
+    color: #212529;
+}
+
 /* Responsive pour l'en-tête */
 @media (max-width: 768px) {
     .header-content {
@@ -403,5 +588,10 @@
     
     .header-stats {
         justify-content: center;
+    }
+    
+    .filters-panel {
+        width: 100%;
+        right: -100%;
     }
 }

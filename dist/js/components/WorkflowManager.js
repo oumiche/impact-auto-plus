@@ -188,6 +188,8 @@ const WorkflowManager = {
     },
     
     async mounted() {
+        // Vérifier que les services requis sont disponibles
+        this.checkRequiredServices();
         await this.loadWorkflowStatus();
     },
     
@@ -319,6 +321,22 @@ const WorkflowManager = {
     `,
     
     methods: {
+        checkRequiredServices() {
+            const requiredServices = [
+                { name: 'apiService', obj: window.apiService },
+                { name: 'notificationService', obj: window.notificationService }
+            ];
+            
+            const missingServices = requiredServices.filter(service => !service.obj);
+            
+            if (missingServices.length > 0) {
+                console.warn('WorkflowManager: Services manquants:', missingServices.map(s => s.name));
+                console.warn('WorkflowManager: Certaines fonctionnalités peuvent ne pas fonctionner correctement');
+            } else {
+                console.log('WorkflowManager: Tous les services requis sont disponibles');
+            }
+        },
+        
         async loadWorkflowStatus() {
             if (!this.intervention.id) return;
             
@@ -341,11 +359,18 @@ const WorkflowManager = {
             const action = this.nextActions.find(a => a.action === actionName);
             if (!action) return;
             
-            const confirmed = await window.notificationService.confirm(
-                `Êtes-vous sûr de vouloir "${action.label.toLowerCase()}" ?`,
-                'Confirmer l\'action',
-                action.class.replace('btn-', '')
-            );
+            // Vérifier que le service de notification est disponible
+            let confirmed = false;
+            if (!window.notificationService || typeof window.notificationService.confirm !== 'function') {
+                console.error('NotificationService not available');
+                confirmed = confirm(`Êtes-vous sûr de vouloir "${action.label.toLowerCase()}" ?`);
+            } else {
+                confirmed = await window.notificationService.confirm(
+                    `Êtes-vous sûr de vouloir "${action.label.toLowerCase()}" ?`,
+                    'Confirmer l\'action',
+                    action.class.replace('btn-', '')
+                );
+            }
             
             if (!confirmed) return;
             
@@ -452,16 +477,17 @@ const WorkflowManager = {
         getProgressForStatus(status) {
             const statusOrder = {
                 'reported': 0,
-                'in_prediagnostic': 10,
-                'prediagnostic_completed': 20,
-                'in_quote': 30,
-                'quote_received': 40,
-                'in_approval': 50,
-                'approved': 60,
-                'in_repair': 70,
-                'repair_completed': 80,
-                'in_reception': 90,
-                'vehicle_received': 100,
+                'in_prediagnostic': 8,
+                'prediagnostic_completed': 16,
+                'in_quote': 25,
+                'quote_received': 33,
+                'in_approval': 41,
+                'approved': 50,
+                'in_repair': 60,
+                'repair_completed': 70,
+                'in_reception': 80,
+                'vehicle_received': 90,
+                'invoiced': 100,
                 'cancelled': 0
             };
             

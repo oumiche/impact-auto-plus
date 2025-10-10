@@ -104,6 +104,16 @@ class CollaborateurRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findAllActive(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->where('c.isActive = :active')
+            ->setParameter('active', true)
+            ->orderBy('c.lastName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function getCollaborateurStatistics(Tenant $tenant): array
     {
         $qb = $this->createQueryBuilder('c')

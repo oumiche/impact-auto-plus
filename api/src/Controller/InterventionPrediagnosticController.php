@@ -56,10 +56,16 @@ class InterventionPrediagnosticController extends AbstractTenantController
             $limit = (int) $request->query->get('limit', 10);
             $search = trim($request->query->get('search', ''));
             $interventionId = $request->query->get('interventionId');
+            $brandId = $request->query->get('brand', '');
+            $modelId = $request->query->get('model', '');
+            $startDate = $request->query->get('startDate', '');
+            $endDate = $request->query->get('endDate', '');
 
             $queryBuilder = $this->prediagnosticRepository->createQueryBuilder('p')
                 ->leftJoin('p.intervention', 'i')
                 ->leftJoin('i.vehicle', 'v')
+                ->leftJoin('v.brand', 'b')
+                ->leftJoin('v.model', 'm')
                 ->leftJoin('i.tenant', 't')
                 ->leftJoin('p.expert', 'e')
                 ->where('t = :tenant')
@@ -71,6 +77,8 @@ class InterventionPrediagnosticController extends AbstractTenantController
                     e.firstName LIKE :search OR 
                     e.lastName LIKE :search OR
                     v.plateNumber LIKE :search OR
+                    b.name LIKE :search OR
+                    m.name LIKE :search OR
                     i.title LIKE :search
                 ')->setParameter('search', '%' . $search . '%');
             }
@@ -78,6 +86,26 @@ class InterventionPrediagnosticController extends AbstractTenantController
             if ($interventionId) {
                 $queryBuilder->andWhere('i.id = :interventionId')
                     ->setParameter('interventionId', $interventionId);
+            }
+
+            if (!empty($brandId)) {
+                $queryBuilder->andWhere('v.brand = :brandId')
+                    ->setParameter('brandId', $brandId);
+            }
+
+            if (!empty($modelId)) {
+                $queryBuilder->andWhere('v.model = :modelId')
+                    ->setParameter('modelId', $modelId);
+            }
+
+            if (!empty($startDate)) {
+                $queryBuilder->andWhere('p.prediagnosticDate >= :startDate')
+                    ->setParameter('startDate', new \DateTime($startDate));
+            }
+
+            if (!empty($endDate)) {
+                $queryBuilder->andWhere('p.prediagnosticDate <= :endDate')
+                    ->setParameter('endDate', new \DateTime($endDate . ' 23:59:59'));
             }
 
             $totalQuery = clone $queryBuilder;
@@ -109,10 +137,14 @@ class InterventionPrediagnosticController extends AbstractTenantController
                             'vehicle' => [
                                 'id' => $prediagnostic->getIntervention()->getVehicle()->getId(),
                                 'plateNumber' => $prediagnostic->getIntervention()->getVehicle()->getPlateNumber(),
-                                'brand' => $prediagnostic->getIntervention()->getVehicle()->getBrand() ? 
-                                    $prediagnostic->getIntervention()->getVehicle()->getBrand()->getName() : null,
-                                'model' => $prediagnostic->getIntervention()->getVehicle()->getModel() ? 
-                                    $prediagnostic->getIntervention()->getVehicle()->getModel()->getName() : null,
+                                'brand' => $prediagnostic->getIntervention()->getVehicle()->getBrand() ? [
+                                    'id' => $prediagnostic->getIntervention()->getVehicle()->getBrand()->getId(),
+                                    'name' => $prediagnostic->getIntervention()->getVehicle()->getBrand()->getName()
+                                ] : null,
+                                'model' => $prediagnostic->getIntervention()->getVehicle()->getModel() ? [
+                                    'id' => $prediagnostic->getIntervention()->getVehicle()->getModel()->getId(),
+                                    'name' => $prediagnostic->getIntervention()->getVehicle()->getModel()->getName()
+                                ] : null,
                             ]
                         ],
                         'prediagnosticDate' => $prediagnostic->getPrediagnosticDate() ? 
@@ -137,8 +169,14 @@ class InterventionPrediagnosticController extends AbstractTenantController
                             'vehicle' => [
                                 'id' => null,
                                 'plateNumber' => 'N/A',
-                                'brand' => null,
-                                'model' => null,
+                                'brand' => [
+                                    'id' => null,
+                                    'name' => null
+                                ],
+                                'model' => [
+                                    'id' => null,
+                                    'name' => null
+                                ],
                             ]
                         ],
                         'prediagnosticDate' => $prediagnostic->getPrediagnosticDate() ? 

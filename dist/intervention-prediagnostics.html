@@ -20,19 +20,26 @@
     <!-- Initialisation Vue.js -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Attendre que Vue.js soit chargé
+            // Attendre que Vue.js soit chargé (comme vehicle-interventions)
             const checkVue = setInterval(() => {
-                if (window.Vue) {
+                console.log('Vérification des composants:', {
+                    Vue: !!window.Vue,
+                    InterventionPrediagnosticsList: !!window.InterventionPrediagnosticsList
+                });
+                
+                if (window.Vue && window.InterventionPrediagnosticsList) {
                     clearInterval(checkVue);
+                    
+                    console.log('Composants prêts, montage de l\'application');
                     
                     const { createApp } = Vue;
                     const app = createApp({
                         components: {
-                            InterventionPrediagnosticCrud
+                            InterventionPrediagnosticsList: window.InterventionPrediagnosticsList
                         },
                         template: `
                             <div class="main-content">
-                                <InterventionPrediagnosticCrud />
+                                <InterventionPrediagnosticsList />
                             </div>
                         `
                     });
@@ -40,6 +47,30 @@
                     app.mount('#app');
                 }
             }, 100);
+            
+            // Timeout de sécurité après 5 secondes
+            setTimeout(() => {
+                if (checkVue) {
+                    clearInterval(checkVue);
+                    console.warn('Timeout: montage de Vue sans tous les composants');
+                    
+                    if (window.Vue && window.InterventionPrediagnosticsList) {
+                        const { createApp } = Vue;
+                        const app = createApp({
+                            components: {
+                                InterventionPrediagnosticsList: window.InterventionPrediagnosticsList
+                            },
+                            template: `
+                                <div class="main-content">
+                                    <InterventionPrediagnosticsList />
+                                </div>
+                            `
+                        });
+                        
+                        app.mount('#app');
+                    }
+                }
+            }, 5000);
         });
     </script>
 </body>

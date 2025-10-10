@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Confirmation Display - Impact Auto</title>
+    
+    <!-- Inclusion automatique de tous les assets -->
+    <script src="js/app-includes.js"></script>
+</head>
+<body>
+    <div style="padding: 20px; font-family: Arial, sans-serif;">
+        <h1>Test Confirmation Display</h1>
+        
+        <div style="margin: 20px 0;">
+            <button id="testBtn" style="padding: 15px 30px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+                Afficher Confirmation
+            </button>
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <button id="manualBtn" style="padding: 15px 30px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+                Test Manuel
+            </button>
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <button id="cleanupBtn" style="padding: 15px 30px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+                Nettoyage
+            </button>
+        </div>
+        
+        <div id="status" style="margin: 20px 0; padding: 10px; background: #e9ecef; border-radius: 4px;">
+            <strong>Status:</strong> <span id="status-text">Chargement...</span>
+        </div>
+        
+        <div id="results" style="margin: 20px 0; padding: 10px; background: #d1ecf1; border-radius: 4px; min-height: 100px;">
+            <strong>Résultats:</strong>
+            <div id="results-content"></div>
+        </div>
+    </div>
+
+    <script>
+        function addResult(text) {
+            const resultsContent = document.getElementById('results-content');
+            const timestamp = new Date().toLocaleTimeString();
+            resultsContent.innerHTML += `<div style="margin: 5px 0; font-size: 14px;">[${timestamp}] ${text}</div>`;
+            resultsContent.scrollTop = resultsContent.scrollHeight;
+        }
+
+        function checkServices() {
+            const status = document.getElementById('status-text');
+            
+            if (window.confirmationService) {
+                status.textContent = '✅ ConfirmationService chargé';
+                status.style.color = '#28a745';
+                addResult('Service de confirmation chargé');
+            } else {
+                status.textContent = '❌ ConfirmationService non disponible';
+                status.style.color = '#dc3545';
+                addResult('Service de confirmation non disponible');
+            }
+        }
+
+        function testConfirmation() {
+            addResult('=== DÉBUT DU TEST ===');
+            
+            if (!window.confirmationService) {
+                addResult('ERREUR: Service non disponible');
+                return;
+            }
+
+            addResult('Création de la confirmation...');
+            
+            // Test simple sans interaction
+            window.confirmationService.warning({
+                title: 'Test Display',
+                message: 'Cette confirmation doit rester affichée.'
+            }).then(result => {
+                addResult('Confirmation fermée: ' + (result ? 'Confirmé' : 'Annulé'));
+                addResult('=== FIN DU TEST ===');
+            }).catch(error => {
+                addResult('ERREUR: ' + error.message);
+            });
+        }
+
+        function testManual() {
+            addResult('Test manuel - création directe...');
+            
+            // Créer manuellement l'élément
+            const container = document.getElementById('confirmation-container') || document.body;
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'confirmation-overlay';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.right = '0';
+            overlay.style.bottom = '0';
+            overlay.style.background = 'rgba(0, 0, 0, 0.5)';
+            overlay.style.zIndex = '10000';
+            overlay.style.display = 'flex';
+            overlay.style.alignItems = 'center';
+            overlay.style.justifyContent = 'center';
+            
+            const modal = document.createElement('div');
+            modal.className = 'confirmation-modal';
+            modal.style.background = 'white';
+            modal.style.padding = '20px';
+            modal.style.borderRadius = '8px';
+            modal.style.maxWidth = '400px';
+            
+            modal.innerHTML = `
+                <h3>Test Manuel</h3>
+                <p>Cette modal est créée manuellement.</p>
+                <div style="margin-top: 20px;">
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        Fermer
+                    </button>
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            container.appendChild(overlay);
+            
+            addResult('Modal manuelle créée');
+        }
+
+        function cleanup() {
+            addResult('Nettoyage en cours...');
+            
+            if (window.confirmationService) {
+                window.confirmationService.forceCleanup();
+            }
+            
+            // Nettoyer aussi les modals manuelles
+            const overlays = document.querySelectorAll('.confirmation-overlay');
+            overlays.forEach(overlay => overlay.remove());
+            
+            addResult('Nettoyage terminé');
+        }
+
+        // Attendre que tout soit chargé
+        function init() {
+            setTimeout(checkServices, 1000);
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', checkServices);
+            } else {
+                checkServices();
+            }
+        }
+
+        // Attendre un peu plus longtemps pour les services
+        setTimeout(() => {
+            const testBtn = document.getElementById('testBtn');
+            const manualBtn = document.getElementById('manualBtn');
+            const cleanupBtn = document.getElementById('cleanupBtn');
+            
+            if (testBtn) {
+                testBtn.addEventListener('click', testConfirmation);
+            }
+            
+            if (manualBtn) {
+                manualBtn.addEventListener('click', testManual);
+            }
+            
+            if (cleanupBtn) {
+                cleanupBtn.addEventListener('click', cleanup);
+            }
+        }, 2000);
+
+        init();
+    </script>
+</body>
+</html>

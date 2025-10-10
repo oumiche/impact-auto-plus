@@ -41,6 +41,10 @@ class VehicleInterventionController extends AbstractTenantController
             $status = $request->query->get('status', '');
             $priority = $request->query->get('priority', '');
             $vehicleId = $request->query->get('vehicle_id', '');
+            $brandId = $request->query->get('brand', '');
+            $modelId = $request->query->get('model', '');
+            $startDate = $request->query->get('startDate', '');
+            $endDate = $request->query->get('endDate', '');
 
             $queryBuilder = $this->interventionRepository->createQueryBuilder('i')
                 ->leftJoin('i.vehicle', 'v')
@@ -80,6 +84,26 @@ class VehicleInterventionController extends AbstractTenantController
                     ->setParameter('vehicleId', $vehicleId);
             }
 
+            if (!empty($brandId)) {
+                $queryBuilder->andWhere('v.brand = :brandId')
+                    ->setParameter('brandId', $brandId);
+            }
+
+            if (!empty($modelId)) {
+                $queryBuilder->andWhere('v.model = :modelId')
+                    ->setParameter('modelId', $modelId);
+            }
+
+            if (!empty($startDate)) {
+                $queryBuilder->andWhere('i.reportedDate >= :startDate')
+                    ->setParameter('startDate', new \DateTime($startDate));
+            }
+
+            if (!empty($endDate)) {
+                $queryBuilder->andWhere('i.reportedDate <= :endDate')
+                    ->setParameter('endDate', new \DateTime($endDate . ' 23:59:59'));
+            }
+
             // Pagination
             $totalQuery = clone $queryBuilder;
             $total = $totalQuery->select('COUNT(i.id)')->getQuery()->getSingleScalarResult();
@@ -95,6 +119,9 @@ class VehicleInterventionController extends AbstractTenantController
                 // Récupérer le code existant
                 $entityCode = $this->codeGenerationService->getExistingCode('intervention', $intervention->getId(), $currentTenant);
                 
+                $vehicle = $intervention->getVehicle();
+                $driver = $intervention->getDriver();
+                
                 $interventionData[] = [
                     'id' => $intervention->getId(),
                     'code' => $entityCode ? $entityCode->getCode() : null,
@@ -102,14 +129,41 @@ class VehicleInterventionController extends AbstractTenantController
                     'title' => $intervention->getTitle(),
                     'description' => $intervention->getDescription(),
                     'vehicle' => [
-                        'id' => $intervention->getVehicle()->getId(),
-                        'plateNumber' => $intervention->getVehicle()->getPlateNumber(),
-                        'brand' => $intervention->getVehicle()->getBrand() ? $intervention->getVehicle()->getBrand()->getName() : null,
-                        'model' => $intervention->getVehicle()->getModel() ? $intervention->getVehicle()->getModel()->getName() : null,
+                        'id' => $vehicle->getId(),
+                        'plateNumber' => $vehicle->getPlateNumber(),
+                        'vin' => $vehicle->getVin(),
+                        'brand' => [
+                            'id' => $vehicle->getBrand() ? $vehicle->getBrand()->getId() : null,
+                            'name' => $vehicle->getBrand() ? $vehicle->getBrand()->getName() : null,
+                        ],
+                        'model' => [
+                            'id' => $vehicle->getModel() ? $vehicle->getModel()->getId() : null,
+                            'name' => $vehicle->getModel() ? $vehicle->getModel()->getName() : null,
+                        ],
+                        'year' => $vehicle->getYear(),
+                        'color' => $vehicle->getColor() ? [
+                            'id' => $vehicle->getColor()->getId(),
+                            'name' => $vehicle->getColor()->getName(),
+                        ] : null,
+                        'fuelType' => $vehicle->getFuelType() ? [
+                            'id' => $vehicle->getFuelType()->getId(),
+                            'name' => $vehicle->getFuelType()->getName(),
+                        ] : null,
+                        'category' => $vehicle->getCategory() ? [
+                            'id' => $vehicle->getCategory()->getId(),
+                            'name' => $vehicle->getCategory()->getName(),
+                        ] : null,
+                        'mileage' => $vehicle->getMileage(),
+                        'status' => $vehicle->getStatus(),
                     ],
-                    'driver' => $intervention->getDriver() ? [
-                        'id' => $intervention->getDriver()->getId(),
-                        'fullName' => $intervention->getDriver()->getFullName(),
+                    'driver' => $driver ? [
+                        'id' => $driver->getId(),
+                        'fullName' => $driver->getFullName(),
+                        'phone' => $driver->getPhone(),
+                        'email' => $driver->getEmail(),
+                        'licenseNumber' => $driver->getLicenseNumber(),
+                        'licenseExpiryDate' => $driver->getLicenseExpiryDate() ? $driver->getLicenseExpiryDate()->format('Y-m-d') : null,
+                        'status' => $driver->getStatus(),
                     ] : null,
                     'interventionType' => $intervention->getInterventionType() ? [
                         'id' => $intervention->getInterventionType()->getId(),
@@ -185,21 +239,31 @@ class VehicleInterventionController extends AbstractTenantController
 
             $intervention = new VehicleIntervention();
             $intervention->setTenant($currentTenant);
-            $intervention->setTitle($data['title']);
-            $intervention->setDescription($data['description'] ?? null);
-            $intervention->setPriority($data['priority'] ?? 'medium');
-            $intervention->setCurrentStatus($data['currentStatus'] ?? 'reported');
+            
+            $title = isset($data['title']) ? (string) $data['title'] : '';
+            $intervention->setTitle($title);
+            
+            $description = isset($data['description']) ? (string) $data['description'] : null;
+            $intervention->setDescription($description);
+            
+            $priority = isset($data['priority']) ? (string) $data['priority'] : 'medium';
+            $intervention->setPriority($priority);
+            
+            $currentStatus = isset($data['currentStatus']) ? (string) $data['currentStatus'] : 'reported';
+            $intervention->setCurrentStatus($currentStatus);
             if (isset($data['estimatedDurationDays']) && is_numeric($data['estimatedDurationDays']) && $data['estimatedDurationDays'] !== '') {
                 $intervention->setEstimatedDurationDays((int) $data['estimatedDurationDays']);
             }
             if (isset($data['odometerReading']) && is_numeric($data['odometerReading']) && $data['odometerReading'] !== '' && method_exists($intervention, 'setOdometerReading')) {
                 $intervention->setOdometerReading((int) $data['odometerReading']);
             }
-            $intervention->setNotes($data['notes'] ?? null);
+            if (isset($data['notes'])) {
+                $intervention->setNotes($data['notes']);
+            }
             
             /** @var \App\Entity\User $user */
             $user = $this->getUser();
-            if ($user) {
+            if ($user && $user->getId()) {
                 $intervention->setReportedBy($user->getId());
             }
 
@@ -207,7 +271,8 @@ class VehicleInterventionController extends AbstractTenantController
             $intervention->setInterventionNumber('TEMP-' . uniqid());
 
             // Relations
-            $vehicle = $this->vehicleRepository->find($data['vehicleId']);
+            $vehicleId = isset($data['vehicleId']) ? (int) $data['vehicleId'] : null;
+            $vehicle = $this->vehicleRepository->find($vehicleId);
             if (!$vehicle || $vehicle->getTenant()->getId() !== $currentTenant->getId()) {
                 return new JsonResponse([
                     'success' => false,
@@ -216,26 +281,28 @@ class VehicleInterventionController extends AbstractTenantController
             }
             $intervention->setVehicle($vehicle);
 
-            if (!empty($data['driverId'])) {
-                $driver = $this->driverRepository->find($data['driverId']);
+            if (isset($data['driverId']) && !empty($data['driverId'])) {
+                $driverId = (int) $data['driverId'];
+                $driver = $this->driverRepository->find($driverId);
                 if ($driver && $driver->getTenant()->getId() === $currentTenant->getId()) {
                     $intervention->setDriver($driver);
                 }
             }
 
-            if (!empty($data['interventionTypeId'])) {
-                $interventionType = $this->interventionTypeRepository->find($data['interventionTypeId']);
+            if (isset($data['interventionTypeId']) && !empty($data['interventionTypeId'])) {
+                $interventionTypeId = (int) $data['interventionTypeId'];
+                $interventionType = $this->interventionTypeRepository->find($interventionTypeId);
                 if ($interventionType) {
                     $intervention->setInterventionType($interventionType);
                 }
             }
 
-            if (!empty($data['assignedTo'])) {
+            if (isset($data['assignedTo']) && !empty($data['assignedTo'])) {
                 $intervention->setAssignedTo((int) $data['assignedTo']);
             }
 
             // Dates
-            if (!empty($data['reportedDate'])) {
+            if (isset($data['reportedDate']) && !empty($data['reportedDate'])) {
                 $intervention->setReportedDate(new \DateTime($data['reportedDate']));
             }
 

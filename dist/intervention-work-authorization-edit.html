@@ -3,32 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modification d'Autorisation - Impact Auto</title>
+    <title>Modification d'Accord Travaux - Impact Auto</title>
     
     <!-- Inclusion automatique de tous les assets -->
     <script src="js/app-includes.js"></script>
     
     <!-- CSS spécifiques à la page -->
     <link rel="stylesheet" href="css/intervention-work-authorization-form.css">
+    <link rel="stylesheet" href="css/intervention-search-unified.css">
 </head>
 <body>
     <div id="app"></div>
     
     <!-- Script de la page -->
+    <script src="js/components/AttachmentGallery.js"></script>
     <script src="js/intervention-work-authorization-form-vue.js"></script>
     
     <!-- Initialisation Vue.js -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== HTML SCRIPT LOADED ===');
+            console.log('Vue available:', !!window.Vue);
+            console.log('InterventionWorkAuthorizationForm available:', !!window.InterventionWorkAuthorizationForm);
+            
             // Attendre que Vue.js soit chargé
             const checkVue = setInterval(() => {
-                if (window.Vue) {
+                if (window.Vue && window.InterventionWorkAuthorizationForm) {
                     clearInterval(checkVue);
+                    
+                    console.log('Vue found, creating app...');
+                    console.log('InterventionWorkAuthorizationForm:', window.InterventionWorkAuthorizationForm);
                     
                     const { createApp } = Vue;
                     const app = createApp({
                         components: {
-                            InterventionWorkAuthorizationForm,
+                            InterventionWorkAuthorizationForm: window.InterventionWorkAuthorizationForm,
                             AttachmentGallery: window.AttachmentGallery
                         },
                         template: `
@@ -38,9 +47,26 @@
                         `
                     });
                     
+                    console.log('Mounting app...');
                     app.mount('#app');
+                    console.log('App mounted');
+                    
+                    // Test simple pour vérifier que le composant est monté
+                    setTimeout(() => {
+                        const appElement = document.querySelector('#app');
+                        console.log('App element content:', appElement ? appElement.innerHTML.substring(0, 200) : 'No app element');
+                    }, 1000);
                 }
             }, 100);
+            
+            // Timeout de sécurité
+            setTimeout(() => {
+                if (window.Vue && !document.querySelector('#app').innerHTML) {
+                    console.error('App not mounted after 5 seconds');
+                    console.log('Vue available:', !!window.Vue);
+                    console.log('InterventionWorkAuthorizationForm available:', !!window.InterventionWorkAuthorizationForm);
+                }
+            }, 5000);
         });
     </script>
 </body>

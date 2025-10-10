@@ -29,7 +29,7 @@ class InterventionQuoteLine
 
     #[ORM\Column(type: Types::STRING, length: 20)]
     #[Groups(['quote_line:read', 'quote_line:write'])]
-    private ?string $workType = null;
+    private ?string $workType = null; // labor, supply, other
 
     #[ORM\Column(type: Types::INTEGER)]
     #[Groups(['quote_line:read', 'quote_line:write'])]

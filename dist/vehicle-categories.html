@@ -4,31 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catégories de Véhicules - Impact Auto</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="css/impact-auto.css">
+    
+    <!-- Inclusion automatique de tous les assets -->
+    <script src="js/app-includes.js"></script>
+    
+    <!-- CSS spécifiques à la page -->
     <link rel="stylesheet" href="css/parametres-vue.css">
     <link rel="stylesheet" href="css/vehicle-categories.css">
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 </head>
 <body>
     <div id="app"></div>
-    <script src="js/services/ApiService.js"></script>
-    <script src="js/sidebar-component.js"></script>
-    <script src="js/load-sidebar.js"></script>
+    
+    <!-- Script de la page -->
     <script src="js/vehicle-categories-vue.js"></script>
+    
+    <!-- Initialisation Vue.js -->
     <script>
-        const { createApp } = Vue;
-        const app = createApp({
-            components: {
-                VehicleCategoryCrud
-            },
-            template: `
-                <div class="main-content">
-                    <VehicleCategoryCrud />
-                </div>
-            `
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attendre que Vue.js soit chargé
+            const checkVue = setInterval(() => {
+                if (window.Vue) {
+                    clearInterval(checkVue);
+                    
+                    const { createApp } = Vue;
+                    const app = createApp({
+                        components: {
+                            VehicleCategoryCrud: window.VehicleCategoryCrud
+                        },
+                        template: `
+                            <div class="main-content">
+                                <VehicleCategoryCrud />
+                            </div>
+                        `
+                    });
+                    
+                    app.mount('#app');
+                }
+            }, 100);
         });
-        app.mount('#app');
     </script>
 </body>
 </html>

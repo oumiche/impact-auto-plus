@@ -540,12 +540,7 @@
     font-size: 14px;
 }
 
-/* Styles pour la recherche d'interventions */
-.intervention-search-container {
-    position: relative;
-    width: 100%;
-    z-index: 1000;
-}
+/* Styles de recherche d'interventions maintenant dans intervention-search-unified.css */
 
 /* Collaborator Search Styles */
 .collaborator-search-container {
@@ -699,163 +694,7 @@
     font-size: 16px;
 }
 
-.intervention-search-input {
-    width: 100%;
-    padding: 12px 45px 12px 15px;
-    border: 2px solid #e1e5e9;
-    border-radius: 6px;
-    font-size: 14px;
-    background: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.intervention-search-input:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-.intervention-search-toggle {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: #6c757d;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 4px;
-    transition: all 0.3s ease;
-}
-
-.intervention-search-toggle:hover {
-    background: #f8f9fa;
-    color: #495057;
-}
-
-.intervention-search-toggle.active {
-    background: #007bff;
-    color: white;
-}
-
-.intervention-search-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 1px solid #e1e5e9;
-    border-top: none;
-    border-radius: 0 0 6px 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 1001;
-    max-height: 400px;
-    overflow: hidden;
-}
-
-.search-input-container {
-    padding: 15px;
-    border-bottom: 1px solid #e1e5e9;
-    background: #f8f9fa;
-}
-
-.search-input {
-    width: 100%;
-    padding: 10px 15px;
-    border: 1px solid #e1e5e9;
-    border-radius: 4px;
-    font-size: 14px;
-    background: white;
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
-}
-
-.intervention-results {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.loading-message, .no-results {
-    padding: 20px;
-    text-align: center;
-    color: #6c757d;
-    font-style: italic;
-}
-
-.intervention-result-item {
-    padding: 15px;
-    border-bottom: 1px solid #f1f3f4;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.intervention-result-item:hover {
-    background: #f8f9fa;
-}
-
-.intervention-result-item:last-child {
-    border-bottom: none;
-}
-
-.intervention-code {
-    font-weight: 600;
-    color: #007bff;
-    font-size: 14px;
-    margin-bottom: 4px;
-}
-
-.intervention-title {
-    font-weight: 500;
-    color: #212529;
-    margin-bottom: 6px;
-    font-size: 15px;
-}
-
-.intervention-vehicle {
-    color: #6c757d;
-    font-size: 13px;
-    margin-bottom: 8px;
-}
-
-.intervention-status {
-    display: flex;
-    justify-content: flex-end;
-}
-
-.status-badge {
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.status-reported {
-    background: #e3f2fd;
-    color: #1976d2;
-}
-
-.status-in_progress {
-    background: #fff3e0;
-    color: #f57c00;
-}
-
-.status-completed {
-    background: #e8f5e8;
-    color: #2e7d32;
-}
-
-.status-cancelled {
-    background: #ffebee;
-    color: #c62828;
-}
+/* Styles de recherche d'interventions maintenant dans intervention-search-unified.css */
 
 /* Responsive pour les items */
 @media (max-width: 768px) {
@@ -879,12 +718,6 @@
         justify-content: space-between;
     }
     
-    .intervention-search-dropdown {
-        max-height: 300px;
-    }
-    
-    .intervention-results {
-        max-height: 200px;
-    }
+    /* Styles de recherche d'interventions maintenant dans intervention-search-unified.css */
 }
 

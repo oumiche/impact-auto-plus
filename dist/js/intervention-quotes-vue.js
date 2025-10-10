@@ -12,6 +12,7 @@ const InterventionQuotesList = {
             statusFilter: 'all',
             dateFilter: 'all',
             showFilters: false,
+            showFiltersPanel: false,
             selectedQuotes: [],
             showBulkActions: false,
             currency: 'F CFA', // Devise par défaut
@@ -20,7 +21,25 @@ const InterventionQuotesList = {
                 totalPages: 1,
                 totalItems: 0,
                 itemsPerPage: 20
-            }
+            },
+            searchTimeout: null,
+            // Filtres avancés - Marque
+            filterBrandSearchTerm: '',
+            selectedFilterBrand: null,
+            availableFilterBrands: [],
+            showFilterBrandSearch: false,
+            loadingFilterBrands: false,
+            brandSearchTimeout: null,
+            // Filtres avancés - Modèle
+            filterModelSearchTerm: '',
+            selectedFilterModel: null,
+            availableFilterModels: [],
+            showFilterModelSearch: false,
+            loadingFilterModels: false,
+            modelSearchTimeout: null,
+            // Filtres avancés - Période
+            dateStart: '',
+            dateEnd: ''
         };
     },
     
@@ -40,6 +59,37 @@ const InterventionQuotesList = {
                 );
             }
             
+            // Filtre par marque
+            if (this.selectedFilterBrand) {
+                filtered = filtered.filter(quote => 
+                    quote.vehicle.brand.toLowerCase() === this.selectedFilterBrand.name.toLowerCase()
+                );
+            }
+            
+            // Filtre par modèle
+            if (this.selectedFilterModel) {
+                filtered = filtered.filter(quote => 
+                    quote.vehicle.model.toLowerCase() === this.selectedFilterModel.name.toLowerCase()
+                );
+            }
+            
+            // Filtre par période personnalisée
+            if (this.dateStart || this.dateEnd) {
+                filtered = filtered.filter(quote => {
+                    const quoteDate = new Date(quote.quoteDate);
+                    if (this.dateStart) {
+                        const startDate = new Date(this.dateStart);
+                        if (quoteDate < startDate) return false;
+                    }
+                    if (this.dateEnd) {
+                        const endDate = new Date(this.dateEnd);
+                        endDate.setHours(23, 59, 59, 999);
+                        if (quoteDate > endDate) return false;
+                    }
+                    return true;
+                });
+            }
+            
             // Filtre par statut
             if (this.statusFilter !== 'all') {
                 filtered = filtered.filter(quote => {
@@ -56,7 +106,7 @@ const InterventionQuotesList = {
                 });
             }
             
-            // Filtre par date
+            // Filtre par période prédéfinie
             if (this.dateFilter !== 'all') {
                 const now = new Date();
                 filtered = filtered.filter(quote => {
@@ -98,15 +148,52 @@ const InterventionQuotesList = {
                 { value: 'month', label: '30 derniers jours' },
                 { value: 'quarter', label: '3 derniers mois' }
             ];
+        },
+        
+        activeFiltersCount() {
+            let count = 0;
+            if (this.statusFilter !== 'all') count++;
+            if (this.dateFilter !== 'all') count++;
+            if (this.selectedFilterBrand) count++;
+            if (this.selectedFilterModel) count++;
+            if (this.dateStart) count++;
+            if (this.dateEnd) count++;
+            return count;
         }
     },
     
     async mounted() {
+        await this.waitForApiService();
         await this.loadCurrency();
         await this.loadQuotes();
+        
+        // Fermer les dropdowns quand on clique ailleurs
+        document.addEventListener('click', this.handleClickOutside);
+    },
+    
+    beforeUnmount() {
+        document.removeEventListener('click', this.handleClickOutside);
     },
     
     methods: {
+        async waitForApiService() {
+            // Attendre que ApiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                console.error('ApiService non disponible après 5 secondes');
+                throw new Error('ApiService non disponible');
+            }
+            
+            console.log('ApiService disponible pour intervention-quotes');
+        },
+        
         async loadCurrency() {
             try {
                 const response = await window.apiService.request('/parameters/currency');
@@ -146,13 +233,27 @@ const InterventionQuotesList = {
         },
         
         async deleteQuote(quote) {
-            const confirmed = await window.notificationService.confirm(
-                `Êtes-vous sûr de vouloir supprimer le devis "${quote.quoteNumber}" ?`,
-                'Supprimer le devis',
-                'delete'
-            );
+            // Vérifier que le devis n'est pas approuvé
+            if (quote.isApproved) {
+                this.showNotification('Ce devis est approuvé et ne peut plus être supprimé', 'warning');
+                return;
+            }
             
-            if (!confirmed) return;
+            try {
+                // Utiliser le système de confirmation centralisé
+                const confirmed = await window.confirmDestructive({
+                    title: 'Supprimer le devis',
+                    message: `Êtes-vous sûr de vouloir supprimer le devis "${quote.quoteNumber}" ?`,
+                    confirmText: 'Supprimer',
+                    cancelText: 'Annuler'
+                });
+
+                if (!confirmed) return;
+            } catch (error) {
+                console.error('Erreur lors de la confirmation:', error);
+                this.showNotification('Erreur lors de la confirmation', 'error');
+                return;
+            }
             
             try {
                 const response = await window.apiService.request(`/intervention-quotes/${quote.id}`, {
@@ -172,13 +273,21 @@ const InterventionQuotesList = {
         },
         
         async approveQuote(quote) {
-            const confirmed = await window.notificationService.confirm(
-                `Approuver le devis "${quote.quoteNumber}" pour un montant de ${this.formatAmount(quote.totalAmount)} ?`,
-                'Approuver le devis',
-                'success'
-            );
-            
-            if (!confirmed) return;
+            try {
+                // Utiliser le système de confirmation centralisé
+                const confirmed = await window.confirmSuccess({
+                    title: 'Approuver le devis',
+                    message: `Approuver le devis "${quote.quoteNumber}" pour un montant de ${this.formatAmount(quote.totalAmount)} ?`,
+                    confirmText: 'Approuver',
+                    cancelText: 'Annuler'
+                });
+
+                if (!confirmed) return;
+            } catch (error) {
+                console.error('Erreur lors de la confirmation:', error);
+                this.showNotification('Erreur lors de la confirmation', 'error');
+                return;
+            }
             
             try {
                 const response = await window.apiService.request(`/intervention-quotes/${quote.id}/approve`, {
@@ -196,7 +305,18 @@ const InterventionQuotesList = {
                 }
             } catch (error) {
                 console.error('Erreur lors de l\'approbation:', error);
-                this.showNotification('Erreur lors de l\'approbation du devis', 'error');
+                
+                // Gestion d'erreur plus spécifique
+                let errorMessage = 'Erreur lors de l\'approbation du devis';
+                if (error.message && error.message.includes('EntityManager is closed')) {
+                    errorMessage = 'Erreur serveur temporaire. Veuillez réessayer dans quelques instants.';
+                } else if (error.message && error.message.includes('500')) {
+                    errorMessage = 'Erreur serveur lors de l\'approbation. Veuillez contacter l\'administrateur.';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                this.showNotification(errorMessage, 'error');
             }
         },
         
@@ -260,10 +380,203 @@ const InterventionQuotesList = {
             this.showFilters = !this.showFilters;
         },
         
+        toggleFiltersPanel() {
+            this.showFiltersPanel = !this.showFiltersPanel;
+        },
+        
+        closeFiltersPanel() {
+            this.showFiltersPanel = false;
+        },
+        
+        applyFilters() {
+            this.closeFiltersPanel();
+        },
+        
+        debouncedSearch() {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => {
+                // Le filtrage se fait déjà via le computed filteredQuotes
+            }, 300);
+        },
+        
         clearFilters() {
             this.searchQuery = '';
             this.statusFilter = 'all';
             this.dateFilter = 'all';
+        },
+        
+        resetFilters() {
+            this.clearFilters();
+            this.selectedFilterBrand = null;
+            this.selectedFilterModel = null;
+            this.filterBrandSearchTerm = '';
+            this.filterModelSearchTerm = '';
+            this.dateStart = '';
+            this.dateEnd = '';
+            this.closeFiltersPanel();
+        },
+        
+        // Méthodes pour le filtre Marque
+        async onFilterBrandFocus() {
+            this.showFilterBrandSearch = true;
+            if (this.filterBrandSearchTerm.length === 0 && this.availableFilterBrands.length === 0) {
+                await this.loadTopBrands();
+            } else if (this.filterBrandSearchTerm.length >= 2) {
+                this.searchFilterBrands();
+            }
+        },
+        
+        async loadTopBrands() {
+            this.loadingFilterBrands = true;
+            try {
+                const response = await window.apiService.getVehicleBrands('', 5);
+                if (response.success) {
+                    this.availableFilterBrands = response.data || [];
+                    this.showFilterBrandSearch = true;
+                }
+            } catch (error) {
+                console.error('Erreur chargement marques:', error);
+            } finally {
+                this.loadingFilterBrands = false;
+            }
+        },
+        
+        async searchFilterBrands() {
+            clearTimeout(this.brandSearchTimeout);
+            
+            if (this.filterBrandSearchTerm.length === 0) {
+                await this.loadTopBrands();
+                return;
+            }
+            
+            if (this.filterBrandSearchTerm.length < 2) {
+                return;
+            }
+            
+            this.brandSearchTimeout = setTimeout(async () => {
+                this.loadingFilterBrands = true;
+                try {
+                    const response = await window.apiService.getVehicleBrands(this.filterBrandSearchTerm, 50);
+                    if (response.success) {
+                        this.availableFilterBrands = response.data || [];
+                        this.showFilterBrandSearch = true;
+                    }
+                } catch (error) {
+                    console.error('Erreur recherche marques:', error);
+                } finally {
+                    this.loadingFilterBrands = false;
+                }
+            }, 300);
+        },
+        
+        selectFilterBrand(brand) {
+            this.selectedFilterBrand = brand;
+            this.filterBrandSearchTerm = brand.name;
+            this.showFilterBrandSearch = false;
+            this.availableFilterBrands = [];
+            // Réinitialiser le modèle
+            this.selectedFilterModel = null;
+            this.filterModelSearchTerm = '';
+        },
+        
+        clearFilterBrandSelection() {
+            this.selectedFilterBrand = null;
+            this.filterBrandSearchTerm = '';
+            this.showFilterBrandSearch = false;
+            // Réinitialiser le modèle
+            this.selectedFilterModel = null;
+            this.filterModelSearchTerm = '';
+        },
+        
+        // Méthodes pour le filtre Modèle
+        async onFilterModelFocus() {
+            if (!this.selectedFilterBrand) return;
+            this.showFilterModelSearch = true;
+            if (this.filterModelSearchTerm.length === 0 && this.availableFilterModels.length === 0) {
+                await this.loadTopModels();
+            } else if (this.filterModelSearchTerm.length >= 2) {
+                this.searchFilterModels();
+            }
+        },
+        
+        async loadTopModels() {
+            if (!this.selectedFilterBrand) return;
+            
+            this.loadingFilterModels = true;
+            try {
+                const response = await window.apiService.getVehicleModels(
+                    this.selectedFilterBrand.id,
+                    '',
+                    5
+                );
+                if (response.success) {
+                    this.availableFilterModels = response.data || [];
+                    this.showFilterModelSearch = true;
+                }
+            } catch (error) {
+                console.error('Erreur chargement modèles:', error);
+            } finally {
+                this.loadingFilterModels = false;
+            }
+        },
+        
+        async searchFilterModels() {
+            clearTimeout(this.modelSearchTimeout);
+            
+            if (!this.selectedFilterBrand) {
+                this.availableFilterModels = [];
+                this.showFilterModelSearch = false;
+                return;
+            }
+            
+            if (this.filterModelSearchTerm.length === 0) {
+                await this.loadTopModels();
+                return;
+            }
+            
+            if (this.filterModelSearchTerm.length < 2) {
+                return;
+            }
+            
+            this.modelSearchTimeout = setTimeout(async () => {
+                this.loadingFilterModels = true;
+                try {
+                    const response = await window.apiService.getVehicleModels(
+                        this.selectedFilterBrand.id,
+                        this.filterModelSearchTerm,
+                        50
+                    );
+                    if (response.success) {
+                        this.availableFilterModels = response.data || [];
+                        this.showFilterModelSearch = true;
+                    }
+                } catch (error) {
+                    console.error('Erreur recherche modèles:', error);
+                } finally {
+                    this.loadingFilterModels = false;
+                }
+            }, 300);
+        },
+        
+        selectFilterModel(model) {
+            this.selectedFilterModel = model;
+            this.filterModelSearchTerm = model.name;
+            this.showFilterModelSearch = false;
+            this.availableFilterModels = [];
+        },
+        
+        clearFilterModelSelection() {
+            this.selectedFilterModel = null;
+            this.filterModelSearchTerm = '';
+            this.showFilterModelSearch = false;
+        },
+        
+        handleClickOutside(event) {
+            const target = event.target;
+            if (!target.closest('.filter-section')) {
+                this.showFilterBrandSearch = false;
+                this.showFilterModelSearch = false;
+            }
         },
         
         toggleQuoteSelection(quote) {
@@ -292,13 +605,21 @@ const InterventionQuotesList = {
         async bulkApprove() {
             if (this.selectedQuotes.length === 0) return;
             
-            const confirmed = await window.notificationService.confirm(
-                `Approuver ${this.selectedQuotes.length} devis sélectionnés ?`,
-                'Approuver en masse',
-                'success'
-            );
-            
-            if (!confirmed) return;
+            try {
+                // Utiliser le système de confirmation centralisé
+                const confirmed = await window.confirmSuccess({
+                    title: 'Approuver en masse',
+                    message: `Approuver ${this.selectedQuotes.length} devis sélectionnés ?`,
+                    confirmText: 'Approuver',
+                    cancelText: 'Annuler'
+                });
+
+                if (!confirmed) return;
+            } catch (error) {
+                console.error('Erreur lors de la confirmation:', error);
+                this.showNotification('Erreur lors de la confirmation', 'error');
+                return;
+            }
             
             try {
                 const promises = this.selectedQuotes.map(quote => 
@@ -315,15 +636,68 @@ const InterventionQuotesList = {
                 await this.loadQuotes();
             } catch (error) {
                 console.error('Erreur lors de l\'approbation en masse:', error);
-                this.showNotification('Erreur lors de l\'approbation en masse', 'error');
+                
+                // Gestion d'erreur plus spécifique
+                let errorMessage = 'Erreur lors de l\'approbation en masse';
+                if (error.message && error.message.includes('EntityManager is closed')) {
+                    errorMessage = 'Erreur serveur temporaire. Veuillez réessayer dans quelques instants.';
+                } else if (error.message && error.message.includes('500')) {
+                    errorMessage = 'Erreur serveur lors de l\'approbation en masse. Veuillez contacter l\'administrateur.';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                this.showNotification(errorMessage, 'error');
             }
         },
         
+        // Méthodes de notification utilisant le système centralisé (comme vehicle-interventions)
         showNotification(message, type = 'info') {
-            if (window.notificationService) {
-                window.notificationService.show(message, type);
+            // Utiliser les mêmes méthodes que vehicle-interventions
+            switch (type) {
+                case 'success':
+                    this.$notifySuccess(message);
+                    break;
+                case 'error':
+                    this.$notifyError(message);
+                    break;
+                case 'warning':
+                    this.$notifyWarning(message);
+                    break;
+                default:
+                    this.$notifyInfo(message);
+            }
+        },
+
+        $notifySuccess(message, options = {}) {
+            if (window.notifySuccess) {
+                return window.notifySuccess(message, options);
             } else {
-                alert(message);
+                console.log('[SUCCESS]', message);
+            }
+        },
+
+        $notifyError(message, options = {}) {
+            if (window.notifyError) {
+                return window.notifyError(message, options);
+            } else {
+                console.log('[ERROR]', message);
+            }
+        },
+
+        $notifyWarning(message, options = {}) {
+            if (window.notifyWarning) {
+                return window.notifyWarning(message, options);
+            } else {
+                console.log('[WARNING]', message);
+            }
+        },
+
+        $notifyInfo(message, options = {}) {
+            if (window.notifyInfo) {
+                return window.notifyInfo(message, options);
+            } else {
+                console.log('[INFO]', message);
             }
         }
     },
@@ -334,10 +708,6 @@ const InterventionQuotesList = {
             <div class="page-header">
                 <div class="header-content">
                     <div class="header-left">
-                        <button class="btn btn-secondary" @click="window.history.back()">
-                            <i class="fas fa-arrow-left"></i>
-                            Retour
-                        </button>
                         <div class="header-text">
                             <h1><i class="fas fa-file-invoice-dollar"></i> Gestion des Devis</h1>
                             <p>Créer, modifier et suivre les devis d'intervention</p>
@@ -352,45 +722,206 @@ const InterventionQuotesList = {
                 </div>
             </div>
 
-            <!-- Filtres et recherche -->
-            <div class="filters-section">
-                <div class="search-bar">
-                    <div class="search-input-container">
-                        <i class="fas fa-search"></i>
+            <!-- Barre de recherche simple et bouton filtres -->
+            <div style="display: flex; gap: 12px; margin-bottom: 24px; align-items: center;">
+                <div class="search-bar-container" style="flex: 1;">
+                    <i class="fas fa-search search-icon"></i>
                         <input 
                             type="text" 
+                        class="form-control" 
                             v-model="searchQuery"
-                            placeholder="Rechercher par numéro, intervention, véhicule..."
-                            class="search-input"
+                        @input="debouncedSearch"
+                        placeholder="Rechercher par numéro, intervention, véhicule, marque, modèle..."
                         >
                     </div>
-                    <button class="btn btn-outline" @click="toggleFilters">
+                <button class="btn btn-outline" @click="toggleFiltersPanel" style="display: flex; align-items: center; gap: 8px; white-space: nowrap;">
                         <i class="fas fa-filter"></i>
                         Filtres
+                    <span v-if="activeFiltersCount > 0" class="badge-count">{{ activeFiltersCount }}</span>
                     </button>
                 </div>
                 
-                <div v-if="showFilters" class="filters-panel">
-                    <div class="filter-group">
-                        <label>Statut :</label>
-                        <select v-model="statusFilter" class="filter-select">
-                            <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-                                {{ option.label }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Période :</label>
-                        <select v-model="dateFilter" class="filter-select">
-                            <option v-for="option in dateOptions" :key="option.value" :value="option.value">
-                                {{ option.label }}
-                            </option>
-                        </select>
-                    </div>
-                    <button class="btn btn-outline btn-sm" @click="clearFilters">
+            <!-- Panneau de filtres latéral -->
+            <div v-if="showFiltersPanel" class="filters-overlay" @click="closeFiltersPanel"></div>
+            <div class="filters-panel" :class="{ 'filters-panel-open': showFiltersPanel }">
+                <div class="filters-panel-header">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-filter"></i>
+                        Filtres Avancés
+                    </h3>
+                    <button class="btn-icon" @click="closeFiltersPanel">
                         <i class="fas fa-times"></i>
-                        Effacer
                     </button>
+                </div>
+                
+                <div class="filters-panel-body">
+                    <!-- Filtre par marque -->
+                    <div class="filter-section">
+                        <label class="form-label">Marque</label>
+                        <div style="position: relative;">
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                v-model="filterBrandSearchTerm"
+                                @focus="onFilterBrandFocus"
+                                @input="searchFilterBrands"
+                                :placeholder="selectedFilterBrand ? selectedFilterBrand.name : 'Rechercher une marque...'"
+                                autocomplete="off"
+                            >
+                            <button 
+                                v-if="selectedFilterBrand" 
+                                type="button"
+                                @click="clearFilterBrandSelection"
+                                style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #6c757d; cursor: pointer;"
+                            >
+                                <i class="fas fa-times"></i>
+                            </button>
+                            
+                            <div v-if="showFilterBrandSearch" 
+                                 class="dropdown-menu" 
+                                 style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; background: white; border: 1px solid #ddd; border-radius: 4px; max-height: 250px; overflow-y: auto; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                <div v-if="loadingFilterBrands" style="padding: 20px; text-align: center; color: #6c757d;">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    Chargement...
+                                </div>
+                                <div v-else-if="availableFilterBrands.length === 0" style="padding: 20px; text-align: center; color: #6c757d; font-style: italic;">
+                                    <i class="fas fa-search"></i>
+                                    Aucune marque trouvée
+                                </div>
+                                <div v-else>
+                                    <div v-if="filterBrandSearchTerm.length === 0" style="padding: 8px 12px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; color: #6c757d; font-size: 11px; font-weight: 600;">
+                                        <i class="fas fa-star"></i> MARQUES POPULAIRES
+                                    </div>
+                                    <div 
+                                        v-for="brand in availableFilterBrands" 
+                                        :key="brand.id"
+                                        @click="selectFilterBrand(brand)"
+                                        style="padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0;"
+                                        @mouseover="$event.target.style.background='#f8f9fa'"
+                                        @mouseout="$event.target.style.background='white'"
+                                    >
+                                        <div style="font-weight: 600;">{{ brand.name }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Filtre par modèle -->
+                    <div class="filter-section">
+                        <label class="form-label">Modèle</label>
+                        <div style="position: relative;">
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                v-model="filterModelSearchTerm"
+                                @focus="onFilterModelFocus"
+                                @input="searchFilterModels"
+                                :placeholder="selectedFilterModel ? selectedFilterModel.name : 'Rechercher un modèle...'"
+                                :disabled="!selectedFilterBrand"
+                                autocomplete="off"
+                            >
+                            <button 
+                                v-if="selectedFilterModel" 
+                                type="button"
+                                @click="clearFilterModelSelection"
+                                style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #6c757d; cursor: pointer;"
+                            >
+                                <i class="fas fa-times"></i>
+                            </button>
+                            
+                            <div v-if="showFilterModelSearch" 
+                                 class="dropdown-menu" 
+                                 style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; background: white; border: 1px solid #ddd; border-radius: 4px; max-height: 250px; overflow-y: auto; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                <div v-if="loadingFilterModels" style="padding: 20px; text-align: center; color: #6c757d;">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    Chargement...
+                                </div>
+                                <div v-else-if="availableFilterModels.length === 0" style="padding: 20px; text-align: center; color: #6c757d; font-style: italic;">
+                                    <i class="fas fa-search"></i>
+                                    Aucun modèle trouvé
+                                </div>
+                                <div v-else>
+                                    <div v-if="filterModelSearchTerm.length === 0" style="padding: 8px 12px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; color: #6c757d; font-size: 11px; font-weight: 600;">
+                                        <i class="fas fa-star"></i> MODÈLES POPULAIRES
+                                    </div>
+                                    <div 
+                                        v-for="model in availableFilterModels" 
+                                        :key="model.id"
+                                        @click="selectFilterModel(model)"
+                                        style="padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0;"
+                                        @mouseover="$event.target.style.background='#f8f9fa'"
+                                        @mouseout="$event.target.style.background='white'"
+                                    >
+                                        <div style="font-weight: 600;">{{ model.name }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <small v-if="!selectedFilterBrand" style="color: #6c757d; font-size: 12px; margin-top: 4px; display: block;">
+                            Sélectionnez d'abord une marque
+                        </small>
+                    </div>
+                    
+                    <!-- Période personnalisée -->
+                    <div class="filter-section">
+                        <label class="form-label">Période personnalisée</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <label style="font-size: 12px; color: #6c757d; display: block; margin-bottom: 4px;">Date début</label>
+                                <input 
+                                    type="date" 
+                                    class="form-control" 
+                                    v-model="dateStart"
+                                    :max="dateEnd || null"
+                                >
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: #6c757d; display: block; margin-bottom: 4px;">Date fin</label>
+                                <input 
+                                    type="date" 
+                                    class="form-control" 
+                                    v-model="dateEnd"
+                                    :min="dateStart || null"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Filtre par statut -->
+                    <div class="filter-section">
+                        <label class="form-label">Statut</label>
+                        <select v-model="statusFilter" class="form-control">
+                            <option value="all">Tous les statuts</option>
+                            <option value="pending">En attente</option>
+                            <option value="approved">Approuvés</option>
+                            <option value="expired">Expirés</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Filtre par période prédéfinie -->
+                    <div class="filter-section">
+                        <label class="form-label">Période prédéfinie</label>
+                        <select v-model="dateFilter" class="form-control">
+                            <option value="all">Toutes les dates</option>
+                            <option value="today">Aujourd'hui</option>
+                            <option value="week">7 derniers jours</option>
+                            <option value="month">30 derniers jours</option>
+                            <option value="quarter">3 derniers mois</option>
+                        </select>
+                    </div>
+
+                    <!-- Boutons d'action du panneau -->
+                    <div class="filters-panel-actions">
+                        <button class="btn btn-outline" @click="resetFilters">
+                            <i class="fas fa-redo"></i>
+                            Réinitialiser
+                        </button>
+                        <button class="btn btn-primary" @click="applyFilters">
+                            <i class="fas fa-check"></i>
+                            Appliquer
+                    </button>
+                    </div>
                 </div>
             </div>
 
@@ -423,10 +954,6 @@ const InterventionQuotesList = {
                     <i class="fas fa-file-invoice-dollar"></i>
                     <h3>Aucun devis trouvé</h3>
                     <p>Commencez par créer votre premier devis</p>
-                    <button class="btn btn-primary" @click="goToCreate">
-                        <i class="fas fa-plus"></i>
-                        Créer un devis
-                    </button>
                 </div>
                 
                 <div v-else class="data-table-container">
@@ -441,8 +968,7 @@ const InterventionQuotesList = {
                                         class="select-all-checkbox"
                                     >
                                 </th>
-                                <th>Numéro</th>
-                                <th>Intervention</th>
+                                <th>Numéro & Intervention</th>
                                 <th>Véhicule</th>
                                 <th>Statut</th>
                                 <th>Montant</th>
@@ -462,17 +988,17 @@ const InterventionQuotesList = {
                                     >
                                 </td>
                                 <td class="quote-number-cell">
-                                    <code class="entity-code">{{ quote.quoteNumber }}</code>
-                                </td>
-                                <td class="intervention-cell">
-                                    <div class="intervention-info">
-                                        <div class="intervention-title">{{ quote.interventionCode }}</div>
+                                    <div class="quote-number-info">
+                                        <div class="quote-number-line">
+                                            <code class="entity-code">{{ quote.quoteNumber }}</code>
+                                            <span class="intervention-code">{{ quote.interventionCode }}</span>
+                                        </div>
                                     </div>
                                 </td>
                                 <td class="vehicle-cell">
                                     <div class="vehicle-info">
                                         <div class="vehicle-details">
-                                            {{ quote.vehicle.brand }} {{ quote.vehicle.model }}
+                                            {{ quote.vehicle.brand?.name }} {{ quote.vehicle.model?.name }}
                                         </div>
                                         <div class="vehicle-plate">{{ quote.vehicle.plateNumber }}</div>
                                     </div>
@@ -499,19 +1025,29 @@ const InterventionQuotesList = {
                                     <span v-else class="no-reception-date">-</span>
                                 </td>
                                 <td class="actions-cell">
-                                    <div class="quote-actions">
-                                        <button class="btn btn-outline btn-sm" @click="goToEdit(quote)" title="Modifier">
+                                    <div class="table-actions">
+                                        <button 
+                                            class="btn btn-outline" 
+                                            @click="goToEdit(quote)" 
+                                            title="Modifier"
+                                        >
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <button 
                                             v-if="!quote.isApproved" 
-                                            class="btn btn-success btn-sm" 
+                                            class="btn btn-success" 
                                             @click="approveQuote(quote)" 
                                             title="Approuver"
                                         >
                                             <i class="fas fa-check"></i>
                                         </button>
-                                        <button class="btn btn-danger btn-sm" @click="deleteQuote(quote)" title="Supprimer">
+                                        <button 
+                                            class="btn btn-danger" 
+                                            :class="{ 'btn-disabled': quote.isApproved }"
+                                            :disabled="quote.isApproved"
+                                            @click="deleteQuote(quote)" 
+                                            :title="quote.isApproved ? 'Devis approuvé - Suppression non autorisée' : 'Supprimer'"
+                                        >
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>

@@ -218,6 +218,32 @@ class FileUploadService
     }
 
     /**
+     * Récupère les informations d'un fichier
+     */
+    public function getFileInfo(int $fileId, Tenant $tenant): ?array
+    {
+        $attachment = $this->entityManager->getRepository(Attachment::class)->find($fileId);
+
+        if (!$attachment || $attachment->getTenant() !== $tenant) {
+            return null;
+        }
+
+        return [
+            'id' => $attachment->getId(),
+            'fileName' => $attachment->getFileName(),
+            'originalName' => $attachment->getOriginalName(),
+            'filePath' => $attachment->getFilePath(),
+            'fileSize' => $attachment->getFileSize(),
+            'mimeType' => $attachment->getMimeType(),
+            'fileExtension' => $attachment->getFileExtension(),
+            'description' => $attachment->getDescription(),
+            'uploadedAt' => $attachment->getUploadedAt(),
+            'downloadCount' => $attachment->getDownloadCount(),
+            'isActive' => $attachment->isActive()
+        ];
+    }
+
+    /**
      * Met à jour le compteur de téléchargements
      */
     public function incrementDownloadCount(int $fileId): void
@@ -272,6 +298,18 @@ class FileUploadService
                 break;
             case 'vehicle_intervention':
                 $entity = $this->entityManager->getRepository(\App\Entity\VehicleIntervention::class)->find($entityId);
+                break;
+            case 'intervention_quote':
+                $entity = $this->entityManager->getRepository(\App\Entity\InterventionQuote::class)->find($entityId);
+                break;
+            case 'intervention_invoice':
+                $entity = $this->entityManager->getRepository(\App\Entity\InterventionInvoice::class)->find($entityId);
+                break;
+            case 'intervention_work_authorization':
+                $entity = $this->entityManager->getRepository(\App\Entity\InterventionWorkAuthorization::class)->find($entityId);
+                break;
+            case 'intervention_reception_report':
+                $entity = $this->entityManager->getRepository(\App\Entity\InterventionReceptionReport::class)->find($entityId);
                 break;
             default:
                 return false;

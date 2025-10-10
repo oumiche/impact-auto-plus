@@ -239,23 +239,20 @@ class VueLayout {
 
     async logout() {
         try {
-            const token = localStorage.getItem('auth_token');
-            if (token) {
-                await fetch('/api/auth/logout.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+            // Utiliser apiService pour déconnecter
+            if (window.apiService) {
+                await window.apiService.logout();
             }
         } catch (error) {
             console.error('Erreur lors de la déconnexion:', error);
         } finally {
+            // Nettoyer le localStorage
             localStorage.removeItem('auth_token');
             localStorage.removeItem('current_user');
             localStorage.removeItem('current_tenant');
-            window.location.href = 'login-simple.html';
+            
+            // Rediriger vers la page de connexion
+            window.location.href = '/login.html';
         }
     }
 }

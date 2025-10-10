@@ -72,15 +72,17 @@
 
 .search-input-container i {
     position: absolute;
-    left: 12px;
+    right: 12px;
     top: 50%;
     transform: translateY(-50%);
     color: #6c757d;
+    z-index: 1;
+    font-size: 14px;
 }
 
 .search-input {
     width: 100%;
-    padding: 10px 12px 10px 40px;
+    padding: 10px 40px 10px 12px;
     border: 1px solid #ddd;
     border-radius: 6px;
     font-size: 14px;
@@ -93,13 +95,23 @@
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
+/* Panneau de filtres latéral */
 .filters-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background: white;
+    box-shadow: -2px 0 20px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
     display: flex;
-    gap: 20px;
-    align-items: center;
-    flex-wrap: wrap;
-    padding-top: 15px;
-    border-top: 1px solid #dee2e6;
+    flex-direction: column;
+    transition: right 0.3s ease-out;
+}
+
+.filters-panel-open {
+    right: 0;
 }
 
 .filter-group {
@@ -311,12 +323,6 @@
     margin-bottom: 15px;
 }
 
-.amount-total {
-    font-size: 20px;
-    font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 8px;
-}
 
 .amount-detail {
     font-size: 12px;
@@ -334,6 +340,165 @@
 .quote-actions .btn {
     padding: 6px 10px;
     font-size: 12px;
+}
+
+/* Actions Cell - Styles pour les boutons d'actions dans le tableau */
+.actions-cell {
+    min-width: 200px;
+}
+
+.table-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+}
+
+.table-actions .btn {
+    padding: 8px 12px;
+    font-size: 13px;
+    min-width: 40px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+/* Barre de recherche simple */
+.search-bar-container {
+    flex: 1;
+    position: relative;
+}
+
+.search-bar-container .form-control {
+    width: 100%;
+    padding: 12px 16px 12px 40px;
+    font-size: 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.search-bar-container .form-control:focus {
+    outline: none;
+    border-color: #1e3c72;
+    box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+}
+
+.search-bar-container .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    pointer-events: none;
+}
+
+/* Badge de compteur */
+.badge-count {
+    background: #dc3545;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Overlay pour le panneau de filtres */
+.filters-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9998;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.filters-panel-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8f9fa;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.filters-panel-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.filters-panel-body {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.filter-section {
+    margin-bottom: 24px;
+}
+
+.filter-section .form-label {
+    display: block;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+}
+
+.filter-section .form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+}
+
+.filters-panel-actions {
+    padding: 16px 24px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    gap: 12px;
+    background: #f8f9fa;
+}
+
+.filters-panel-actions .btn {
+    flex: 1;
+}
+
+/* Bouton icône pour fermer */
+.btn-icon {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background: #e9ecef;
+    color: #212529;
 }
 
 /* Responsive */
@@ -359,9 +524,8 @@
     }
     
     .filters-panel {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
+        width: 100%;
+        right: -100%;
     }
     
     .filter-group {
@@ -414,203 +578,83 @@
     }
 }
 
-/* Styles pour le tableau des devis */
-.data-table-container {
-    background: #fff;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border: 1px solid #e9ecef;
-}
+/* Styles spécifiques pour les devis (utilise les styles unifiés) */
 
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-}
-
-.data-table thead {
-    background: #f8f9fa;
-    border-bottom: 2px solid #e9ecef;
-}
-
-.data-table th {
-    padding: 15px 12px;
-    text-align: left;
-    font-weight: 600;
-    color: #495057;
-    border-bottom: 1px solid #dee2e6;
-    white-space: nowrap;
-}
-
-.data-table th:first-child {
-    width: 50px;
-    text-align: center;
-}
-
+/* Largeurs spécifiques des colonnes */
 .data-table th:nth-child(2) {
-    width: 120px;
-}
-
-.data-table th:nth-child(3) {
-    width: 150px;
-}
-
-.data-table th:nth-child(4) {
     width: 200px;
 }
 
-.data-table th:nth-child(5) {
+.data-table th:nth-child(3) {
+    width: 200px;
+}
+
+.data-table th:nth-child(4) {
     width: 100px;
 }
 
-.data-table th:nth-child(6) {
+.data-table th:nth-child(5) {
     width: 150px;
 }
 
-.data-table th:nth-child(7) {
+.data-table th:nth-child(6) {
     width: 120px;
 }
 
-.data-table th:nth-child(8) {
+.data-table th:nth-child(7) {
     width: 140px;
 }
 
 .data-table th:last-child {
-    width: 160px;
+    width: 180px;
     text-align: center;
 }
 
-.data-table td {
-    padding: 12px;
-    border-bottom: 1px solid #f1f3f4;
-    vertical-align: top;
-}
-
-.quote-row:hover {
-    background: #f8f9fa;
-}
-
-.checkbox-cell {
-    text-align: center;
-    width: 50px;
-}
-
-.select-all-checkbox,
-.quote-checkbox {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-}
-
+/* Styles spécifiques pour les devis */
 .quote-number-cell {
-    width: 120px;
+    width: 200px;
 }
 
-.entity-code {
-    background: #e9ecef;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    color: #495057;
-}
-
-.intervention-cell {
-    width: 150px;
-}
-
-.intervention-info {
+.quote-number-info {
     display: flex;
     flex-direction: column;
 }
 
-.intervention-title {
+.quote-number-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.intervention-code {
     font-weight: 500;
     color: #2c3e50;
-    font-size: 13px;
+    font-size: 12px;
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
 }
 
 .vehicle-cell {
     width: 200px;
 }
 
-.vehicle-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.vehicle-details {
-    font-weight: 500;
-    color: #2c3e50;
-    margin-bottom: 2px;
-}
-
-.vehicle-plate {
-    font-size: 12px;
-    color: #6c757d;
-    font-family: 'Courier New', monospace;
-}
-
 .status-cell {
     width: 100px;
-}
-
-.status-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.status-approved {
-    background: #d4edda;
-    color: #155724;
-}
-
-.status-pending {
-    background: #fff3cd;
-    color: #856404;
-}
-
-.status-expired {
-    background: #f8d7da;
-    color: #721c24;
 }
 
 .amount-cell {
     width: 150px;
 }
 
-.amount-total {
-    font-weight: 700;
-    color: #2c3e50;
-    font-size: 14px;
-    margin-bottom: 4px;
-}
-
-.amount-details {
-    font-size: 11px;
-    color: #6c757d;
-}
-
-.amount-detail {
-    margin-bottom: 2px;
-}
-
 .date-cell {
     width: 120px;
-    font-size: 13px;
-    color: #495057;
 }
 
 .reception-date-cell {
     width: 140px;
-    font-size: 13px;
-    color: #495057;
 }
 
 .no-reception-date {
@@ -618,53 +662,9 @@
     font-style: italic;
 }
 
-.actions-cell {
-    width: 160px;
-    text-align: center;
-}
-
-.quote-actions {
-    display: flex;
-    gap: 4px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.quote-actions .btn {
-    padding: 4px 8px;
-    font-size: 11px;
-    min-width: 32px;
-}
-
-/* Responsive pour le tableau */
+/* Responsive spécifique pour les devis */
 @media (max-width: 1200px) {
-    .data-table-container {
-        overflow-x: auto;
-    }
-    
     .data-table {
-        min-width: 1000px;
-    }
-}
-
-@media (max-width: 768px) {
-    .data-table th,
-    .data-table td {
-        padding: 8px 6px;
-    }
-    
-    .data-table th,
-    .data-table td {
-        font-size: 12px;
-    }
-    
-    .quote-actions {
-        flex-direction: column;
-        gap: 2px;
-    }
-    
-    .quote-actions .btn {
-        padding: 6px 4px;
-        font-size: 10px;
+        min-width: 920px;
     }
 }

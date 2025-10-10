@@ -118,7 +118,8 @@ class ReferenceDataController extends AbstractController
             $offset = ($page - 1) * $limit;
             $search = $request->query->get('search', '');
             $status = $request->query->get('status', 'all');
-            $marqueId = $request->query->get('marque_id');
+            // Accepter brandId ou marque_id pour la compatibilité
+            $marqueId = $request->query->get('brandId') ?? $request->query->get('marque_id');
             
             // Construire les critères de recherche
             $criteria = [];
@@ -144,7 +145,19 @@ class ReferenceDataController extends AbstractController
                     'isActive' => $model->isActive(),
                     'brand' => $model->getBrand() ? [
                         'id' => $model->getBrand()->getId(),
-                        'name' => $model->getBrand()->getName()
+                        'name' => $model->getBrand()->getName(),
+                        'code' => $model->getBrand()->getCode(),
+                        'country' => $model->getBrand()->getCountry(),
+                        'logoUrl' => $model->getBrand()->getLogoUrl(),
+                        'website' => $model->getBrand()->getWebsite()
+                    ] : null,
+                    'marque' => $model->getBrand() ? [
+                        'id' => $model->getBrand()->getId(),
+                        'name' => $model->getBrand()->getName(),
+                        'code' => $model->getBrand()->getCode(),
+                        'country' => $model->getBrand()->getCountry(),
+                        'logoUrl' => $model->getBrand()->getLogoUrl(),
+                        'website' => $model->getBrand()->getWebsite()
                     ] : null,
                     'createdAt' => $model->getCreatedAt()?->format('Y-m-d H:i:s'),
                     'updatedAt' => $model->getUpdatedAt()?->format('Y-m-d H:i:s')

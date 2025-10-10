@@ -32,6 +32,9 @@ class InterventionInvoice
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $dueDate = null;
 
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $receivedDate = null;
+
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     private string $subtotal;
 
@@ -126,6 +129,17 @@ class InterventionInvoice
     public function setDueDate(?\DateTimeInterface $dueDate): self
     {
         $this->dueDate = $dueDate;
+        return $this;
+    }
+
+    public function getReceivedDate(): ?\DateTimeInterface
+    {
+        return $this->receivedDate;
+    }
+
+    public function setReceivedDate(?\DateTimeInterface $receivedDate): self
+    {
+        $this->receivedDate = $receivedDate;
         return $this;
     }
 

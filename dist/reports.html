@@ -4,36 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rapports - Impact Auto</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="css/impact-auto.css">
+    
+    <!-- Inclusion automatique de tous les assets -->
+    <script src="js/app-includes.js"></script>
+    
+    <!-- CSS spécifiques à la page -->
+    <link rel="stylesheet" href="css/reports-common.css">
 </head>
 <body>
-    <!-- Sidebar sera chargé dynamiquement -->
+    <div id="app"></div>
     
-    <main class="main-content">
-        <div class="page-header">
-            <h1 class="section-title">Rapports et Analyses</h1>
-            <p class="page-subtitle">Générez des rapports détaillés sur votre parc</p>
-        </div>
-
-        <div class="dashboard-section">
-            <h2>Rapports Disponibles</h2>
-            <div class="reports-grid">
-                <div class="report-card">
-                    <i class="fas fa-chart-bar"></i>
-                    <h3>Rapport de Coûts</h3>
-                    <p>Analyse des coûts de maintenance et d'intervention</p>
-                </div>
-                <div class="report-card">
-                    <i class="fas fa-car"></i>
-                    <h3>État du Parc</h3>
-                    <p>Vue d'ensemble de l'état de vos véhicules</p>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script src="js/sidebar-component.js"></script>
-    <script src="js/load-sidebar.js"></script>
+    <!-- Script de la page -->
+    <script src="js/reports-vue.js"></script>
+    
+    <!-- Initialisation Vue.js -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attendre que Vue.js soit chargé
+            const checkVue = setInterval(() => {
+                if (window.Vue) {
+                    clearInterval(checkVue);
+                    
+                    const { createApp } = Vue;
+                    const app = createApp({
+                        components: {
+                            ReportsApp: window.ReportsApp
+                        },
+                        template: `
+                            <div class="main-content">
+                                <ReportsApp />
+                            </div>
+                        `
+                    });
+                    
+                    app.mount('#app');
+                }
+            }, 100);
+        });
+    </script>
 </body>
 </html>

@@ -75,7 +75,7 @@ class InterventionInvoiceRepository extends ServiceEntityRepository
         }
 
         // Filtre par statut de paiement
-        if (!empty($status)) {
+        if (!empty($status) && $status !== 'all') {
             $qb->andWhere('i.paymentStatus = :status')
                ->setParameter('status', $status);
         }
@@ -131,7 +131,7 @@ class InterventionInvoiceRepository extends ServiceEntityRepository
         }
 
         // Filtre par statut de paiement
-        if (!empty($status)) {
+        if (!empty($status) && $status !== 'all') {
             $qb->andWhere('i.paymentStatus = :status')
                ->setParameter('status', $status);
         }

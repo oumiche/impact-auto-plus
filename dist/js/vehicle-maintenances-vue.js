@@ -1,19 +1,27 @@
 /**
- * Impact Auto - Maintenances Véhicules Vue.js
- * Composant CRUD pour la gestion des maintenances de véhicules
+ * Impact Auto - Entretiens Véhicules Vue.js
+ * Composant CRUD pour la gestion des entretiens de véhicules
  */
 
 const VehicleMaintenanceCrud = {
-    components: {
-        DatePicker,
-        DateTimePicker
-    },
     template: `
         <div class="parameter-crud">
             <!-- Page Header -->
             <div class="page-header">
-                <h1 class="section-title">Gestion des Maintenances</h1>
-                <p class="page-subtitle">Gérez les maintenances et réparations de votre flotte</p>
+                <div class="header-content">
+                    <div class="header-left">
+                        <div class="header-text">
+                            <h1 class="section-title">Gestion des Entretiens</h1>
+                            <p class="page-subtitle">Gérez les entretiens et réparations de votre flotte</p>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <button class="btn btn-primary" @click="openCreateModal">
+                            <i class="fas fa-plus"></i>
+                            Nouvel Entretien
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Search and Filter Bar -->
@@ -24,17 +32,8 @@ const VehicleMaintenanceCrud = {
                         type="text" 
                         v-model="searchTerm" 
                         @input="debouncedSearch"
-                        placeholder="Rechercher une maintenance..."
+                        placeholder="Rechercher par véhicule, marque, modèle, type..."
                     >
-                </div>
-                
-                <div class="filter-group">
-                    <select v-model="vehicleFilter" @change="loadMaintenances" class="filter-select">
-                        <option value="">Tous les véhicules</option>
-                        <option v-for="vehicle in vehicles" :key="vehicle.id" :value="vehicle.id">
-                            {{ vehicle.fullName }}
-                        </option>
-                    </select>
                 </div>
 
                 <div class="filter-group">
@@ -56,11 +55,6 @@ const VehicleMaintenanceCrud = {
                         <option value="repair">Réparation</option>
                     </select>
                 </div>
-
-                <button class="btn btn-primary" @click="openCreateModal">
-                    <i class="fas fa-plus"></i>
-                    Nouvelle Maintenance
-                </button>
             </div>
 
             <!-- Table -->
@@ -89,7 +83,7 @@ const VehicleMaintenanceCrud = {
                                 <div class="vehicle-info">
                                     <div class="vehicle-plate">{{ maintenance.vehicle.plateNumber }}</div>
                                     <div class="vehicle-details">
-                                        {{ maintenance.vehicle.brand }} {{ maintenance.vehicle.model }}
+                                        {{ maintenance.vehicle.brand }} {{ maintenance.vehicle.model }} ({{ maintenance.vehicle.year }})
                                     </div>
                                 </div>
                             </td>
@@ -176,14 +170,14 @@ const VehicleMaintenanceCrud = {
             <!-- Loading -->
             <div v-if="loading" class="loading">
                 <i class="fas fa-spinner fa-spin"></i>
-                <h3>Chargement des maintenances...</h3>
+                <h3>Chargement des entretiens...</h3>
             </div>
 
             <!-- No Data -->
             <div v-if="!loading && maintenances.length === 0" class="no-data">
                 <i class="fas fa-wrench"></i>
-                <h3>Aucune maintenance trouvée</h3>
-                <p>Commencez par créer une nouvelle maintenance pour votre flotte.</p>
+                <h3>Aucun entretien trouvé</h3>
+                <p>Commencez par créer un nouvel entretien pour votre flotte.</p>
             </div>
 
             <!-- Modal de création/édition -->
@@ -228,15 +222,15 @@ const VehicleMaintenanceCrud = {
                                                 class="dropdown-item vehicle-item"
                                                 @click="selectVehicle(vehicle)"
                                             >
-                                                <div class="vehicle-info-dropdown">
-                                                    <div class="vehicle-main">{{ vehicle.plateNumber }} - {{ vehicle.brand?.name || vehicle.brand }} {{ vehicle.model?.name || vehicle.model }}</div>
-                                                    <div class="vehicle-details-dropdown">
-                                                        <span v-if="vehicle.year">{{ vehicle.year }}</span>
-                                                        <span v-if="vehicle.color">{{ vehicle.color.name }}</span>
-                                                        <span v-if="vehicle.fuelType">{{ vehicle.fuelType.name }}</span>
-                                                        <span v-if="vehicle.category">{{ vehicle.category.name }}</span>
-                                                    </div>
+                                            <div class="vehicle-info-dropdown">
+                                                <div class="vehicle-main">{{ vehicle.plateNumber }} - {{ vehicle.brand }} {{ vehicle.model }}</div>
+                                                <div class="vehicle-details-dropdown">
+                                                    <span v-if="vehicle.year">{{ vehicle.year }}</span>
+                                                    <span v-if="vehicle.color">{{ vehicle.color }}</span>
+                                                    <span v-if="vehicle.fuelType">{{ vehicle.fuelType }}</span>
+                                                    <span v-if="vehicle.category">{{ vehicle.category }}</span>
                                                 </div>
+                                            </div>
                                                 <button 
                                                     type="button" 
                                                     class="vehicle-details-btn"
@@ -290,7 +284,7 @@ const VehicleMaintenanceCrud = {
                                 <textarea 
                                     id="maintenance-description"
                                     v-model="form.description" 
-                                    placeholder="Décrivez les détails de la maintenance..."
+                                    placeholder="Décrivez les détails de l'entretien..."
                                     rows="3"
                                 ></textarea>
                             </div>
@@ -298,20 +292,25 @@ const VehicleMaintenanceCrud = {
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="maintenance-scheduled-date">Date programmée *</label>
-                                    <date-picker 
+                                    <input 
+                                        type="date" 
+                                        id="maintenance-scheduled-date"
                                         v-model="form.scheduledDate"
-                                        placeholder="Sélectionner la date programmée"
-                                        :min-date="today"
-                                    ></date-picker>
+                                        class="form-control"
+                                        :min="today"
+                                        required
+                                    >
                                 </div>
 
                                 <div class="form-group">
                                     <label for="maintenance-completed-date">Date de réalisation</label>
-                                    <date-picker 
+                                    <input 
+                                        type="date" 
+                                        id="maintenance-completed-date"
                                         v-model="form.completedDate"
-                                        placeholder="Sélectionner la date de réalisation"
-                                        :min-date="form.scheduledDate"
-                                    ></date-picker>
+                                        class="form-control"
+                                        :min="form.scheduledDate"
+                                    >
                                 </div>
                             </div>
 
@@ -590,7 +589,6 @@ const VehicleMaintenanceCrud = {
             
             // Search and filters
             searchTerm: '',
-            vehicleFilter: '',
             statusFilter: '',
             typeFilter: '',
             searchTimeout: null,
@@ -645,24 +643,43 @@ const VehicleMaintenanceCrud = {
         }
     },
 
-    mounted() {
-        this.loadMaintenances();
-        this.loadVehicles();
-        this.loadCurrency();
+    async mounted() {
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
+        await this.loadMaintenances();
+        await this.loadVehicles();
+        await this.loadCurrency();
     },
 
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadMaintenances() {
             this.loading = true;
             try {
-                const response = await apiService.getVehicleMaintenances(
-                    this.pagination?.page || 1,
-                    10,
-                    this.searchTerm,
-                    this.vehicleFilter,
-                    this.statusFilter,
-                    this.typeFilter
-                );
+                const params = new URLSearchParams({
+                    page: this.pagination?.page || 1,
+                    limit: 10
+                });
+                
+                if (this.searchTerm) params.append('search', this.searchTerm);
+                if (this.statusFilter) params.append('status', this.statusFilter);
+                if (this.typeFilter) params.append('type', this.typeFilter);
+                
+                const response = await window.apiService.request(`/vehicle-maintenances?${params.toString()}`);
                 
                 if (response.success) {
                     this.maintenances = response.data;
@@ -680,7 +697,7 @@ const VehicleMaintenanceCrud = {
 
         async loadVehicles() {
             try {
-                const response = await apiService.getAvailableVehiclesForMaintenance();
+                const response = await window.apiService.request('/vehicle-maintenances/vehicles');
                 if (response.success) {
                     this.vehicles = response.data;
                 }
@@ -691,7 +708,7 @@ const VehicleMaintenanceCrud = {
 
         async loadCurrency() {
             try {
-                const response = await apiService.request('/parameters/currency');
+                const response = await window.apiService.request('/parameters/currency');
                 if (response.success) {
                     this.currency = response.data.value;
                 }
@@ -728,8 +745,8 @@ const VehicleMaintenanceCrud = {
                 type: maintenance.type,
                 title: maintenance.title,
                 description: maintenance.description || '',
-                scheduledDate: maintenance.scheduledDate || '',
-                completedDate: maintenance.completedDate || '',
+                scheduledDate: this.formatDateForInput(maintenance.scheduledDate),
+                completedDate: this.formatDateForInput(maintenance.completedDate),
                 cost: maintenance.cost,
                 status: maintenance.status,
                 odometerReading: maintenance.odometerReading,
@@ -763,9 +780,9 @@ const VehicleMaintenanceCrud = {
             try {
                 let response;
                 if (this.isEditing) {
-                    response = await apiService.updateVehicleMaintenance(this.form.id, this.form);
+                    response = await window.apiService.request('/vehicle-maintenances/' + this.form.id, { method: 'PUT', body: JSON.stringify(this.form) });
                 } else {
-                    response = await apiService.createVehicleMaintenance(this.form);
+                    response = await window.apiService.request('/vehicle-maintenances', { method: 'POST', body: JSON.stringify(this.form) });
                 }
 
                 if (response.success) {
@@ -793,7 +810,7 @@ const VehicleMaintenanceCrud = {
 
             this.deleting = true;
             try {
-                const response = await apiService.deleteVehicleMaintenance(this.maintenanceToDelete.id);
+                const response = await window.apiService.request('/vehicle-maintenances/' + this.maintenanceToDelete.id, { method: 'DELETE' });
                 if (response.success) {
                     this.showNotification(response.message, 'success');
                     this.closeDeleteModal();
@@ -825,7 +842,7 @@ const VehicleMaintenanceCrud = {
                 type: '',
                 title: '',
                 description: '',
-                scheduledDate: '',
+                scheduledDate: this.today,
                 completedDate: '',
                 cost: null,
                 status: 'scheduled',
@@ -856,6 +873,12 @@ const VehicleMaintenanceCrud = {
             if (!dateString) return '-';
             const date = new Date(dateString);
             return date.toLocaleDateString('fr-FR');
+        },
+        
+        formatDateForInput(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0]; // Format YYYY-MM-DD pour input date
         },
 
         formatNumber(number) {
@@ -940,7 +963,7 @@ const VehicleMaintenanceCrud = {
             
             try {
                 this.saving = true;
-                const response = await window.apiService.syncVehicleMileageFromTracking(this.form.vehicleId);
+                const response = await window.apiService.request(`/vehicle-maintenances/sync-vehicle-mileage/${this.form.vehicleId}`, { method: 'POST' });
                 
                 if (response.success) {
                     this.form.odometerReading = response.data.newMileage;
@@ -1006,21 +1029,30 @@ const VehicleMaintenanceCrud = {
         },
 
         showNotification(message, type = 'info') {
-            // Remove existing notifications
-            const existingNotifications = document.querySelectorAll('.notification');
-            existingNotifications.forEach(notification => notification.remove());
-
-            // Create new notification
+            // Utiliser le service de notification global si disponible
+            if (window.notificationService) {
+                window.notificationService.show(message, type);
+                return;
+            }
+            
+            // Créer un conteneur de notifications s'il n'existe pas
+            let container = document.querySelector('.notification-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'notification-container';
+                document.body.appendChild(container);
+            }
+            
+            // Créer une notification temporaire
             const notification = document.createElement('div');
             notification.className = `notification notification-${type}`;
             notification.innerHTML = `
                 <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
                 <span>${message}</span>
             `;
-
-            document.body.appendChild(notification);
-
-            // Auto remove after 5 seconds
+            
+            container.appendChild(notification);
+            
             setTimeout(() => {
                 if (notification.parentNode) {
                     notification.parentNode.removeChild(notification);

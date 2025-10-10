@@ -33,7 +33,14 @@
             background: var(--impact-primary, #1e3c72);
             color: white;
             padding: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-content {
             text-align: center;
+            flex: 1;
         }
 
         .logo {
@@ -49,6 +56,26 @@
         .subtitle {
             opacity: 0.9;
             font-size: 1rem;
+        }
+
+        .back-button-header {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .back-button-header:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         .selection-body {
@@ -177,29 +204,21 @@
             border: 1px solid #fcc;
         }
 
-        .back-button, .continue-button {
-            padding: 12px 24px;
+        .continue-button {
+            padding: 12px 32px;
             border: none;
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-        }
-
-        .back-button {
-            background: #f5f5f5;
-            color: #666;
-            padding: 16px 32px;
-            font-size: 1.1rem;
-        }
-
-        .back-button:hover {
-            background: #e0e0e0;
-        }
-
-        .continue-button {
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             background: var(--impact-primary, #1e3c72);
             color: white;
+            font-size: 1rem;
         }
 
         .continue-button:hover:not(:disabled) {
@@ -236,6 +255,22 @@
                 padding: 10px;
             }
             
+            .selection-header {
+                padding: 20px 15px;
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .back-button-header {
+                align-self: flex-start;
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .header-content {
+                width: 100%;
+            }
+            
             .selection-body {
                 padding: 20px;
             }
@@ -250,10 +285,16 @@
     <div class="selection-container">
         <div class="selection-card">
             <div class="selection-header">
-                <div class="logo">
-                    <i class="fas fa-building"></i> Impact Auto
+                <button class="back-button-header" id="back-button">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </button>
+                <div class="header-content">
+                    <div class="logo">
+                        <i class="fas fa-building"></i> Impact Auto
+                    </div>
+                    <div class="subtitle">Sélectionnez votre organisation</div>
                 </div>
-                <div class="subtitle">Sélectionnez votre organisation</div>
+                <div style="width: 120px;"></div>
             </div>
             
             <div class="selection-body">
@@ -268,12 +309,9 @@
                     <!-- Les tenants seront chargés dynamiquement -->
                 </div>
                 
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <button class="back-button" id="back-button">
-                        <i class="fas fa-arrow-left"></i> Retour
-                    </button>
+                <div style="display: flex; align-items: center; justify-content: flex-end; margin-top: 20px;">
                     <button class="continue-button" id="continue-button" disabled>
-                        <i class="fas fa-arrow-right"></i> Continuer
+                        Continuer <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
             </div>

@@ -2,14 +2,15 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Entity\Tenant;
 use App\Repository\TenantRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 #[Route('/api/tenants')]
 class TenantController extends AbstractController
@@ -20,12 +21,22 @@ class TenantController extends AbstractController
         private ValidatorInterface $validator
     ) {}
 
+
     #[Route('', name: 'api_tenants_list', methods: ['GET'])]
     public function list(): JsonResponse
     {
         try {
+            $user = $this->getUser();
+            if (!$user) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'User not authenticated',
+                    'code' => 401
+                ], 401);
+            }
+            
             $userTenants = $this->entityManager->getRepository(\App\Entity\UserTenantPermission::class)
-                ->findBy(['user' => $this->getUser(), 'isActive' => true]);
+                ->findBy(['user' => $user, 'isActive' => true]);
 
             $tenants = array_map(function($userTenant) {
                 $tenant = $userTenant->getTenant();
@@ -222,7 +233,7 @@ class TenantController extends AbstractController
                     'name' => $tenant->getName(),
                     'slug' => $tenant->getSlug(),
                     'description' => $tenant->getDescription(),
-                    'isActive' => $tenant->getIsActive()
+                    'isActive' => $tenant->isActive()
                 ];
             }, $tenants);
 
@@ -246,6 +257,7 @@ class TenantController extends AbstractController
     public function adminList(Request $request): JsonResponse
     {
         try {
+            /**@var User $user */
             $user = $this->getUser();
             if (!$user) {
                 return new JsonResponse([
@@ -261,7 +273,7 @@ class TenantController extends AbstractController
             $status = $request->query->get('status', '');
 
             // Vérifier si l'utilisateur est super admin
-            $isSuperAdmin = $user->isSuperAdmin();
+            $isSuperAdmin = $user->isAdmin();
 
             if ($isSuperAdmin) {
                 // Super admin : accès à tous les tenants

@@ -1,16 +1,27 @@
-const { createApp } = Vue;
+/**
+ * Impact Auto - Suivi de Carburant Vue.js
+ * Composant CRUD pour la gestion du suivi de carburant
+ */
 
 const VehicleFuelLogCrud = {
-    components: {
-        DatePicker,
-        DateTimePicker
-    },
     template: `
         <div class="vehicle-fuel-log-crud">
             <!-- Page Header -->
             <div class="page-header">
-                <h1 class="section-title">Gestion des Carnets de Carburant</h1>
-                <p class="page-subtitle">Suivez la consommation de carburant de votre flotte</p>
+                <div class="header-content">
+                    <div class="header-left">
+                        <div class="header-text">
+                            <h1 class="section-title">Suivi de Carburant</h1>
+                            <p class="page-subtitle">Suivez la consommation de carburant de votre flotte</p>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <button class="btn btn-primary" @click="openCreateModal">
+                            <i class="fas fa-plus"></i>
+                            Nouveau Suivi
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Barre de recherche et filtres -->
@@ -21,45 +32,22 @@ const VehicleFuelLogCrud = {
                         type="text" 
                         v-model="searchTerm" 
                         @input="debouncedSearch"
-                        placeholder="Rechercher un carnet de carburant..."
+                        placeholder="Rechercher par véhicule, conducteur, type de carburant..."
                     >
                 </div>
-                
-                <div class="filter-group">
-                    <select v-model="vehicleFilter" @change="loadFuelLogs" class="filter-select">
-                        <option value="">Tous les véhicules</option>
-                        <option v-for="vehicle in vehicles" :key="vehicle.id" :value="vehicle.id">
-                            {{ vehicle.plateNumber }} - {{ vehicle.brand }} {{ vehicle.model }}
-                        </option>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <select v-model="driverFilter" @change="loadFuelLogs" class="filter-select">
-                        <option value="">Tous les conducteurs</option>
-                        <option v-for="driver in drivers" :key="driver.id" :value="driver.id">
-                            {{ driver.fullName }}
-                        </option>
-                    </select>
-                </div>
-                
-                <button class="btn btn-primary" @click="openCreateModal">
-                    <i class="fas fa-plus"></i>
-                    Nouveau Carnet
-                </button>
             </div>
 
-            <!-- Tableau des carnets de carburant -->
+            <!-- Tableau du suivi de carburant -->
             <div class="table-container">
                 <div v-if="loading" class="loading">
                     <i class="fas fa-spinner fa-spin"></i>
-                    Chargement des carnets de carburant...
+                    Chargement du suivi de carburant...
                 </div>
                 
                 <div v-else-if="fuelLogs.length === 0" class="no-data">
                     <i class="fas fa-gas-pump"></i>
-                    <h3>Aucun carnet de carburant trouvé</h3>
-                    <p>Commencez par ajouter un nouveau carnet de carburant.</p>
+                    <h3>Aucun suivi de carburant trouvé</h3>
+                    <p>Commencez par ajouter un nouveau suivi de carburant.</p>
                 </div>
                 
                 <table v-else class="data-table">
@@ -70,11 +58,8 @@ const VehicleFuelLogCrud = {
                             <th>Conducteur</th>
                             <th>Date</th>
                             <th>Type de Carburant</th>
-                            <th>Quantité</th>
-                            <th>Prix Unitaire</th>
                             <th>Coût Total</th>
                             <th>Kilométrage</th>
-                            <th>Station</th>
                             <th>Statut</th>
                             <th>Actions</th>
                         </tr>
@@ -109,16 +94,6 @@ const VehicleFuelLogCrud = {
                                 <span v-else class="text-muted">-</span>
                             </td>
                             <td>
-                                <div class="quantity">
-                                    {{ formatNumber(fuelLog.quantity) }} L
-                                </div>
-                            </td>
-                            <td>
-                                <div class="unit-price">
-                                    {{ formatNumber(fuelLog.unitPrice) }} {{ currency }}
-                                </div>
-                            </td>
-                            <td>
                                 <div class="total-cost">
                                     {{ formatNumber(fuelLog.totalCost) }} {{ currency }}
                                 </div>
@@ -130,19 +105,6 @@ const VehicleFuelLogCrud = {
                                         +{{ formatNumber(fuelLog.kilometersDriven) }} km
                                     </div>
                                 </div>
-                            </td>
-                            <td>
-                                <div v-if="fuelLog.stationName" class="station-info">
-                                    <div class="station-name">
-                                        <span v-if="fuelLog.isFullTank" class="full-tank-indicator"></span>
-                                        <span v-else class="full-tank-indicator empty"></span>
-                                        {{ fuelLog.stationName }}
-                                    </div>
-                                    <div v-if="fuelLog.stationLocation" class="station-location">
-                                        {{ fuelLog.stationLocation }}
-                                    </div>
-                                </div>
-                                <span v-else class="text-muted">-</span>
                             </td>
                             <td>
                                 <span :class="['status-badge', fuelLog.isActive ? 'status-active' : 'status-inactive']">
@@ -191,7 +153,7 @@ const VehicleFuelLogCrud = {
             <div v-if="showModal" class="modal-overlay" @click="closeModal">
                 <div class="modal-content modal-lg" @click.stop>
                     <div class="modal-header">
-                        <h3>{{ isEditing ? "Modifier le carnet de carburant" : "Nouveau carnet de carburant" }}</h3>
+                        <h3>{{ isEditing ? "Modifier le suivi de carburant" : "Nouveau suivi de carburant" }}</h3>
                         <button class="close-btn" @click="closeModal">
                             <i class="fas fa-times"></i>
                         </button>
@@ -306,11 +268,14 @@ const VehicleFuelLogCrud = {
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="fuel-log-date">Date de ravitaillement *</label>
-                                    <date-picker 
+                                    <input 
+                                        type="date" 
+                                        id="fuel-log-date"
                                         v-model="form.refuelDate"
-                                        placeholder="Sélectionner la date"
-                                        :max-date="today"
-                                    ></date-picker>
+                                        class="form-control"
+                                        :max="today"
+                                        required
+                                    >
                                 </div>
                                 
                                 <div class="form-group">
@@ -508,9 +473,9 @@ const VehicleFuelLogCrud = {
                     <div class="modal-body">
                         <div class="delete-warning">
                             <i class="fas fa-exclamation-triangle"></i>
-                            <p v-if="fuelLogToDelete">Êtes-vous sûr de vouloir supprimer le carnet de carburant du {{ formatDate(fuelLogToDelete.refuelDate) }} ?</p>
-                            <p v-else>Êtes-vous sûr de vouloir supprimer ce carnet de carburant ?</p>
-                            <p class="text-muted">Cette action est irréversible et supprimera définitivement toutes les données associées à ce carnet.</p>
+                            <p v-if="fuelLogToDelete">Êtes-vous sûr de vouloir supprimer ce suivi de carburant du {{ formatDate(fuelLogToDelete.refuelDate) }} ?</p>
+                            <p v-else>Êtes-vous sûr de vouloir supprimer ce suivi de carburant ?</p>
+                            <p class="text-muted">Cette action est irréversible et supprimera définitivement toutes les données associées à ce suivi.</p>
                         </div>
                     </div>
                     
@@ -547,8 +512,6 @@ const VehicleFuelLogCrud = {
             loading: false,
             saving: false,
             searchTerm: '',
-            vehicleFilter: '',
-            driverFilter: '',
             currentPage: 1,
             itemsPerPage: 10,
             pagination: null,
@@ -581,12 +544,14 @@ const VehicleFuelLogCrud = {
         };
     },
     
-    mounted() {
-        this.loadFuelLogs();
-        this.loadVehicles();
-        this.loadDrivers();
-        this.loadFuelTypes();
-        this.loadCurrency();
+    async mounted() {
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
+        await this.loadFuelLogs();
+        await this.loadVehicles();
+        await this.loadDrivers();
+        await this.loadFuelTypes();
+        await this.loadCurrency();
     },
     
     watch: {
@@ -599,26 +564,42 @@ const VehicleFuelLogCrud = {
     },
     
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadFuelLogs() {
             this.loading = true;
             try {
-                const response = await window.apiService.getVehicleFuelLogs(
-                    this.currentPage, 
-                    this.itemsPerPage, 
-                    this.searchTerm,
-                    this.vehicleFilter,
-                    this.driverFilter
-                );
+                const params = new URLSearchParams({
+                    page: this.currentPage,
+                    limit: this.itemsPerPage
+                });
+                
+                if (this.searchTerm) params.append('search', this.searchTerm);
+                
+                const response = await window.apiService.request(`/vehicle-fuel-logs?${params.toString()}`);
                 
                 if (response.success) {
                     this.fuelLogs = response.data;
                     this.pagination = response.pagination;
                 } else {
-                    this.showNotification('Erreur lors du chargement des carnets de carburant: ' + response.message, 'error');
+                    this.showNotification('Erreur lors du chargement du suivi de carburant: ' + response.message, 'error');
                 }
             } catch (error) {
-                console.error('Erreur lors du chargement des carnets de carburant:', error);
-                this.showNotification('Erreur lors du chargement des carnets de carburant', 'error');
+                console.error('Erreur lors du chargement du suivi de carburant:', error);
+                this.showNotification('Erreur lors du chargement du suivi de carburant', 'error');
             } finally {
                 this.loading = false;
             }
@@ -828,7 +809,7 @@ const VehicleFuelLogCrud = {
                 vehicleId: fuelLog.vehicle.id,
                 driverId: fuelLog.driver ? fuelLog.driver.id : '',
                 fuelTypeId: fuelLog.fuelType ? fuelLog.fuelType.id : '',
-                refuelDate: fuelLog.refuelDate,
+                refuelDate: this.formatDateForInput(fuelLog.refuelDate),
                 quantity: fuelLog.quantity,
                 unitPrice: fuelLog.unitPrice,
                 totalCost: fuelLog.totalCost,
@@ -876,15 +857,18 @@ const VehicleFuelLogCrud = {
                 } else {
                     // Afficher les erreurs de validation de kilométrage si elles existent
                     if (response.errors && Array.isArray(response.errors)) {
-                        const errorMessage = response.errors.join('<br>');
-                        this.showNotification('Erreurs de validation:<br>' + errorMessage, 'error');
+                        const errorDetails = response.errors.map(err => `• ${err}`).join('<br>');
+                        const fullMessage = (response.message || 'Erreurs de validation') + '<br>' + errorDetails;
+                        this.showNotification(fullMessage, 'error');
                     } else {
                         this.showNotification('Erreur: ' + response.message, 'error');
                     }
                 }
             } catch (error) {
                 console.error('Erreur lors de la sauvegarde:', error);
-                this.showNotification('Erreur lors de la sauvegarde', 'error');
+                // Afficher le message d'erreur détaillé s'il existe
+                const errorMessage = error.message || 'Erreur lors de la sauvegarde';
+                this.showNotification(errorMessage, 'error');
             } finally {
                 this.saving = false;
             }
@@ -981,7 +965,7 @@ const VehicleFuelLogCrud = {
                 vehicleId: '',
                 driverId: '',
                 fuelTypeId: '',
-                refuelDate: '',
+                refuelDate: this.today,
                 quantity: null,
                 unitPrice: null,
                 totalCost: null,
@@ -1012,6 +996,12 @@ const VehicleFuelLogCrud = {
             if (!dateString) return '-';
             const date = new Date(dateString);
             return date.toLocaleDateString('fr-FR');
+        },
+        
+        formatDateForInput(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0]; // Format YYYY-MM-DD pour input date
         },
         
         formatNumber(number) {
@@ -1052,6 +1042,20 @@ const VehicleFuelLogCrud = {
         },
         
         showNotification(message, type = 'info') {
+            // Utiliser le service de notification global si disponible
+            if (window.notificationService) {
+                window.notificationService.show(message, type);
+                return;
+            }
+            
+            // Créer un conteneur de notifications s'il n'existe pas
+            let container = document.querySelector('.notification-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'notification-container';
+                document.body.appendChild(container);
+            }
+            
             // Créer une notification temporaire
             const notification = document.createElement('div');
             notification.className = `notification notification-${type}`;
@@ -1060,7 +1064,7 @@ const VehicleFuelLogCrud = {
                 <span>${message}</span>
             `;
             
-            document.body.appendChild(notification);
+            container.appendChild(notification);
             
             setTimeout(() => {
                 if (notification.parentNode) {

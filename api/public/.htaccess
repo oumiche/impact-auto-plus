@@ -1,0 +1,12 @@
+# Configuration Apache pour Impact Auto
+RewriteEngine On
+
+# Permettre les headers Authorization
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule ^(.*) - [E=HTTP_AUTHORIZATION:%1]
+
+# CORS géré par Symfony (nelmio_cors) - pas de duplication
+
+# Redirection vers index.php pour Symfony
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ index.php [QSA,L]

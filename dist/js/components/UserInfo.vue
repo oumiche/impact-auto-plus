@@ -64,15 +64,9 @@ export default {
     
     async logout() {
       try {
-        const token = localStorage.getItem('auth_token')
-        if (token) {
-          await fetch('/api/auth/logout.php', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          })
+        // Utiliser apiService pour déconnecter
+        if (window.apiService) {
+          await window.apiService.logout()
         }
       } catch (error) {
         console.error('Erreur lors de la déconnexion:', error)

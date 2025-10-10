@@ -23,25 +23,26 @@ class InterventionWorkAuthorization
     #[ORM\ManyToOne(targetEntity: InterventionQuote::class)]
     private ?InterventionQuote $quote = null;
 
-    #[ORM\Column(type: 'integer')]
-    private int $authorizedBy;
+    #[ORM\ManyToOne(targetEntity: Collaborateur::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Collaborateur $authorizedBy = null;
+
+    #[ORM\Column(type: 'string', length: 50)]
+    private string $authorizationNumber;
 
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $authorizationDate = null;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
-    private ?string $maxAmount = null;
-
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $specialInstructions = null;
-
-    #[ORM\Column(type: 'boolean')]
-    private bool $isUrgent = false;
 
     #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\OneToMany(mappedBy: 'authorization', targetEntity: InterventionWorkAuthorizationLine::class, cascade: ['persist'])]
+    #[ORM\Column(type: 'boolean')]
+    private bool $isValidated = false;
+
+    #[ORM\OneToMany(mappedBy: 'authorization', targetEntity: InterventionWorkAuthorizationLine::class, cascade: ['persist', 'remove'])]
     private Collection $lines;
 
     public function __construct()
@@ -78,14 +79,33 @@ class InterventionWorkAuthorization
         return $this;
     }
 
-    public function getAuthorizedBy(): int
+    public function getAuthorizedBy(): ?Collaborateur
     {
         return $this->authorizedBy;
     }
 
-    public function setAuthorizedBy(int $authorizedBy): self
+    public function setAuthorizedBy(?Collaborateur $authorizedBy): self
     {
         $this->authorizedBy = $authorizedBy;
+        return $this;
+    }
+
+    /**
+     * Retourne l'ID du collaborateur qui a autorisé (pour compatibilité)
+     */
+    public function getAuthorizedById(): ?int
+    {
+        return $this->authorizedBy ? $this->authorizedBy->getId() : null;
+    }
+
+    public function getAuthorizationNumber(): string
+    {
+        return $this->authorizationNumber;
+    }
+
+    public function setAuthorizationNumber(string $authorizationNumber): self
+    {
+        $this->authorizationNumber = $authorizationNumber;
         return $this;
     }
 
@@ -100,19 +120,6 @@ class InterventionWorkAuthorization
         return $this;
     }
 
-    public function getMaxAmount(): ?string
-    {
-        return $this->maxAmount;
-    }
-
-    public function setMaxAmount(?string $maxAmount): self
-    {
-        if ($maxAmount !== null && $maxAmount < 0) {
-            throw new \InvalidArgumentException("Max amount cannot be negative");
-        }
-        $this->maxAmount = $maxAmount;
-        return $this;
-    }
 
     public function getSpecialInstructions(): ?string
     {
@@ -125,16 +132,6 @@ class InterventionWorkAuthorization
         return $this;
     }
 
-    public function isUrgent(): bool
-    {
-        return $this->isUrgent;
-    }
-
-    public function setIsUrgent(bool $isUrgent): self
-    {
-        $this->isUrgent = $isUrgent;
-        return $this;
-    }
 
     public function getCreatedAt(): ?\DateTimeImmutable
     {
@@ -148,34 +145,21 @@ class InterventionWorkAuthorization
     }
 
     // Méthodes utilitaires
-    public function isWithinBudget(float $actualCost): bool
-    {
-        if (!$this->maxAmount) {
-            return true; // Pas de limite définie
-        }
-        return $actualCost <= (float) $this->maxAmount;
-    }
-
-    public function getRemainingBudget(float $actualCost): ?float
-    {
-        if (!$this->maxAmount) {
-            return null;
-        }
-        return max(0, (float) $this->maxAmount - $actualCost);
-    }
-
-    public function getMaxAmountFloat(): ?float
-    {
-        return $this->maxAmount ? (float) $this->maxAmount : null;
-    }
 
     public function isValidated(): bool
     {
-        return $this->authorizationDate !== null;
+        return $this->isValidated;
+    }
+
+    public function setIsValidated(bool $isValidated): self
+    {
+        $this->isValidated = $isValidated;
+        return $this;
     }
 
     public function markAsValidated(): self
     {
+        $this->isValidated = true;
         $this->authorizationDate = new \DateTime();
         return $this;
     }
@@ -212,24 +196,6 @@ class InterventionWorkAuthorization
         return $expiryDate > $now ? $diff->days : -$diff->days;
     }
 
-    public function canExceedBudget(): bool
-    {
-        return $this->maxAmount === null;
-    }
-
-    public function getBudgetUtilization(float $actualCost): ?float
-    {
-        if (!$this->maxAmount) {
-            return null;
-        }
-        
-        $maxAmount = (float) $this->maxAmount;
-        if ($maxAmount == 0) {
-            return null;
-        }
-        
-        return min(100, ($actualCost / $maxAmount) * 100);
-    }
 
     /**
      * @return Collection<int, InterventionWorkAuthorizationLine>

@@ -5,8 +5,25 @@
 
 class ApiService {
     constructor() {
-        this.baseUrl = 'https://127.0.0.1:8000/api';
+        // Utiliser la configuration centralisée si disponible
+        if (window.AppConfig) {
+            this.baseUrl = window.AppConfig.getApiUrl();
+        } else {
+            // Fallback si AppConfig n'est pas chargé
+            console.warn('AppConfig not loaded, using fallback URL detection');
+            const hostname = window.location.hostname;
+            
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                this.baseUrl = 'https://127.0.0.1:8000/api';
+            } else if (hostname.includes('zeddev01.com')) {
+                this.baseUrl = 'https://iautobackend.zeddev01.com/api';
+            } else {
+                this.baseUrl = `${window.location.protocol}//${hostname}/api`;
+            }
+        }
+        
         this.token = localStorage.getItem('auth_token');
+        console.log('ApiService initialized with baseUrl:', this.baseUrl);
     }
 
     /**
@@ -45,16 +62,37 @@ class ApiService {
         };
 
         try {
+            console.log('Making API request to:', url);
+            console.log('Request headers:', finalOptions.headers);
+            
             const response = await fetch(url, finalOptions);
-            const data = await response.json();
+            console.log('API response status:', response.status);
+            
+            // Gérer le cas où la réponse n'est pas du JSON (erreur serveur, etc.)
+            let data;
+            try {
+                data = await response.json();
+                console.log('API response data:', data);
+            } catch (jsonError) {
+                console.error('Erreur de parsing JSON:', jsonError);
+                throw new Error('Réponse du serveur invalide');
+            }
 
             if (!response.ok) {
                 // Gestion spécifique des erreurs d'authentification
                 if (response.status === 401) {
-                    const errorMessage = data.message || data.error || 'Token expiré ou invalide';
+                    const errorMessage = data.message || data.error || 'JWT Token not found';
+                    console.error('Erreur d\'authentification 401:', errorMessage);
+                    console.error('Full 401 response:', data);
                     this.handleAuthError(errorMessage);
                     throw new Error(errorMessage);
                 }
+                
+                // Pour les erreurs de validation (400), retourner le data complet avec les détails
+                if (response.status === 400 && data.errors) {
+                    return data; // Retourner l'objet complet avec success: false, message et errors
+                }
+                
                 throw new Error(data.message || data.error || `HTTP ${response.status}`);
             }
 
@@ -62,14 +100,8 @@ class ApiService {
         } catch (error) {
             console.error('API Error:', error);
             
-            // Vérifier si c'est une erreur de token JWT
-            if (error.message.includes('JWT Token not found') || 
-                error.message.includes('Token expiré') || 
-                error.message.includes('Token invalide') ||
-                error.message.includes('Authentication required')) {
-                this.handleAuthError('Session expirée. Redirection vers la page de connexion...');
-            }
-            
+            // Ne pas appeler handleAuthError ici car c'est déjà fait dans le if (response.status === 401)
+            // Juste propager l'erreur
             throw error;
         }
     }
@@ -690,7 +722,30 @@ class ApiService {
      * Récupérer les tenants accessibles par l'utilisateur connecté
      */
     async getAvailableTenants() {
-        return this.request('/tenants');
+        // Vérifier la validité du JWT
+        try {
+            const tokenParts = this.token.split('.');
+            if (tokenParts.length === 3) {
+                const payload = JSON.parse(atob(tokenParts[1]));
+                
+                // Vérifier si le token a expiré
+                if (payload.exp * 1000 < Date.now()) {
+                    console.error('JWT token has expired');
+                    throw new Error('Token expiré');
+                }
+            }
+        } catch (e) {
+            console.error('Error validating JWT:', e);
+            throw new Error('Token JWT invalide');
+        }
+        
+        try {
+            const result = await this.request('/tenants');
+            return result;
+        } catch (error) {
+            console.error('getAvailableTenants error:', error);
+            throw error;
+        }
     }
 
     /**

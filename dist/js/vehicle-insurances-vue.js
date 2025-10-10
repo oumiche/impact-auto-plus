@@ -1,16 +1,27 @@
-const { createApp } = Vue;
+/**
+ * Impact Auto - Assurances Véhicules Vue.js
+ * Composant CRUD pour la gestion des assurances véhicules
+ */
 
 const VehicleInsuranceCrud = {
-    components: {
-        DatePicker,
-        DateTimePicker
-    },
     template: `
         <div class="vehicle-insurance-crud">
             <!-- Page Header -->
             <div class="page-header">
-                <h1 class="section-title">Gestion des Assurances Véhicules</h1>
-                <p class="page-subtitle">Gérez les assurances de votre flotte de véhicules</p>
+                <div class="header-content">
+                    <div class="header-left">
+                        <div class="header-text">
+                            <h1 class="section-title">Gestion des Assurances Véhicules</h1>
+                            <p class="page-subtitle">Gérez les assurances de votre flotte de véhicules</p>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <button class="btn btn-primary" @click="openCreateModal">
+                            <i class="fas fa-plus"></i>
+                            Nouvelle Assurance
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Barre de recherche et filtres -->
@@ -21,24 +32,19 @@ const VehicleInsuranceCrud = {
                         type="text" 
                         v-model="searchTerm" 
                         @input="debouncedSearch"
-                        placeholder="Rechercher une assurance..."
+                        placeholder="Rechercher par véhicule, compagnie, numéro de police..."
                     >
                 </div>
                 
                 <div class="filter-group">
                     <select v-model="statusFilter" @change="loadInsurances" class="filter-select">
-                        <option value="all">Toutes les assurances</option>
+                        <option value="all">Tous les statuts</option>
                         <option value="active">Actives</option>
                         <option value="expired">Expirées</option>
                         <option value="cancelled">Annulées</option>
                         <option value="pending_renewal">En attente de renouvellement</option>
                     </select>
                 </div>
-                
-                <button class="btn btn-primary" @click="openCreateModal">
-                    <i class="fas fa-plus"></i>
-                    Nouvelle Assurance
-                </button>
             </div>
 
             <!-- Tableau des assurances -->
@@ -241,20 +247,24 @@ const VehicleInsuranceCrud = {
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="insurance-start-date">Date de début *</label>
-                                    <date-picker 
+                                    <input 
+                                        type="date" 
+                                        id="insurance-start-date"
                                         v-model="form.startDate"
-                                        placeholder="Sélectionner la date de début"
-                                        :max-date="today"
-                                    ></date-picker>
+                                        :max="today"
+                                        required
+                                    >
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="insurance-end-date">Date de fin *</label>
-                                    <date-picker 
+                                    <input 
+                                        type="date" 
+                                        id="insurance-end-date"
                                         v-model="form.endDate"
-                                        placeholder="Sélectionner la date de fin"
-                                        :min-date="form.startDate || today"
-                                    ></date-picker>
+                                        :min="form.startDate || today"
+                                        required
+                                    >
                                 </div>
                             </div>
                             
@@ -364,11 +374,12 @@ const VehicleInsuranceCrud = {
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="insurance-renewal-date">Date de renouvellement</label>
-                                    <date-picker 
+                                    <input 
+                                        type="date" 
+                                        id="insurance-renewal-date"
                                         v-model="form.renewalDate"
-                                        placeholder="Sélectionner la date de renouvellement"
-                                        :min-date="today"
-                                    ></date-picker>
+                                        :min="today"
+                                    >
                                 </div>
                                 
                                 <div class="form-group">
@@ -486,13 +497,30 @@ const VehicleInsuranceCrud = {
         };
     },
     
-    mounted() {
-        this.loadInsurances();
-        this.loadVehicles();
-        this.loadCurrency();
+    async mounted() {
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
+        await this.loadInsurances();
+        await this.loadVehicles();
+        await this.loadCurrency();
     },
     
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadInsurances() {
             this.loading = true;
             try {
@@ -797,6 +825,20 @@ const VehicleInsuranceCrud = {
         },
         
         showNotification(message, type = 'info') {
+            // Utiliser le service de notification global si disponible
+            if (window.notificationService) {
+                window.notificationService.show(message, type);
+                return;
+            }
+            
+            // Créer un conteneur de notifications s'il n'existe pas
+            let container = document.querySelector('.notification-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'notification-container';
+                document.body.appendChild(container);
+            }
+            
             // Créer une notification temporaire
             const notification = document.createElement('div');
             notification.className = `notification notification-${type}`;
@@ -805,7 +847,7 @@ const VehicleInsuranceCrud = {
                 <span>${message}</span>
             `;
             
-            document.body.appendChild(notification);
+            container.appendChild(notification);
             
             setTimeout(() => {
                 if (notification.parentNode) {
@@ -816,7 +858,5 @@ const VehicleInsuranceCrud = {
     }
 };
 
-// Enregistrer le composant globalement
-if (typeof window !== 'undefined') {
-    window.VehicleInsuranceCrud = VehicleInsuranceCrud;
-}
+// Exposer le composant globalement
+window.VehicleInsuranceCrud = VehicleInsuranceCrud;

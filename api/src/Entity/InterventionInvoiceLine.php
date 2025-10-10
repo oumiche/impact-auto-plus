@@ -34,6 +34,10 @@ class InterventionInvoiceLine
     #[Groups(['invoice_line:read', 'invoice_line:write'])]
     private ?string $description = null;
 
+    #[ORM\Column(type: Types::STRING, length: 50, nullable: true)]
+    #[Groups(['invoice_line:read', 'invoice_line:write'])]
+    private ?string $workType = null;
+
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     #[Groups(['invoice_line:read', 'invoice_line:write'])]
     private ?string $quantity = null;
@@ -117,6 +121,17 @@ class InterventionInvoiceLine
     public function setDescription(string $description): static
     {
         $this->description = $description;
+        return $this;
+    }
+
+    public function getWorkType(): ?string
+    {
+        return $this->workType;
+    }
+
+    public function setWorkType(?string $workType): static
+    {
+        $this->workType = $workType;
         return $this;
     }
 

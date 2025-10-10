@@ -143,10 +143,10 @@ sudo openssl genpkey -out /var/www/html/impact-auto/api/config/jwt/private.pem -
 sudo openssl pkey -in /var/www/html/impact-auto/api/config/jwt/private.pem -out /var/www/html/impact-auto/api/config/jwt/public.pem -pubout -passin pass:votre_passphrase_jwt
 
 # Changer les permissions
-sudo chown www-data:www-data /var/www/html/impact-auto/api/config/jwt/private.pem
-sudo chown www-data:www-data /var/www/html/impact-auto/api/config/jwt/public.pem
-sudo chmod 644 /var/www/html/impact-auto/api/config/jwt/private.pem
-sudo chmod 644 /var/www/html/impact-auto/api/config/jwt/public.pem
+sudo chown www-data:www-data /var/www/html/impact-auto/backend/config/jwt/private.pem
+sudo chown www-data:www-data /var/www/html/impact-auto/backend/config/jwt/public.pem
+sudo chmod 644 /var/www/html/impact-auto/backend/config/jwt/private.pem
+sudo chmod 644 /var/www/html/impact-auto/backend/config/jwt/public.pem
 ```
 
 ### 7. Configuration de la base de données
@@ -166,6 +166,7 @@ sudo -u www-data php bin/console doctrine:migrations:status
 
 ```bash
 sudo nano /etc/apache2/sites-available/impact-auto.conf
+sudo rm -R /etc/apache2/sites-available/impact-auto.conf
 ```
 
 #### Contenu du fichier de configuration

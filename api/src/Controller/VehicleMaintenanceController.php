@@ -287,7 +287,7 @@ class VehicleMaintenanceController extends AbstractTenantController
 
             return new JsonResponse([
                 'success' => true,
-                'message' => 'Maintenance créée avec succès',
+                'message' => 'Entretien créé avec succès',
                 'data' => [
                     'id' => $maintenance->getId(),
                     'code' => $maintenanceCode,
@@ -464,7 +464,7 @@ class VehicleMaintenanceController extends AbstractTenantController
 
             return new JsonResponse([
                 'success' => true,
-                'message' => 'Maintenance mise à jour avec succès',
+                'message' => 'Entretien mis à jour avec succès',
                 'data' => [
                     'id' => $maintenance->getId(),
                     'title' => $maintenance->getTitle(),
@@ -500,7 +500,7 @@ class VehicleMaintenanceController extends AbstractTenantController
 
             return new JsonResponse([
                 'success' => true,
-                'message' => 'Maintenance supprimée avec succès'
+                'message' => 'Entretien supprimé avec succès'
             ]);
 
         } catch (\Exception $e) {
@@ -645,7 +645,7 @@ class VehicleMaintenanceController extends AbstractTenantController
             } else {
                 return new JsonResponse([
                     'success' => false,
-                    'message' => 'Aucune maintenance avec kilométrage trouvée pour ce véhicule',
+                    'message' => 'Aucun entretien avec kilométrage trouvé pour ce véhicule',
                     'code' => 404
                 ], 404);
             }

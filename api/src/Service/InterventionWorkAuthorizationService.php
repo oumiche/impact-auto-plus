@@ -7,6 +7,7 @@ use App\Entity\InterventionWorkAuthorization;
 use App\Entity\InterventionWorkAuthorizationLine;
 use App\Entity\InterventionQuoteLine;
 use App\Entity\VehicleIntervention;
+use App\Entity\Collaborateur;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -29,11 +30,11 @@ class InterventionWorkAuthorizationService
     /**
      * Génère automatiquement une autorisation de travail à partir d'un devis approuvé
      */
-    public function generateFromApprovedQuote(InterventionQuote $quote, int $authorizedBy, array $options = []): InterventionWorkAuthorization
+    public function generateFromApprovedQuote(InterventionQuote $quote, Collaborateur $authorizedBy, array $options = []): InterventionWorkAuthorization
     {
-        // Vérifier que le devis est approuvé
-        if (!$quote->isApproved()) {
-            throw new \InvalidArgumentException('Le devis doit être approuvé pour générer une autorisation de travail');
+        // Vérifier que le devis est validé
+        if (!$quote->isValidated()) {
+            throw new \InvalidArgumentException('Le devis doit être validé pour générer une autorisation de travail');
         }
 
         // Vérifier qu'il n'existe pas déjà une autorisation pour ce devis
@@ -52,8 +53,6 @@ class InterventionWorkAuthorizationService
         $authorization->setAuthorizationDate(new \DateTime());
         
         // Copier les options depuis le devis
-        $authorization->setMaxAmount($quote->getTotalAmount());
-        $authorization->setIsUrgent($options['isUrgent'] ?? false);
         $authorization->setSpecialInstructions($options['specialInstructions'] ?? null);
 
         // Copier les lignes du devis
@@ -78,7 +77,7 @@ class InterventionWorkAuthorizationService
             $authLine->setAuthorization($authorization);
             $authLine->setSupply($quoteLine->getSupply());
             $authLine->setLineNumber($lineNumber++);
-            $authLine->setDescription($quoteLine->getDisplayName());
+            // La description sera générée automatiquement basée sur la fourniture
             $authLine->setQuantity($quoteLine->getQuantity());
             $authLine->setUnitPrice($quoteLine->getUnitPrice());
             $authLine->setDiscountPercentage($quoteLine->getDiscountPercentage());
@@ -94,27 +93,6 @@ class InterventionWorkAuthorizationService
         }
     }
 
-    /**
-     * Met à jour le montant maximum d'une autorisation
-     */
-    public function updateMaxAmount(InterventionWorkAuthorization $authorization, string $maxAmount): InterventionWorkAuthorization
-    {
-        $authorization->setMaxAmount($maxAmount);
-        $this->entityManager->flush();
-        
-        return $authorization;
-    }
-
-    /**
-     * Marque une autorisation comme urgente
-     */
-    public function markAsUrgent(InterventionWorkAuthorization $authorization): InterventionWorkAuthorization
-    {
-        $authorization->setIsUrgent(true);
-        $this->entityManager->flush();
-        
-        return $authorization;
-    }
 
     /**
      * Ajoute des instructions spéciales à une autorisation
@@ -128,66 +106,22 @@ class InterventionWorkAuthorizationService
     }
 
     /**
-     * Vérifie si une autorisation est dans le budget
-     */
-    public function checkBudgetCompliance(InterventionWorkAuthorization $authorization, float $actualCost): array
-    {
-        $maxAmount = $authorization->getMaxAmountFloat();
-        
-        if ($maxAmount === null) {
-            return [
-                'compliant' => true,
-                'message' => 'Aucune limite de budget définie',
-                'utilization' => null,
-                'remaining' => null
-            ];
-        }
-
-        $compliant = $actualCost <= $maxAmount;
-        $utilization = $authorization->getBudgetUtilization($actualCost);
-        $remaining = $authorization->getRemainingBudget($actualCost);
-
-        return [
-            'compliant' => $compliant,
-            'message' => $compliant ? 'Dans le budget' : 'Dépassement de budget',
-            'utilization' => $utilization,
-            'remaining' => $remaining
-        ];
-    }
-
-    /**
-     * Calcule les statistiques d'utilisation du budget
+     * Calcule les statistiques des lignes d'autorisation
      */
     public function getBudgetStatistics(InterventionWorkAuthorization $authorization): array
     {
-        $maxAmount = $authorization->getMaxAmountFloat();
-        
-        if ($maxAmount === null) {
-            return [
-                'hasBudget' => false,
-                'maxAmount' => null,
-                'actualCost' => null,
-                'utilization' => null,
-                'remaining' => null
-            ];
-        }
-
-        // Pour l'instant, on utilise le montant total des lignes comme coût actuel
-        // Dans une vraie application, cela pourrait venir d'une autre source
+        // Calculer le coût total des lignes
         $actualCost = 0;
         foreach ($authorization->getLines() as $line) {
             $actualCost += (float) $line->getLineTotal();
         }
 
-        $utilization = $authorization->getBudgetUtilization($actualCost);
-        $remaining = $authorization->getRemainingBudget($actualCost);
-
         return [
-            'hasBudget' => true,
-            'maxAmount' => $maxAmount,
+            'hasBudget' => false,
+            'maxAmount' => null,
             'actualCost' => $actualCost,
-            'utilization' => $utilization,
-            'remaining' => $remaining
+            'utilization' => null,
+            'remaining' => null
         ];
     }
 

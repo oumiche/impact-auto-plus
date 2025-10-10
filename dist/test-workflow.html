@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test WorkflowManager - Impact Auto</title>
+    
+    <!-- Inclusion automatique de tous les assets -->
+    <script src="js/app-includes.js"></script>
+    
+    <!-- CSS spécifiques -->
+    <link rel="stylesheet" href="css/workflow-manager.css">
+</head>
+<body>
+    <div id="app"></div>
+    
+    <!-- Scripts spécifiques à la page -->
+    <script src="js/components/WorkflowManager.js"></script>
+    
+    <!-- Test du WorkflowManager -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attendre que tous les services soient chargés
+            const checkServices = setInterval(() => {
+                if (window.Vue && window.notificationService && window.apiService) {
+                    clearInterval(checkServices);
+                    
+                    console.log('=== TEST WORKFLOW MANAGER ===');
+                    console.log('Vue.js:', window.Vue ? '✓' : '✗');
+                    console.log('NotificationService:', window.notificationService ? '✓' : '✗');
+                    console.log('ApiService:', window.apiService ? '✓' : '✗');
+                    console.log('WorkflowManager:', window.WorkflowManager ? '✓' : '✗');
+                    
+                    // Test de la méthode confirm
+                    if (window.notificationService && typeof window.notificationService.confirm === 'function') {
+                        console.log('NotificationService.confirm:', '✓');
+                        
+                        // Test simple
+                        window.notificationService.confirm(
+                            'Ceci est un test de la boîte de confirmation',
+                            'Test Confirmation',
+                            'info'
+                        ).then(result => {
+                            console.log('Résultat de la confirmation:', result);
+                        });
+                    } else {
+                        console.log('NotificationService.confirm:', '✗');
+                    }
+                    
+                    // Initialiser Vue.js avec un test simple
+                    const { createApp } = Vue;
+                    const app = createApp({
+                        components: {
+                            WorkflowManager: window.WorkflowManager
+                        },
+                        data() {
+                            return {
+                                testIntervention: {
+                                    id: 1,
+                                    currentStatus: 'reported',
+                                    statusLabel: 'Signalé',
+                                    title: 'Test Intervention'
+                                }
+                            };
+                        },
+                        template: `
+                            <div class="test-container">
+                                <h1>Test WorkflowManager</h1>
+                                <div class="test-section">
+                                    <h2>Composant WorkflowManager</h2>
+                                    <WorkflowManager 
+                                        :intervention="testIntervention"
+                                        :readonly="false"
+                                    />
+                                </div>
+                            </div>
+                        `
+                    });
+                    
+                    app.mount('#app');
+                }
+            }, 100);
+            
+            // Timeout de sécurité
+            setTimeout(() => {
+                if (!window.Vue || !window.notificationService) {
+                    console.error('Timeout: Services non chargés après 10 secondes');
+                    document.body.innerHTML = '<div style="padding: 20px; color: red;">Erreur: Services non chargés</div>';
+                }
+            }, 10000);
+        });
+    </script>
+    
+    <style>
+        .test-container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+    </style>
+</body>
+</html>

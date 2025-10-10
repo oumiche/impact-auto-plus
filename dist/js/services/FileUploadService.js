@@ -83,6 +83,15 @@ class FileUploadService {
                 case 'intervention_quote':
                     endpoint = `/intervention-quotes/${entityId}/attachments`;
                     break;
+                case 'intervention_invoice':
+                    endpoint = `/intervention-invoices/${entityId}/attachments`;
+                    break;
+                case 'intervention_work_authorization':
+                    endpoint = `/intervention-work-authorizations/${entityId}/attachments`;
+                    break;
+                case 'intervention_reception_report':
+                    endpoint = `/intervention-reception-reports/${entityId}/attachments`;
+                    break;
                 default:
                     throw new Error(`Type d'entité non supporté: ${entityType}`);
             }
@@ -163,6 +172,15 @@ class FileUploadService {
                 case 'intervention_quote':
                     endpoint = `/intervention-quotes/${entityId}/attachments`;
                     break;
+                case 'intervention_invoice':
+                    endpoint = `/intervention-invoices/${entityId}/attachments`;
+                    break;
+                case 'intervention_work_authorization':
+                    endpoint = `/intervention-work-authorizations/${entityId}/attachments`;
+                    break;
+                case 'intervention_reception_report':
+                    endpoint = `/intervention-reception-reports/${entityId}/attachments`;
+                    break;
                 default:
                     throw new Error(`Type d'entité non supporté: ${entityType}`);
             }
@@ -201,6 +219,15 @@ class FileUploadService {
                 case 'intervention_quote':
                     endpoint = `/intervention-quotes/${entityId}/attachments/${fileId}`;
                     break;
+                case 'intervention_invoice':
+                    endpoint = `/intervention-invoices/${entityId}/attachments/${fileId}`;
+                    break;
+                case 'intervention_work_authorization':
+                    endpoint = `/intervention-work-authorizations/${entityId}/attachments/${fileId}`;
+                    break;
+                case 'intervention_reception_report':
+                    endpoint = `/intervention-reception-reports/${entityId}/attachments/${fileId}`;
+                    break;
                 default:
                     throw new Error(`Type d'entité non supporté: ${entityType}`);
             }
@@ -226,16 +253,53 @@ class FileUploadService {
 
     /**
      * Télécharge un fichier
-     * @param {Object} attachment - Objet attachment avec filePath et originalName
      * @param {string} entityType - Type d'entité (ex: 'intervention_prediagnostic')
      * @param {number} entityId - ID de l'entité
+     * @param {number} fileId - ID du fichier
      */
-    downloadFile(attachment, entityType, entityId) {
-        const link = document.createElement('a');
-        // Les fichiers sont servis par le backend sur le port 8000
-        link.href = `http://127.0.0.1:8000/uploads/${entityType}/${entityId}/${attachment.fileName}`;
-        link.download = attachment.originalName;
-        link.click();
+    async downloadFile(entityType, entityId, fileId) {
+        try {
+            let endpoint;
+            switch (entityType) {
+                case 'intervention_prediagnostic':
+                    endpoint = `/intervention-prediagnostics/${entityId}/attachments/${fileId}/download`;
+                    break;
+                case 'vehicle_intervention':
+                    endpoint = `/vehicle-interventions/${entityId}/attachments/${fileId}/download`;
+                    break;
+                case 'intervention_quote':
+                    endpoint = `/intervention-quotes/${entityId}/attachments/${fileId}/download`;
+                    break;
+                case 'intervention_invoice':
+                    endpoint = `/intervention-invoices/${entityId}/attachments/${fileId}/download`;
+                    break;
+                case 'intervention_work_authorization':
+                    endpoint = `/intervention-work-authorizations/${entityId}/attachments/${fileId}/download`;
+                    break;
+                case 'intervention_reception_report':
+                    endpoint = `/intervention-reception-reports/${entityId}/attachments/${fileId}/download`;
+                    break;
+                default:
+                    throw new Error(`Type d'entité non supporté: ${entityType}`);
+            }
+
+            const response = await window.apiService.request(endpoint);
+            
+            if (response.success && response.data?.url) {
+                // Créer un lien de téléchargement temporaire
+                const link = document.createElement('a');
+                link.href = response.data.url;
+                link.download = response.data.originalName || response.data.fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                throw new Error('URL de téléchargement non disponible');
+            }
+        } catch (error) {
+            console.error('Erreur lors du téléchargement:', error);
+            throw error;
+        }
     }
 
     /**

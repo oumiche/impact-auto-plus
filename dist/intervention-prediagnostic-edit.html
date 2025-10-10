@@ -17,8 +17,6 @@
     <div id="app"></div>
     
     <!-- Scripts spécifiques à la page -->
-    <script src="js/services/FileUploadService.js"></script>
-    <script src="js/components/DateTimePicker.js"></script>
     <script src="js/components/AttachmentGallery.js"></script>
     
     <!-- Script de la page -->
@@ -27,21 +25,45 @@
     <!-- Initialisation Vue.js -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Attendre que Vue.js soit chargé
-            const checkVue = setInterval(() => {
-                if (window.Vue) {
-                    clearInterval(checkVue);
+            // Attendre que Vue.js et les composants soient chargés
+            const checkComponents = setInterval(() => {
+                console.log('Vérification des composants:', {
+                    Vue: !!window.Vue,
+                    InterventionPrediagnosticForm: !!window.InterventionPrediagnosticForm,
+                    AttachmentGallery: !!window.AttachmentGallery,
+                    DateTimePicker: !!window.DateTimePicker,
+                    FileUploadService: !!window.fileUploadService
+                });
+                
+                if (window.Vue && window.InterventionPrediagnosticForm) {
+                    clearInterval(checkComponents);
+                    
+                    console.log('Composants prêts, montage de l\'application');
+                    
+                    // Récupérer l'ID depuis l'URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const prediagnosticId = urlParams.get('id');
+                    
+                    console.log('ID du prédiagnostic:', prediagnosticId);
                     
                     const { createApp } = Vue;
                     const app = createApp({
                         components: {
-                            InterventionPrediagnosticForm,
+                            InterventionPrediagnosticForm: window.InterventionPrediagnosticForm,
                             AttachmentGallery: window.AttachmentGallery,
                             DateTimePicker: window.DateTimePicker
                         },
+                        data() {
+                            return {
+                                prediagnosticId: prediagnosticId
+                            };
+                        },
                         template: `
                             <div class="main-content">
-                                <InterventionPrediagnosticForm />
+                                <InterventionPrediagnosticForm 
+                                    mode="edit" 
+                                    :prediagnostic-id="prediagnosticId" 
+                                />
                             </div>
                         `
                     });
@@ -49,6 +71,46 @@
                     app.mount('#app');
                 }
             }, 100);
+            
+            // Timeout de sécurité après 5 secondes
+            setTimeout(() => {
+                if (checkComponents) {
+                    clearInterval(checkComponents);
+                    console.warn('Timeout: montage de Vue sans tous les composants');
+                    
+                    if (window.Vue && window.InterventionPrediagnosticForm) {
+                        // Récupérer l'ID depuis l'URL
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const prediagnosticId = urlParams.get('id');
+                        
+                        console.log('ID du prédiagnostic (timeout):', prediagnosticId);
+                        
+                        const { createApp } = Vue;
+                        const app = createApp({
+                            components: {
+                                InterventionPrediagnosticForm: window.InterventionPrediagnosticForm,
+                                AttachmentGallery: window.AttachmentGallery,
+                                DateTimePicker: window.DateTimePicker
+                            },
+                            data() {
+                                return {
+                                    prediagnosticId: prediagnosticId
+                                };
+                            },
+                            template: `
+                                <div class="main-content">
+                                    <InterventionPrediagnosticForm 
+                                        mode="edit" 
+                                        :prediagnostic-id="prediagnosticId" 
+                                    />
+                                </div>
+                            `
+                        });
+                        
+                        app.mount('#app');
+                    }
+                }
+            }, 5000);
         });
     </script>
 </body>

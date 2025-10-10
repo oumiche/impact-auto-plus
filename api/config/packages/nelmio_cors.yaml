@@ -1,11 +1,36 @@
 nelmio_cors:
     defaults:
         origin_regex: true
-        allow_origin: ['http://localhost:8080', 'http://localhost:3000', 'http://127.0.0.1:8080', 'https://localhost:8080', 'https://127.0.0.1:8080', 'http://127.0.0.1:8000', 'https://127.0.0.1:8000']
+        # Autoriser localhost pour le développement et les domaines de production
+        allow_origin: 
+            - 'http://localhost:8080'
+            - 'http://localhost:3000'
+            - 'http://127.0.0.1:8080'
+            - 'https://localhost:8080'
+            - 'https://127.0.0.1:8080'
+            - 'http://127.0.0.1:8000'
+            - 'https://127.0.0.1:8000'
+            - '^https?://.*\.zeddev01\.com$'  # Tous les sous-domaines zeddev01.com
         allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
-        allow_headers: ['Content-Type', 'Authorization', 'Accept']
-        expose_headers: ['Link']
+        allow_headers: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin']
+        expose_headers: ['Link', 'Content-Type', 'Authorization']
         max_age: 3600
         allow_credentials: true
     paths:
-        '^/api/': true
+        '^/api/': 
+            # Configuration spécifique pour l'API - pas de duplication des headers
+            origin_regex: true
+            allow_origin: 
+                - 'http://localhost:8080'
+                - 'http://localhost:3000'
+                - 'http://127.0.0.1:8080'
+                - 'https://localhost:8080'
+                - 'https://127.0.0.1:8080'
+                - 'http://127.0.0.1:8000'
+                - 'https://127.0.0.1:8000'
+                - '^https?://.*\.zeddev01\.com$'  # Tous les sous-domaines zeddev01.com
+            allow_headers: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin']
+            allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
+            expose_headers: ['Link', 'Content-Type', 'Authorization']
+            allow_credentials: true
+            max_age: 3600

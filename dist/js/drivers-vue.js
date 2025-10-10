@@ -1,12 +1,27 @@
-const { createApp } = Vue;
+/**
+ * Impact Auto - Conducteurs Vue.js
+ * Composant CRUD pour la gestion des conducteurs
+ */
 
 const DriverCrud = {
     template: `
         <div class="driver-crud">
             <!-- Page Header -->
             <div class="page-header">
-                <h1 class="section-title">Gestion des Conducteurs</h1>
-                <p class="page-subtitle">Gérez les conducteurs et leurs informations de permis</p>
+                <div class="header-content">
+                    <div class="header-left">
+                        <div class="header-text">
+                            <h1 class="section-title">Gestion des Conducteurs</h1>
+                            <p class="page-subtitle">Gérez les conducteurs et leurs informations de permis</p>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <button class="btn btn-primary" @click="openCreateModal">
+                            <i class="fas fa-plus"></i>
+                            Nouveau Conducteur
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Barre de recherche et filtres -->
@@ -17,22 +32,17 @@ const DriverCrud = {
                         type="text" 
                         v-model="searchTerm" 
                         @input="debouncedSearch"
-                        placeholder="Rechercher un conducteur..."
+                        placeholder="Rechercher par nom, email, téléphone, permis..."
                     >
                 </div>
                 
                 <div class="filter-group">
                     <select v-model="activeFilter" @change="loadDrivers" class="filter-select">
-                        <option value="all">Tous les conducteurs</option>
-                        <option value="active">Actifs uniquement</option>
-                        <option value="inactive">Inactifs uniquement</option>
+                        <option value="all">Tous les statuts</option>
+                        <option value="active">Actifs</option>
+                        <option value="inactive">Inactifs</option>
                     </select>
                 </div>
-                
-                <button class="btn btn-primary" @click="openCreateModal">
-                    <i class="fas fa-plus"></i>
-                    Nouveau Conducteur
-                </button>
             </div>
 
             <!-- Tableau des conducteurs -->
@@ -395,12 +405,29 @@ const DriverCrud = {
         };
     },
     
-    mounted() {
-        this.loadDrivers();
-        this.loadLicenseTypes();
+    async mounted() {
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
+        await this.loadDrivers();
+        await this.loadLicenseTypes();
     },
     
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadDrivers() {
             this.loading = true;
             try {
@@ -659,12 +686,5 @@ const DriverCrud = {
     }
 };
 
-// Exporter le composant
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = DriverCrud;
-}
-
-// Enregistrer le composant globalement pour Vue
-if (typeof window !== 'undefined' && window.Vue) {
-    window.DriverCrud = DriverCrud;
-}
+// Exposer le composant globalement
+window.DriverCrud = DriverCrud;

@@ -11,6 +11,16 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'vehicle_interventions')]
 class VehicleIntervention
 {
+    public const WORKTYPE_LABOR = 'labor';
+    public const WORKTYPE_PARTS = 'supply';
+    public const WORKTYPE_OTHER = 'other';
+
+    public const WORKTYPES = [
+        self::WORKTYPE_LABOR,
+        self::WORKTYPE_PARTS,
+        self::WORKTYPE_OTHER
+    ];
+    
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -478,11 +488,12 @@ class VehicleIntervention
             'repair_completed' => 'Réparation terminée',
             'in_reception' => 'En réception',
             'vehicle_received' => 'Véhicule reçu',
+            'invoiced' => 'Facturé',
             'cancelled' => 'Annulé'
         ];
     }
 
-    public function getStatusLabel(string $status = null): string
+    public function getStatusLabel(?string $status = null): string
     {
         $status = $status ?? $this->currentStatus;
         $validStatuses = $this->getValidStatuses();
@@ -502,7 +513,8 @@ class VehicleIntervention
             'in_repair' => ['repair_completed', 'cancelled'],
             'repair_completed' => ['in_reception', 'cancelled'],
             'in_reception' => ['vehicle_received', 'cancelled'],
-            'vehicle_received' => ['cancelled'],
+            'vehicle_received' => ['invoiced', 'cancelled'],
+            'invoiced' => ['cancelled'],
             'cancelled' => []
         ];
     }
@@ -595,7 +607,7 @@ class VehicleIntervention
 
     public function isCompleted(): bool
     {
-        return $this->currentStatus === 'vehicle_received';
+        return in_array($this->currentStatus, ['vehicle_received', 'invoiced']);
     }
 
     public function isCancelled(): bool
@@ -623,16 +635,17 @@ class VehicleIntervention
     {
         $statusOrder = [
             'reported' => 0,
-            'in_prediagnostic' => 10,
-            'prediagnostic_completed' => 20,
-            'in_quote' => 30,
-            'quote_received' => 40,
-            'in_approval' => 50,
-            'approved' => 60,
-            'in_repair' => 70,
-            'repair_completed' => 80,
-            'in_reception' => 90,
-            'vehicle_received' => 100,
+            'in_prediagnostic' => 8,
+            'prediagnostic_completed' => 16,
+            'in_quote' => 25,
+            'quote_received' => 33,
+            'in_approval' => 41,
+            'approved' => 50,
+            'in_repair' => 60,
+            'repair_completed' => 70,
+            'in_reception' => 80,
+            'vehicle_received' => 90,
+            'invoiced' => 100,
             'cancelled' => 0
         ];
 
@@ -653,6 +666,7 @@ class VehicleIntervention
             'repair_completed' => 'réparation',
             'in_reception' => 'réception',
             'vehicle_received' => 'réception',
+            'invoiced' => 'facturation',
             'cancelled' => 'annulé'
         ];
 

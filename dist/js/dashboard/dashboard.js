@@ -215,13 +215,10 @@ class ImpactAutoDashboard {
 
     async handleLogout() {
         try {
-            await fetch('/api/auth/logout.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-                }
-            });
+            // Utiliser apiService pour déconnecter
+            if (window.apiService) {
+                await window.apiService.logout();
+            }
         } catch (error) {
             console.error('Erreur lors de la déconnexion:', error);
         } finally {

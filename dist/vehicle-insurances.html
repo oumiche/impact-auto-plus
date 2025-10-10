@@ -4,28 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assurances Véhicules - Impact Auto</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="css/impact-auto.css">
+    
+    <!-- Inclusion automatique de tous les assets -->
+    <script src="js/app-includes.js"></script>
+    
+    <!-- CSS spécifiques à la page -->
     <link rel="stylesheet" href="css/parametres-vue.css">
-    <link rel="stylesheet" href="css/intervention-types.css">
     <link rel="stylesheet" href="css/vehicle-insurances.css">
-    <link rel="stylesheet" href="css/date-picker.css">
-    <script src="https://unpkg.com/vue@2/dist/vue.min.js"></script>
 </head>
 <body>
     <div id="app"></div>
-    <script src="js/services/ApiService.js"></script>
-    <script src="js/components/DatePicker.js"></script>
-    <script src="js/components/DateTimePicker.js"></script>
-    <script src="js/auth/auth-guard.js"></script>
-    <script src="js/sidebar-component.js"></script>
-    <script src="js/load-sidebar.js"></script>
+    
+    <!-- Script de la page -->
     <script src="js/vehicle-insurances-vue.js"></script>
+    
+    <!-- Initialisation Vue.js -->
     <script>
-        new Vue({
-            el: '#app',
-            components: { VehicleInsuranceCrud },
-            template: '<div class="main-content"><VehicleInsuranceCrud /></div>'
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attendre que Vue.js soit chargé
+            const checkVue = setInterval(() => {
+                if (window.Vue) {
+                    clearInterval(checkVue);
+                    
+                    const { createApp } = Vue;
+                    const app = createApp({
+                        components: {
+                            VehicleInsuranceCrud: window.VehicleInsuranceCrud
+                        },
+                        template: `
+                            <div class="main-content">
+                                <VehicleInsuranceCrud />
+                            </div>
+                        `
+                    });
+                    
+                    app.mount('#app');
+                }
+            }, 100);
         });
     </script>
 </body>

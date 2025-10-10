@@ -163,7 +163,10 @@ export default {
 
     async handleLogout() {
       try {
-        await this.$http.post('/api/auth/logout')
+        // Utiliser apiService pour déconnecter
+        if (window.apiService) {
+          await window.apiService.logout()
+        }
         
         // Nettoyer sessionStorage
         sessionStorage.removeItem('impact_auto_user')
@@ -171,12 +174,17 @@ export default {
         sessionStorage.removeItem('impact_auto_session')
         sessionStorage.removeItem('impact_auto_permissions')
         sessionStorage.removeItem('impact_auto_can_switch')
+        
+        // Nettoyer localStorage aussi
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('current_user')
+        localStorage.removeItem('current_tenant')
 
         // Rediriger vers login
         window.location.href = '/login.html'
       } catch (error) {
         console.error('Logout error:', error)
-        // Rediriger quand même
+        // Rediriger quand même vers login
         window.location.href = '/login.html'
       }
     }

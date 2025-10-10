@@ -3,23 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de Bord - Impact Auto</title>
+    <title>Dashboard - Impact Auto</title>
     
     <!-- Inclusion automatique de tous les assets -->
     <script src="js/app-includes.js"></script>
     
     <!-- CSS spécifiques à la page -->
-    <link rel="stylesheet" href="css/homepage.css">
+    <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
-    <!-- Script de la page -->
-    <script src="js/dashboard/dashboard.js"></script>
+    <div id="app"></div>
     
-    <!-- Initialisation du dashboard -->
+    <!-- Script de la page -->
+    <script src="js/dashboard-vue.js"></script>
+    
+    <!-- Initialisation Vue.js -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialiser le dashboard classique
-            new ImpactAutoDashboard();
+            // Attendre que Vue.js soit chargé
+            const checkVue = setInterval(() => {
+                if (window.Vue) {
+                    clearInterval(checkVue);
+                    
+                    const { createApp } = Vue;
+                    const app = createApp({
+                        components: {
+                            DashboardVue: window.DashboardVue
+                        },
+                        template: `
+                            <div class="main-content">
+                                <DashboardVue />
+                            </div>
+                        `
+                    });
+                    
+                    app.mount('#app');
+                }
+            }, 100);
         });
     </script>
 </body>

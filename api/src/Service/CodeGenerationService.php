@@ -62,37 +62,6 @@ class CodeGenerationService
     }
 
     /**
-     * Génère un numéro de devis
-     */
-    public function generateQuoteNumber(Tenant $tenant): string
-    {
-        $year = date('Y');
-        $prefix = "DEV-{$year}-";
-
-        // Récupérer le dernier numéro de devis pour ce tenant
-        $lastQuote = $this->entityManager->getRepository(\App\Entity\InterventionQuote::class)
-            ->createQueryBuilder('q')
-            ->join('q.intervention', 'i')
-            ->where('i.tenant = :tenant')
-            ->andWhere('q.quoteNumber LIKE :prefix')
-            ->setParameter('tenant', $tenant)
-            ->setParameter('prefix', $prefix . '%')
-            ->orderBy('q.quoteNumber', 'DESC')
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-
-        if (!$lastQuote) {
-            return $prefix . '0001';
-        }
-
-        $lastNumber = (int) substr($lastQuote->getQuoteNumber(), -4);
-        $nextNumber = $lastNumber + 1;
-
-        return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-    }
-
-    /**
      * Génère un code pour un véhicule
      */
     public function generateVehicleCode(int $vehicleId, Tenant $tenant, ?User $generatedBy = null): EntityCode

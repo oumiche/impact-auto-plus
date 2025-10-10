@@ -18,6 +18,9 @@ class InterventionReceptionReport
     #[ORM\JoinColumn(nullable: false)]
     private ?VehicleIntervention $intervention = null;
 
+    #[ORM\Column(type: 'string', length: 50)]
+    private string $receptionNumber;
+
     #[ORM\Column(type: 'integer')]
     private int $receivedBy;
 
@@ -61,6 +64,17 @@ class InterventionReceptionReport
     public function setIntervention(?VehicleIntervention $intervention): self
     {
         $this->intervention = $intervention;
+        return $this;
+    }
+
+    public function getReceptionNumber(): string
+    {
+        return $this->receptionNumber;
+    }
+
+    public function setReceptionNumber(string $receptionNumber): self
+    {
+        $this->receptionNumber = $receptionNumber;
         return $this;
     }
 

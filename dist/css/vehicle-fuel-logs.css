@@ -82,26 +82,54 @@
 
 .page-header {
   margin-bottom: 30px;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 20px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .section-title {
-  font-size: 2rem;
+  font-size: 28px;
   font-weight: 600;
-  color: var(--text-primary, #333);
-  margin-bottom: 8px;
+  color: #2c3e50;
+  margin: 0 0 5px 0;
 }
 
 .page-subtitle {
-  color: var(--text-secondary, #666);
-  font-size: 1rem;
+  color: #6c757d;
+  font-size: 14px;
+  margin: 0;
 }
 
 .search-filter-bar {
   display: flex;
-  align-items: center;
-  gap: 20px;
+  align-items: stretch;
+  gap: 15px;
   margin-bottom: 30px;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
 .search-box {
@@ -805,11 +833,12 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   z-index: 1001;
-  max-width: 400px;
+  max-width: 500px;
   animation: slideIn 0.3s ease;
+  word-wrap: break-word;
 }
 
 .notification-success {
@@ -840,6 +869,10 @@
 .notification span {
   font-weight: 500;
   color: inherit !important;
+  flex: 1;
+  line-height: 1.5;
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 @keyframes slideIn {

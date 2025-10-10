@@ -1,16 +1,27 @@
-const { createApp } = Vue;
+/**
+ * Impact Auto - Véhicules Vue.js
+ * Composant CRUD pour la gestion des véhicules
+ */
 
 const VehicleCrud = {
-    components: {
-        DatePicker,
-        DateTimePicker
-    },
     template: `
         <div class="parameter-crud">
             <!-- Page Header -->
             <div class="page-header">
-                <h1 class="section-title">Gestion des Véhicules</h1>
-                <p class="page-subtitle">Gérez votre flotte de véhicules et leurs informations</p>
+                <div class="header-content">
+                    <div class="header-left">
+                        <div class="header-text">
+                            <h1 class="section-title">Gestion des Véhicules</h1>
+                            <p class="page-subtitle">Gérez votre flotte de véhicules et leurs informations</p>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <button class="btn btn-primary" @click="openCreateModal">
+                            <i class="fas fa-plus"></i>
+                            Nouveau Véhicule
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Barre de recherche et filtres -->
@@ -21,23 +32,18 @@ const VehicleCrud = {
                         type="text" 
                         v-model="searchTerm" 
                         @input="debouncedSearch"
-                        placeholder="Rechercher un véhicule..."
+                        placeholder="Rechercher par plaque, marque, modèle, catégorie..."
                     >
                 </div>
                 
                 <div class="filter-group">
                     <select v-model="activeFilter" @change="loadVehicles" class="filter-select">
-                        <option value="all">Tous les véhicules</option>
-                        <option value="active">Actifs uniquement</option>
-                        <option value="maintenance">En maintenance</option>
+                        <option value="all">Tous les statuts</option>
+                        <option value="active">Actifs</option>
+                        <option value="maintenance">En entretien</option>
                         <option value="out_of_service">Hors service</option>
                     </select>
                 </div>
-                
-                <button class="btn btn-primary" @click="openCreateModal">
-                    <i class="fas fa-plus"></i>
-                    Nouveau Véhicule
-                </button>
             </div>
 
             <!-- Tableau des véhicules -->
@@ -506,16 +512,33 @@ const VehicleCrud = {
         }
     },
     
-    mounted() {
-        this.loadVehicles();
-        this.loadBrands();
-        this.loadColors();
-        this.loadCategories();
-        this.loadFuelTypes();
-        this.loadCurrency();
+    async mounted() {
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
+        await this.loadVehicles();
+        await this.loadBrands();
+        await this.loadColors();
+        await this.loadCategories();
+        await this.loadFuelTypes();
+        await this.loadCurrency();
     },
     
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadVehicles() {
             this.loading = true;
             try {
@@ -964,12 +987,5 @@ const VehicleCrud = {
     }
 };
 
-// Exporter le composant
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = VehicleCrud;
-}
-
-// Enregistrer le composant globalement pour Vue
-if (typeof window !== 'undefined' && window.Vue) {
-    window.VehicleCrud = VehicleCrud;
-}
+// Exposer le composant globalement
+window.VehicleCrud = VehicleCrud;

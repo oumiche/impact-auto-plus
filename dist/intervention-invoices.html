@@ -20,10 +20,20 @@
     <!-- Initialisation Vue.js -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Attendre que Vue.js soit chargé
-            const checkVue = setInterval(() => {
-                if (window.Vue) {
-                    clearInterval(checkVue);
+            // Attendre que tous les composants soient chargés
+            const checkComponents = setInterval(() => {
+                const components = {
+                    Vue: !!window.Vue,
+                    InterventionInvoicesList: !!window.InterventionInvoicesList,
+                    ApiService: !!window.apiService,
+                    NotificationService: !!window.NotificationService,
+                    ConfirmationServiceV2: !!window.ConfirmationServiceV2
+                };
+                
+                console.log('Vérification des composants:', components);
+                
+                if (components.Vue && components.InterventionInvoicesList && components.ApiService) {
+                    clearInterval(checkComponents);
                     
                     const { createApp } = Vue;
                     const app = createApp({
@@ -38,8 +48,17 @@
                     });
                     
                     app.mount('#app');
+                    console.log('Application Vue montée pour intervention-invoices');
                 }
             }, 100);
+            
+            // Timeout de sécurité
+            setTimeout(() => {
+                if (document.getElementById('app').__vue__ === undefined) {
+                    console.warn('Timeout: montage de Vue sans tous les composants');
+                    clearInterval(checkComponents);
+                }
+            }, 5000);
         });
     </script>
 </body>

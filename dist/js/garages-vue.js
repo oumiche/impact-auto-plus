@@ -1,12 +1,27 @@
-const { createApp } = Vue;
+/**
+ * Impact Auto - Garages Vue.js
+ * Composant CRUD pour la gestion des garages
+ */
 
 const GarageCrud = {
     template: `
         <div class="parameter-crud">
             <!-- Page Header -->
             <div class="page-header">
-                <h1 class="section-title">Gestion des Garages</h1>
-                <p class="page-subtitle">Gérez les garages partenaires et leurs informations</p>
+                <div class="header-content">
+                    <div class="header-left">
+                        <div class="header-text">
+                            <h1 class="section-title">Gestion des Garages</h1>
+                            <p class="page-subtitle">Gérez les garages partenaires et leurs informations</p>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <button class="btn btn-primary" @click="openCreateModal">
+                            <i class="fas fa-plus"></i>
+                            Nouveau Garage
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Barre de recherche et filtres -->
@@ -17,22 +32,17 @@ const GarageCrud = {
                         type="text" 
                         v-model="searchTerm" 
                         @input="debouncedSearch"
-                        placeholder="Rechercher un garage..."
+                        placeholder="Rechercher par nom, adresse, contact, spécialisation..."
                     >
                 </div>
                 
                 <div class="filter-group">
                     <select v-model="activeFilter" @change="loadGarages" class="filter-select">
-                        <option value="all">Tous les garages</option>
-                        <option value="active">Actifs uniquement</option>
-                        <option value="inactive">Inactifs uniquement</option>
+                        <option value="all">Tous les statuts</option>
+                        <option value="active">Actifs</option>
+                        <option value="inactive">Inactifs</option>
                     </select>
                 </div>
-                
-                <button class="btn btn-primary" @click="openCreateModal">
-                    <i class="fas fa-plus"></i>
-                    Nouveau Garage
-                </button>
             </div>
 
             <!-- Tableau des garages -->
@@ -332,11 +342,28 @@ const GarageCrud = {
         };
     },
     
-    mounted() {
-        this.loadGarages();
+    async mounted() {
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
+        await this.loadGarages();
     },
     
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadGarages() {
             this.loading = true;
             try {
@@ -541,3 +568,6 @@ const GarageCrud = {
         }
     }
 };
+
+// Exposer le composant globalement
+window.GarageCrud = GarageCrud;

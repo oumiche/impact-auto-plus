@@ -3,11 +3,6 @@
  * Composant CRUD pour la gestion des modèles de véhicules
  */
 
-// Vérifier que Vue.js est disponible
-if (typeof Vue === 'undefined') {
-    console.error('Vue.js n\'est pas chargé. Veuillez inclure Vue.js avant ce script.');
-}
-
 // Définir le composant ModeleCrud
 const ModeleCrud = {
     name: 'ModeleCrud',
@@ -104,11 +99,28 @@ const ModeleCrud = {
     },
     
     async mounted() {
+        // Attendre que l'API service soit disponible
+        await this.waitForApiService();
         await this.loadMarques();
         await this.loadModeles();
     },
     
     methods: {
+        async waitForApiService() {
+            // Attendre que window.apiService soit disponible
+            let attempts = 0;
+            const maxAttempts = 50; // 5 secondes max
+            
+            while (!window.apiService && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.apiService) {
+                throw new Error('API Service non disponible après 5 secondes');
+            }
+        },
+        
         async loadMarques() {
             try {
                 const data = await window.apiService.getMarques(null, '', 'all', 1, 100); // Récupérer toutes les marques pour le select
@@ -773,26 +785,5 @@ const ModeleCrud = {
     `
 };
 
-// Initialiser l'application Vue.js
-document.addEventListener('DOMContentLoaded', () => {
-    // Vérifier que Vue.js est disponible
-    if (typeof Vue === 'undefined') {
-        console.error('Vue.js n\'est pas chargé. Veuillez inclure Vue.js avant ce script.');
-        return;
-    }
-
-    // Créer l'application Vue
-    const app = Vue.createApp({
-        components: {
-            ModeleCrud
-        },
-        template: `
-            <div class="main-content">
-                <ModeleCrud />
-            </div>
-        `
-    });
-
-    // Monter l'application
-    app.mount('#app');
-});
+// Exposer le composant globalement
+window.ModeleCrud = ModeleCrud;

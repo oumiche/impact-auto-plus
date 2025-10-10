@@ -152,7 +152,7 @@ class VehicleFuelLogController extends AbstractTenantController
         } catch (\Exception $e) {
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Erreur lors du chargement des carnets de carburant: ' . $e->getMessage(),
+                'message' => 'Erreur lors du chargement du suivi de carburant: ' . $e->getMessage(),
                 'code' => 500
             ], 500);
         }
@@ -241,7 +241,7 @@ class VehicleFuelLogController extends AbstractTenantController
                 ], 404);
             }
 
-            // Créer le nouveau carnet de carburant
+            // Créer le nouveau suivi de carburant
             $fuelLog = new VehicleFuelLog();
             $fuelLog->setTenant($currentTenant);
             $fuelLog->setVehicle($vehicle);
@@ -353,15 +353,16 @@ class VehicleFuelLogController extends AbstractTenantController
             if (!empty($mileageErrors)) {
                 return new JsonResponse([
                     'success' => false,
-                    'message' => 'Erreurs de cohérence des données de kilométrage',
+                    'message' => 'Le kilométrage saisi n\'est pas cohérent',
                     'errors' => $mileageErrors,
                     'code' => 400
                 ], 400);
             }
 
             $this->entityManager->persist($fuelLog);
+            $this->entityManager->flush();
 
-            // Générer automatiquement un code pour le carnet de carburant
+            // Générer automatiquement un code pour le suivi de carburant
             try {
                 $entityCode = $this->codeGenerationService->generateCode(
                     'fuel_log',
@@ -377,7 +378,7 @@ class VehicleFuelLogController extends AbstractTenantController
 
             return new JsonResponse([
                 'success' => true,
-                'message' => 'Carnet de carburant créé avec succès',
+                'message' => 'Suivi de carburant créé avec succès',
                 'data' => [
                     'id' => $fuelLog->getId(),
                     'code' => $fuelLogCode,
@@ -395,7 +396,7 @@ class VehicleFuelLogController extends AbstractTenantController
         } catch (\Exception $e) {
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Erreur lors de la création du carnet de carburant: ' . $e->getMessage(),
+                'message' => 'Erreur lors de la création du suivi de carburant: ' . $e->getMessage(),
                 'code' => 500
             ], 500);
         }
@@ -420,7 +421,7 @@ class VehicleFuelLogController extends AbstractTenantController
             if (!$fuelLog) {
                 return new JsonResponse([
                     'success' => false,
-                    'message' => 'Carnet de carburant non trouvé',
+                    'message' => 'Suivi de carburant non trouvé',
                     'code' => 404
                 ], 404);
             }
@@ -575,7 +576,7 @@ class VehicleFuelLogController extends AbstractTenantController
             if (!empty($mileageErrors)) {
                 return new JsonResponse([
                     'success' => false,
-                    'message' => 'Erreurs de cohérence des données de kilométrage',
+                    'message' => 'Le kilométrage saisi n\'est pas cohérent',
                     'errors' => $mileageErrors,
                     'code' => 400
                 ], 400);
@@ -585,7 +586,7 @@ class VehicleFuelLogController extends AbstractTenantController
 
             return new JsonResponse([
                 'success' => true,
-                'message' => 'Carnet de carburant mis à jour avec succès',
+                'message' => 'Suivi de carburant mis à jour avec succès',
                 'data' => [
                     'id' => $fuelLog->getId(),
                     'refuelDate' => $fuelLog->getRefuelDate()->format('Y-m-d'),
@@ -598,7 +599,7 @@ class VehicleFuelLogController extends AbstractTenantController
         } catch (\Exception $e) {
             return new JsonResponse([
                 'success' => false,
-                'message' => 'Erreur lors de la mise à jour du carnet de carburant: ' . $e->getMessage(),
+                'message' => 'Erreur lors de la mise à jour du suivi de carburant: ' . $e->getMessage(),
                 'code' => 500
             ], 500);
         }
@@ -614,7 +615,7 @@ class VehicleFuelLogController extends AbstractTenantController
             if (!$fuelLog) {
                 return new JsonResponse([
                     'success' => false,
-                    'message' => 'Carnet de carburant non trouvé',
+                    'message' => 'Suivi de carburant non trouvé',
                     'code' => 404
                 ], 404);
             }

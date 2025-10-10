@@ -49,13 +49,13 @@ class InterventionQuote
     private ?string $taxAmount = null;
 
     #[ORM\Column(type: 'boolean')]
-    private bool $isApproved = false;
+    private bool $isValidated = false;
 
     #[ORM\Column(type: 'integer', nullable: true)]
-    private ?int $approvedBy = null;
+    private ?int $validatedBy = null;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
-    private ?\DateTimeInterface $approvedAt = null;
+    private ?\DateTimeInterface $validatedAt = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $notes = null;
@@ -201,36 +201,37 @@ class InterventionQuote
         return $this;
     }
 
-    public function isApproved(): bool
+
+    public function isValidated(): bool
     {
-        return $this->isApproved;
+        return $this->isValidated;
     }
 
-    public function setIsApproved(bool $isApproved): self
+    public function setIsValidated(bool $isValidated): self
     {
-        $this->isApproved = $isApproved;
+        $this->isValidated = $isValidated;
         return $this;
     }
 
-    public function getApprovedBy(): ?int
+    public function getValidatedBy(): ?int
     {
-        return $this->approvedBy;
+        return $this->validatedBy;
     }
 
-    public function setApprovedBy(?int $approvedBy): self
+    public function setValidatedBy(?int $validatedBy): self
     {
-        $this->approvedBy = $approvedBy;
+        $this->validatedBy = $validatedBy;
         return $this;
     }
 
-    public function getApprovedAt(): ?\DateTimeInterface
+    public function getValidatedAt(): ?\DateTimeInterface
     {
-        return $this->approvedAt;
+        return $this->validatedAt;
     }
 
-    public function setApprovedAt(?\DateTimeInterface $approvedAt): self
+    public function setValidatedAt(?\DateTimeInterface $validatedAt): self
     {
-        $this->approvedAt = $approvedAt;
+        $this->validatedAt = $validatedAt;
         return $this;
     }
 
@@ -258,11 +259,11 @@ class InterventionQuote
 
     // Méthodes utilitaires
 
-    public function approve(int $approvedBy): self
+    public function validate(int $validatedBy): self
     {
-        $this->isApproved = true;
-        $this->approvedBy = $approvedBy;
-        $this->approvedAt = new \DateTime();
+        $this->isValidated = true;
+        $this->validatedBy = $validatedBy;
+        $this->validatedAt = new \DateTime();
         return $this;
     }
 
@@ -365,5 +366,50 @@ class InterventionQuote
         }
         
         return $diff->days;
+    }
+
+    /**
+     * Recalcule le totalAmount à partir des lignes du devis
+     */
+    public function recalculateTotalAmount(): void
+    {
+        $totalAmount = 0.0;
+        $laborCost = 0.0;
+        $partsCost = 0.0;
+        $taxAmount = 0.0;
+
+        foreach ($this->lines as $line) {
+            $lineTotal = (float) $line->getLineTotal();
+            $totalAmount += $lineTotal;
+
+            // Calculer les coûts par type
+            if ($line->getWorkType() === 'labor') {
+                $laborCost += $lineTotal;
+            } elseif ($line->getWorkType() === 'supply' && $line->getSupply()) {
+                $partsCost += $lineTotal;
+            }
+
+            // Calculer les taxes
+            if ($line->getTaxRate()) {
+                $subtotal = (float) $line->getQuantity() * (float) $line->getEffectiveUnitPrice();
+                
+                // Appliquer la remise
+                if ($line->getDiscountPercentage()) {
+                    $discount = $subtotal * ((float) $line->getDiscountPercentage() / 100);
+                    $subtotal -= $discount;
+                } elseif ($line->getDiscountAmount()) {
+                    $subtotal -= (float) $line->getDiscountAmount();
+                }
+                
+                $tax = $subtotal * ((float) $line->getTaxRate() / 100);
+                $taxAmount += $tax;
+            }
+        }
+
+        // Mettre à jour les montants
+        $this->totalAmount = (string) round($totalAmount, 2);
+        $this->laborCost = $laborCost > 0 ? (string) round($laborCost, 2) : null;
+        $this->partsCost = $partsCost > 0 ? (string) round($partsCost, 2) : null;
+        $this->taxAmount = $taxAmount > 0 ? (string) round($taxAmount, 2) : null;
     }
 }

@@ -57,6 +57,9 @@ class SidebarComponent {
   }
 
   setupEventListeners() {
+    // Attacher l'événement au bouton de déconnexion
+    this.attachLogoutButton()
+    
     // Fermer la sidebar en cliquant à l'extérieur sur mobile
     document.addEventListener('click', (event) => {
       const sidebar = document.getElementById('sidebar')
@@ -70,6 +73,19 @@ class SidebarComponent {
         this.updateSidebarClass()
       }
     })
+  }
+
+  attachLogoutButton() {
+    const logoutBtn = document.getElementById('logout-btn')
+    if (logoutBtn && !logoutBtn.dataset.listenerAttached) {
+      logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault()
+        this.logout()
+      })
+      // Marquer comme attaché pour éviter les doublons
+      logoutBtn.dataset.listenerAttached = 'true'
+      console.log('Bouton logout attaché avec succès')
+    }
   }
 
   toggleSidebar() {
@@ -104,22 +120,19 @@ class SidebarComponent {
 
   async logout() {
     try {
-      const token = localStorage.getItem('auth_token')
-      if (token) {
-        await fetch('/api/auth/logout.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        })
+      // Utiliser apiService pour déconnecter
+      if (window.apiService) {
+        await window.apiService.logout()
       }
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error)
     } finally {
+      // Nettoyer le localStorage
       localStorage.removeItem('auth_token')
       localStorage.removeItem('current_user')
       localStorage.removeItem('current_tenant')
+      
+      // Rediriger vers la page de connexion
       window.location.href = '/login.html'
     }
   }
@@ -132,7 +145,8 @@ window.toggleSidebar = function() {
   }
 }
 
-// Initialiser le composant sidebar
-document.addEventListener('DOMContentLoaded', () => {
-  window.sidebarComponent = new SidebarComponent()
-})
+// Exposer la classe globalement
+window.SidebarComponent = SidebarComponent
+
+// Ne pas initialiser automatiquement - laissons load-sidebar.js le faire après le chargement du template
+// L'instance sera créée par load-sidebar.js après le chargement du template HTML
