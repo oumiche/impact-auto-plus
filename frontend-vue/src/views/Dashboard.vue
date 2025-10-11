@@ -11,7 +11,7 @@
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon vehicles">
-            <i class="icon">🚗</i>
+            <i class="fas fa-car"></i>
           </div>
           <div class="stat-content">
             <div class="stat-value">{{ animatedStats.vehicles }}</div>
@@ -21,7 +21,7 @@
 
         <div class="stat-card">
           <div class="stat-icon interventions">
-            <i class="icon">🔧</i>
+            <i class="fas fa-tools"></i>
           </div>
           <div class="stat-content">
             <div class="stat-value">{{ animatedStats.interventions }}</div>
@@ -31,7 +31,7 @@
 
         <div class="stat-card">
           <div class="stat-icon drivers">
-            <i class="icon">👤</i>
+            <i class="fas fa-user"></i>
           </div>
           <div class="stat-content">
             <div class="stat-value">{{ animatedStats.drivers }}</div>
@@ -41,7 +41,7 @@
 
         <div class="stat-card">
           <div class="stat-icon maintenance">
-            <i class="icon">🛠️</i>
+            <i class="fas fa-wrench"></i>
           </div>
           <div class="stat-content">
             <div class="stat-value">{{ animatedStats.maintenance }}</div>
@@ -56,17 +56,17 @@
         <div class="content-card">
           <div class="card-header">
             <h3 class="card-title">
-              <i class="icon">🕐</i> Activité Récente
+              <i class="fas fa-clock"></i> Activité Récente
             </h3>
           </div>
           <div class="recent-activity">
             <div v-if="recentActivities.length === 0" class="no-data">
-              <i class="icon">ℹ️</i>
+              <i class="fas fa-info-circle"></i>
               <p>Aucune activité récente</p>
             </div>
             <div v-else v-for="activity in recentActivities" :key="activity.id" class="activity-item">
               <div class="activity-icon" :class="`activity-${activity.type}`">
-                <i class="icon">{{ activity.icon }}</i>
+                <i :class="`fas ${activity.icon}`"></i>
               </div>
               <div class="activity-content">
                 <div class="activity-title">{{ activity.title }}</div>
@@ -80,24 +80,24 @@
         <div class="content-card">
           <div class="card-header">
             <h3 class="card-title">
-              <i class="icon">⚡</i> Actions Rapides
+              <i class="fas fa-bolt"></i> Actions Rapides
             </h3>
           </div>
           <div class="quick-actions">
             <router-link :to="{ name: 'Vehicles' }" class="quick-action">
-              <i class="icon">➕</i>
+              <i class="fas fa-car"></i>
               <span>Nouveau Véhicule</span>
             </router-link>
             <router-link :to="{ name: 'VehicleInterventions' }" class="quick-action">
-              <i class="icon">🔧</i>
+              <i class="fas fa-tools"></i>
               <span>Nouvelle Intervention</span>
             </router-link>
             <router-link :to="{ name: 'Drivers' }" class="quick-action">
-              <i class="icon">👤</i>
+              <i class="fas fa-user-plus"></i>
               <span>Nouveau Conducteur</span>
             </router-link>
             <router-link :to="{ name: 'Reports' }" class="quick-action">
-              <i class="icon">📊</i>
+              <i class="fas fa-chart-bar"></i>
               <span>Générer Rapport</span>
             </router-link>
           </div>
@@ -110,7 +110,7 @@
         <div class="content-card">
           <div class="card-header">
             <h3 class="card-title">
-              <i class="icon">📈</i> État du Parc
+              <i class="fas fa-chart-line"></i> État du Parc
             </h3>
           </div>
           <div class="vehicle-status-overview">
@@ -142,12 +142,12 @@
         <div class="content-card">
           <div class="card-header">
             <h3 class="card-title">
-              <i class="icon">📅</i> Entretiens à Venir
+              <i class="fas fa-calendar-alt"></i> Entretiens à Venir
             </h3>
           </div>
           <div class="upcoming-maintenance">
             <div v-if="upcomingMaintenance.length === 0" class="no-data">
-              <i class="icon">ℹ️</i>
+              <i class="fas fa-info-circle"></i>
               <p>Aucun entretien programmé</p>
             </div>
             <div v-else v-for="maintenance in upcomingMaintenance" :key="maintenance.id" class="maintenance-item">
@@ -222,9 +222,9 @@ const loadDashboardData = async () => {
     }
     
     recentActivities.value = [
-      { id: 1, title: 'Révision - ABC-123', time: 'Il y a 15 min', icon: '🔧', type: 'info' },
-      { id: 2, title: 'Réparation - XYZ-789', time: 'Il y a 1 h', icon: '🔧', type: 'warning' },
-      { id: 3, title: 'Contrôle technique - DEF-456', time: 'Il y a 2 h', icon: '✅', type: 'success' }
+      { id: 1, title: 'Révision - ABC-123', time: 'Il y a 15 min', icon: 'fa-tools', type: 'info' },
+      { id: 2, title: 'Réparation - XYZ-789', time: 'Il y a 1 h', icon: 'fa-wrench', type: 'warning' },
+      { id: 3, title: 'Contrôle technique - DEF-456', time: 'Il y a 2 h', icon: 'fa-check-circle', type: 'success' }
     ]
     
     upcomingMaintenance.value = [
@@ -266,9 +266,6 @@ const animateCounters = () => {
 </script>
 
 <style scoped lang="scss">
-.dashboard {
-}
-
 .welcome-message {
   background: #2563eb;
   color: white;

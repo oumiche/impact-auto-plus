@@ -276,11 +276,21 @@ export default {
     return response.data
   },
   
+  // Alias pour compatibilité
+  async getBrands(params = {}) {
+    return this.getMarques(params)
+  },
+  
   // ==================== MODELS (MODELES) ====================
   
   async getModeles(params = {}) {
     const response = await apiClient.get('/reference/models', { params })
     return response.data
+  },
+  
+  // Alias pour compatibilité
+  async getModels(params = {}) {
+    return this.getModeles(params)
   },
   
   async createModele(data) {
@@ -455,27 +465,32 @@ export default {
   // ==================== DRIVERS ====================
   
   async getDrivers(params = {}) {
-    const response = await apiClient.get('/drivers', { params })
+    const response = await apiClient.get('/drivers/admin', { params })
     return response.data
   },
   
   async getDriver(id) {
-    const response = await apiClient.get(`/drivers/${id}`)
+    const response = await apiClient.get(`/drivers/admin/${id}`)
     return response.data
   },
   
   async createDriver(data) {
-    const response = await apiClient.post('/drivers', data)
+    const response = await apiClient.post('/drivers/admin', data)
     return response.data
   },
   
   async updateDriver(id, data) {
-    const response = await apiClient.put(`/drivers/${id}`, data)
+    const response = await apiClient.put(`/drivers/admin/${id}`, data)
     return response.data
   },
   
   async deleteDriver(id) {
-    const response = await apiClient.delete(`/drivers/${id}`)
+    const response = await apiClient.delete(`/drivers/admin/${id}`)
+    return response.data
+  },
+  
+  async getLicenseTypes() {
+    const response = await apiClient.get('/drivers/license-types')
     return response.data
   },
   
@@ -608,6 +623,649 @@ export default {
    */
   async deleteSupplyCategory(id) {
     const response = await apiClient.delete(`/supply-categories/admin/${id}`)
+    return response.data
+  },
+  
+  // ==================== USERS ====================
+  
+  /**
+   * Récupérer un utilisateur par ID
+   */
+  async getUser(id) {
+    const response = await apiClient.get(`/users/${id}`)
+    return response.data
+  },
+  
+  /**
+   * Récupérer la liste des utilisateurs
+   */
+  async getUsers(params = {}) {
+    const response = await apiClient.get('/users', { params })
+    return response.data
+  },
+  
+  /**
+   * Créer un utilisateur
+   */
+  async createUser(data) {
+    const response = await apiClient.post('/users', data)
+    return response.data
+  },
+  
+  /**
+   * Mettre à jour un utilisateur
+   */
+  async updateUser(id, data) {
+    const response = await apiClient.put(`/users/${id}`, data)
+    return response.data
+  },
+  
+  /**
+   * Supprimer un utilisateur
+   */
+  async deleteUser(id) {
+    const response = await apiClient.delete(`/users/${id}`)
+    return response.data
+  },
+  
+  // ==================== TENANTS ====================
+  
+  /**
+   * Récupérer les tenants de l'utilisateur connecté (pour sélection après login)
+   */
+  async getUserTenants() {
+    const response = await apiClient.get('/tenants')
+    return response.data
+  },
+  
+  /**
+   * Récupérer un tenant par ID
+   */
+  async getTenant(id) {
+    const response = await apiClient.get(`/tenants/admin/${id}`)
+    return response.data
+  },
+  
+  /**
+   * Récupérer la liste des tenants (admin - tous les tenants)
+   */
+  async getTenants(params = {}) {
+    const response = await apiClient.get('/tenants/admin', { params })
+    return response.data
+  },
+  
+  /**
+   * Créer un tenant
+   */
+  async createTenant(data) {
+    const response = await apiClient.post('/tenants/admin', data)
+    return response.data
+  },
+  
+  /**
+   * Mettre à jour un tenant
+   */
+  async updateTenant(id, data) {
+    const response = await apiClient.put(`/tenants/admin/${id}`, data)
+    return response.data
+  },
+  
+  /**
+   * Supprimer un tenant
+   */
+  async deleteTenant(id) {
+    const response = await apiClient.delete(`/tenants/admin/${id}`)
+    return response.data
+  },
+  
+  /**
+   * Upload logo tenant
+   */
+  async uploadTenantLogo(tenantId, file) {
+    const formData = new FormData()
+    formData.append('logo', file)
+    const response = await apiClient.post(`/tenants/admin/${tenantId}/logo`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  },
+  
+  // ==================== USER TENANT PERMISSIONS ====================
+  
+  /**
+   * Récupérer les permissions utilisateur-tenant
+   */
+  async getUserTenantPermissions(params = {}) {
+    const response = await apiClient.get('/user-tenant-permissions/admin', { params })
+    return response.data
+  },
+  
+  /**
+   * Récupérer une permission par ID
+   */
+  async getUserTenantPermission(id) {
+    const response = await apiClient.get(`/user-tenant-permissions/admin/${id}`)
+    return response.data
+  },
+  
+  /**
+   * Créer une permission utilisateur-tenant
+   */
+  async createUserTenantPermission(data) {
+    const response = await apiClient.post('/user-tenant-permissions/admin', data)
+    return response.data
+  },
+  
+  /**
+   * Mettre à jour une permission utilisateur-tenant
+   */
+  async updateUserTenantPermission(id, data) {
+    const response = await apiClient.put(`/user-tenant-permissions/admin/${id}`, data)
+    return response.data
+  },
+  
+  /**
+   * Supprimer une permission utilisateur-tenant
+   */
+  async deleteUserTenantPermission(id) {
+    const response = await apiClient.delete(`/user-tenant-permissions/admin/${id}`)
+    return response.data
+  },
+  
+  // ==================== CODE FORMATS ====================
+  
+  /**
+   * Récupérer les formats de code
+   */
+  async getCodeFormats(params = {}) {
+    const response = await apiClient.get('/code-formats/admin', { params })
+    return response.data
+  },
+  
+  /**
+   * Récupérer un format de code par ID
+   */
+  async getCodeFormat(id) {
+    const response = await apiClient.get(`/code-formats/admin/${id}`)
+    return response.data
+  },
+  
+  /**
+   * Créer un format de code
+   */
+  async createCodeFormat(data) {
+    const response = await apiClient.post('/code-formats/admin', data)
+    return response.data
+  },
+  
+  /**
+   * Mettre à jour un format de code
+   */
+  async updateCodeFormat(id, data) {
+    const response = await apiClient.put(`/code-formats/admin/${id}`, data)
+    return response.data
+  },
+  
+  /**
+   * Supprimer un format de code
+   */
+  async deleteCodeFormat(id) {
+    const response = await apiClient.delete(`/code-formats/admin/${id}`)
+    return response.data
+  },
+  
+  /**
+   * Récupérer les types d'entités disponibles
+   */
+  async getCodeFormatEntityTypes() {
+    const response = await apiClient.get('/code-formats/entity-types')
+    return response.data
+  },
+  
+  // ==================== SYSTEM PARAMETERS ====================
+  
+  /**
+   * Récupérer les paramètres système
+   */
+  async getSystemParameters(params = {}) {
+    const response = await apiClient.get('/parameters', { params })
+    return response.data
+  },
+  
+  /**
+   * Récupérer un paramètre système par ID
+   */
+  async getSystemParameter(id) {
+    const response = await apiClient.get(`/parameters/${id}`)
+    return response.data
+  },
+  
+  /**
+   * Créer un paramètre système
+   */
+  async createSystemParameter(data) {
+    const response = await apiClient.post('/parameters', data)
+    return response.data
+  },
+  
+  /**
+   * Mettre à jour un paramètre système
+   */
+  async updateSystemParameter(id, data) {
+    const response = await apiClient.put(`/parameters/${id}`, data)
+    return response.data
+  },
+  
+  /**
+   * Supprimer un paramètre système
+   */
+  async deleteSystemParameter(id) {
+    const response = await apiClient.delete(`/parameters/${id}`)
+    return response.data
+  },
+  
+  /**
+   * Récupérer les catégories de paramètres
+   */
+  async getParameterCategories() {
+    const response = await apiClient.get('/parameters/categories')
+    return response.data
+  },
+  
+  // ==================== SUPPLY PRICES ====================
+  
+  /**
+   * Récupérer l'historique des prix
+   */
+  async getSupplyPrices(params = {}) {
+    const response = await apiClient.get('/supply-prices', { params })
+    return response.data
+  },
+  
+  /**
+   * Récupérer un prix par ID
+   */
+  async getSupplyPrice(id) {
+    const response = await apiClient.get(`/supply-prices/${id}`)
+    return response.data
+  },
+  
+  /**
+   * Créer un historique de prix
+   */
+  async createSupplyPrice(data) {
+    const response = await apiClient.post('/supply-prices', data)
+    return response.data
+  },
+  
+  /**
+   * Mettre à jour un historique de prix
+   */
+  async updateSupplyPrice(id, data) {
+    const response = await apiClient.put(`/supply-prices/${id}`, data)
+    return response.data
+  },
+  
+  /**
+   * Supprimer un historique de prix
+   */
+  async deleteSupplyPrice(id) {
+    const response = await apiClient.delete(`/supply-prices/${id}`)
+    return response.data
+  },
+  
+  /**
+   * Récupérer les analytics des prix
+   */
+  async getSupplyPricesAnalytics(params = {}) {
+    const response = await apiClient.get('/supply-prices/analytics', { params })
+    return response.data
+  },
+
+  // ==================== VEHICLE INTERVENTIONS ====================
+  
+  /**
+   * Interventions véhicules
+   */
+  async getVehicleInterventions(params = {}) {
+    const response = await apiClient.get('/vehicle-interventions', { params })
+    return response.data
+  },
+
+  async getVehicleIntervention(id) {
+    const response = await apiClient.get(`/vehicle-interventions/${id}`)
+    return response.data
+  },
+
+  async createVehicleIntervention(data) {
+    const response = await apiClient.post('/vehicle-interventions', data)
+    return response.data
+  },
+
+  async updateVehicleIntervention(id, data) {
+    const response = await apiClient.put(`/vehicle-interventions/${id}`, data)
+    return response.data
+  },
+
+  async deleteVehicleIntervention(id) {
+    const response = await apiClient.delete(`/vehicle-interventions/${id}`)
+    return response.data
+  },
+
+  /**
+   * Workflow d'intervention
+   */
+  async getInterventionWorkflowStatus(id) {
+    const response = await apiClient.get(`/vehicle-interventions/${id}/workflow/status`)
+    return response.data
+  },
+
+  async transitionInterventionWorkflow(id, data) {
+    const response = await apiClient.post(`/vehicle-interventions/${id}/workflow/transition`, data)
+    return response.data
+  },
+
+  async startInterventionPrediagnostic(id) {
+    const response = await apiClient.post(`/vehicle-interventions/${id}/workflow/prediagnostic/start`)
+    return response.data
+  },
+
+  async completeInterventionPrediagnostic(id) {
+    const response = await apiClient.post(`/vehicle-interventions/${id}/workflow/prediagnostic/complete`)
+    return response.data
+  },
+
+  async startInterventionQuote(id) {
+    const response = await apiClient.post(`/vehicle-interventions/${id}/workflow/quote/start`)
+    return response.data
+  },
+
+  async approveIntervention(id, data) {
+    const response = await apiClient.post(`/vehicle-interventions/${id}/workflow/approve`, data)
+    return response.data
+  },
+
+  async cancelIntervention(id, data) {
+    const response = await apiClient.post(`/vehicle-interventions/${id}/workflow/cancel`, data)
+    return response.data
+  },
+
+  // ==================== INTERVENTION PREDIAGNOSTICS ====================
+  
+  async getInterventionPrediagnostics(params = {}) {
+    const response = await apiClient.get('/intervention-prediagnostics', { params })
+    return response.data
+  },
+
+  async getInterventionPrediagnostic(id) {
+    const response = await apiClient.get(`/intervention-prediagnostics/${id}`)
+    return response.data
+  },
+
+  async createInterventionPrediagnostic(data) {
+    const response = await apiClient.post('/intervention-prediagnostics', data)
+    return response.data
+  },
+
+  async updateInterventionPrediagnostic(id, data) {
+    const response = await apiClient.put(`/intervention-prediagnostics/${id}`, data)
+    return response.data
+  },
+
+  async deleteInterventionPrediagnostic(id) {
+    const response = await apiClient.delete(`/intervention-prediagnostics/${id}`)
+    return response.data
+  },
+
+  /**
+   * Gestion des pièces jointes - Prédiagnostics
+   */
+  async uploadPrediagnosticAttachment(prediagnosticId, file, description = '') {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (description) formData.append('description', description)
+    
+    const response = await apiClient.post(
+      `/intervention-prediagnostics/${prediagnosticId}/attachments`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    )
+    return response.data
+  },
+
+  async getPrediagnosticAttachments(prediagnosticId) {
+    const response = await apiClient.get(`/intervention-prediagnostics/${prediagnosticId}/attachments`)
+    return response.data
+  },
+
+  async deletePrediagnosticAttachment(prediagnosticId, attachmentId) {
+    const response = await apiClient.delete(`/intervention-prediagnostics/${prediagnosticId}/attachments/${attachmentId}`)
+    return response.data
+  },
+
+  // ==================== INTERVENTION QUOTES ====================
+  
+  async getInterventionQuotes(params = {}) {
+    const response = await apiClient.get('/intervention-quotes', { params })
+    return response.data
+  },
+
+  async getInterventionQuote(id) {
+    const response = await apiClient.get(`/intervention-quotes/${id}`)
+    return response.data
+  },
+
+  async createInterventionQuote(data) {
+    const response = await apiClient.post('/intervention-quotes', data)
+    return response.data
+  },
+
+  async updateInterventionQuote(id, data) {
+    const response = await apiClient.put(`/intervention-quotes/${id}`, data)
+    return response.data
+  },
+
+  async deleteInterventionQuote(id) {
+    const response = await apiClient.delete(`/intervention-quotes/${id}`)
+    return response.data
+  },
+
+  /**
+   * Gestion des pièces jointes - Quotes
+   */
+  async uploadQuoteAttachment(quoteId, file, description = '') {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (description) formData.append('description', description)
+    
+    const response = await apiClient.post(
+      `/intervention-quotes/${quoteId}/attachments`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    )
+    return response.data
+  },
+
+  async getQuoteAttachments(quoteId) {
+    const response = await apiClient.get(`/intervention-quotes/${quoteId}/attachments`)
+    return response.data
+  },
+
+  async deleteQuoteAttachment(quoteId, attachmentId) {
+    const response = await apiClient.delete(`/intervention-quotes/${quoteId}/attachments/${attachmentId}`)
+    return response.data
+  },
+
+  // ==================== INTERVENTION WORK AUTHORIZATIONS ====================
+  
+  async getInterventionWorkAuthorizations(params = {}) {
+    const response = await apiClient.get('/intervention-work-authorizations', { params })
+    return response.data
+  },
+
+  async getInterventionWorkAuthorization(id) {
+    const response = await apiClient.get(`/intervention-work-authorizations/${id}`)
+    return response.data
+  },
+
+  async createInterventionWorkAuthorization(data) {
+    const response = await apiClient.post('/intervention-work-authorizations', data)
+    return response.data
+  },
+
+  async updateInterventionWorkAuthorization(id, data) {
+    const response = await apiClient.put(`/intervention-work-authorizations/${id}`, data)
+    return response.data
+  },
+
+  async deleteInterventionWorkAuthorization(id) {
+    const response = await apiClient.delete(`/intervention-work-authorizations/${id}`)
+    return response.data
+  },
+
+  /**
+   * Gestion des pièces jointes - Work Authorizations
+   */
+  async uploadWorkAuthorizationAttachment(authId, file, description = '') {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (description) formData.append('description', description)
+    
+    const response = await apiClient.post(
+      `/intervention-work-authorizations/${authId}/attachments`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    )
+    return response.data
+  },
+
+  async getWorkAuthorizationAttachments(authId) {
+    const response = await apiClient.get(`/intervention-work-authorizations/${authId}/attachments`)
+    return response.data
+  },
+
+  async deleteWorkAuthorizationAttachment(authId, attachmentId) {
+    const response = await apiClient.delete(`/intervention-work-authorizations/${authId}/attachments/${attachmentId}`)
+    return response.data
+  },
+
+  // ==================== INTERVENTION RECEPTION REPORTS ====================
+  
+  async getInterventionReceptionReports(params = {}) {
+    const response = await apiClient.get('/intervention-reception-reports', { params })
+    return response.data
+  },
+
+  async getInterventionReceptionReport(id) {
+    const response = await apiClient.get(`/intervention-reception-reports/${id}`)
+    return response.data
+  },
+
+  async createInterventionReceptionReport(data) {
+    const response = await apiClient.post('/intervention-reception-reports', data)
+    return response.data
+  },
+
+  async updateInterventionReceptionReport(id, data) {
+    const response = await apiClient.put(`/intervention-reception-reports/${id}`, data)
+    return response.data
+  },
+
+  async deleteInterventionReceptionReport(id) {
+    const response = await apiClient.delete(`/intervention-reception-reports/${id}`)
+    return response.data
+  },
+
+  /**
+   * Gestion des pièces jointes - Reception Reports
+   */
+  async uploadReceptionReportAttachment(reportId, file, description = '') {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (description) formData.append('description', description)
+    
+    const response = await apiClient.post(
+      `/intervention-reception-reports/${reportId}/attachments`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    )
+    return response.data
+  },
+
+  async getReceptionReportAttachments(reportId) {
+    const response = await apiClient.get(`/intervention-reception-reports/${reportId}/attachments`)
+    return response.data
+  },
+
+  async deleteReceptionReportAttachment(reportId, attachmentId) {
+    const response = await apiClient.delete(`/intervention-reception-reports/${reportId}/attachments/${attachmentId}`)
+    return response.data
+  },
+
+  // ==================== INTERVENTION INVOICES ====================
+  
+  async getInterventionInvoices(params = {}) {
+    const response = await apiClient.get('/intervention-invoices', { params })
+    return response.data
+  },
+
+  async getInterventionInvoice(id) {
+    const response = await apiClient.get(`/intervention-invoices/${id}`)
+    return response.data
+  },
+
+  async createInterventionInvoice(data) {
+    const response = await apiClient.post('/intervention-invoices', data)
+    return response.data
+  },
+
+  async updateInterventionInvoice(id, data) {
+    const response = await apiClient.put(`/intervention-invoices/${id}`, data)
+    return response.data
+  },
+
+  async deleteInterventionInvoice(id) {
+    const response = await apiClient.delete(`/intervention-invoices/${id}`)
+    return response.data
+  },
+
+  async generateInvoiceFromQuote(quoteId) {
+    const response = await apiClient.post(`/intervention-invoices/from-quote/${quoteId}`)
+    return response.data
+  },
+
+  async markInvoiceAsPaid(id, data) {
+    const response = await apiClient.post(`/intervention-invoices/${id}/mark-paid`, data)
+    return response.data
+  },
+
+  async downloadInvoicePdf(id) {
+    const response = await apiClient.get(`/intervention-invoices/${id}/pdf`, {
+      responseType: 'blob'
+    })
+    return response.data
+  },
+
+  async uploadInvoiceAttachment(id, file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await apiClient.post(`/intervention-invoices/${id}/attachments`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  },
+
+  async getInvoiceAttachments(id) {
+    const response = await apiClient.get(`/intervention-invoices/${id}/attachments`)
+    return response.data
+  },
+
+  async deleteInvoiceAttachment(id, fileId) {
+    const response = await apiClient.delete(`/intervention-invoices/${id}/attachments/${fileId}`)
     return response.data
   }
 }

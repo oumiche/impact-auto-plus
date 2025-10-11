@@ -2,7 +2,7 @@
   <DefaultLayout>
     <template #header-actions>
       <button @click="openCreateModal" class="btn-primary">
-        <span class="icon">➕</span>
+        <i class="fas fa-plus"></i>
         Nouvelle marque
       </button>
     </template>
@@ -25,15 +25,15 @@
             <div class="item-header">
               <h3>{{ item.name }}</h3>
               <div class="item-actions">
-                <button @click="openEditModal(item)" class="btn-icon">✏️</button>
-                <button @click="confirmDelete(item)" class="btn-icon btn-danger" title="Supprimer">×</button>
+                <button @click="openEditModal(item)" class="btn-icon btn-edit" title="Modifier"><i class="fas fa-edit"></i></button>
+                <button @click="confirmDelete(item)" class="btn-icon btn-delete" title="Supprimer"><i class="fas fa-trash"></i></button>
               </div>
             </div>
             <div class="item-info">
-              <div class="info-item" v-if="item.code"><span class="icon">🔢</span><span>{{ item.code }}</span></div>
-              <div class="info-item" v-if="item.country"><span class="icon">🌍</span><span>{{ item.country }}</span></div>
-              <div class="info-item" v-if="item.website"><span class="icon">🌐</span><span>{{ item.website }}</span></div>
-              <div class="info-item" v-if="item.description"><span class="icon">📝</span><span>{{ item.description }}</span></div>
+              <div class="info-item" v-if="item.code"><i class="fas fa-hashtag"></i><span>{{ item.code }}</span></div>
+              <div class="info-item" v-if="item.country"><i class="fas fa-globe"></i><span>{{ item.country }}</span></div>
+              <div class="info-item" v-if="item.website"><i class="fas fa-link"></i><span>{{ item.website }}</span></div>
+              <div class="info-item" v-if="item.description"><i class="fas fa-file-alt"></i><span>{{ item.description }}</span></div>
             </div>
             <div class="item-footer">
               <span class="badge" :class="item.isActive ? 'badge-success' : 'badge-inactive'">
@@ -54,10 +54,10 @@
       </div>
 
       <div v-else class="empty-state">
-        <div class="empty-icon">🏷️</div>
+        <div class="empty-icon"><i class="fas fa-tag"></i></div>
         <h3>Aucune marque</h3>
         <p>Commencez par créer votre première marque</p>
-        <button @click="openCreateModal" class="btn-primary">➕ Créer une marque</button>
+        <button @click="openCreateModal" class="btn-primary"><i class="fas fa-plus"></i> Créer une marque</button>
       </div>
 
       <Modal v-model="showModal" :title="isEditing ? 'Modifier la marque' : 'Nouvelle marque'" size="medium">

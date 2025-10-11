@@ -2,7 +2,7 @@
   <DefaultLayout>
     <template #header-actions>
       <button @click="openCreateModal" class="btn-primary">
-        <span class="icon">➕</span>
+        <i class="fas fa-plus"></i>
         Nouvelle fourniture
       </button>
     </template>
@@ -29,34 +29,34 @@
             <div class="supply-header">
               <h3>{{ supply.name }}</h3>
               <div class="supply-actions">
-                <button @click="openEditModal(supply)" class="btn-icon" title="Modifier">
-                  ✏️
+                <button @click="openEditModal(supply)" class="btn-icon btn-edit" title="Modifier">
+                  <i class="fas fa-edit"></i>
                 </button>
-                <button @click="confirmDelete(supply)" class="btn-icon btn-danger" title="Supprimer">
-                  ×
+                <button @click="confirmDelete(supply)" class="btn-icon btn-delete" title="Supprimer">
+                  <i class="fas fa-trash"></i>
                 </button>
               </div>
             </div>
 
             <div class="supply-info">
               <div class="info-item" v-if="supply.reference">
-                <span class="icon">🔢</span>
+                <i class="fas fa-hashtag"></i>
                 <span>Réf: {{ supply.reference }}</span>
               </div>
               <div class="info-item" v-if="supply.oemReference">
-                <span class="icon">🏷️</span>
+                <i class="fas fa-tag"></i>
                 <span>OEM: {{ supply.oemReference }}</span>
               </div>
               <div class="info-item" v-if="supply.category">
-                <span class="icon">📁</span>
+                <i class="fas fa-folder"></i>
                 <span>{{ typeof supply.category === 'object' ? supply.category.name : supply.category }}</span>
               </div>
               <div class="info-item" v-if="supply.brand">
-                <span class="icon">🏭</span>
+                <i class="fas fa-industry"></i>
                 <span>{{ supply.brand }}</span>
               </div>
               <div class="info-item" v-if="supply.unitPrice">
-                <span class="icon">💰</span>
+                <i class="fas fa-dollar-sign"></i>
                 <span>{{ formatPrice(supply.unitPrice) }}</span>
               </div>
             </div>
@@ -81,18 +81,18 @@
 
       <!-- Empty State -->
       <div v-else class="empty-state">
-        <div class="empty-icon">📦</div>
+        <div class="empty-icon"><i class="fas fa-box"></i></div>
         <h3>Aucune fourniture</h3>
         <p>Commencez par ajouter votre première fourniture</p>
         <button @click="openCreateModal" class="btn-primary">
-          <span class="icon">➕</span>
+          <i class="fas fa-plus"></i>
           Créer une fourniture
         </button>
       </div>
 
       <!-- Error Message -->
       <div v-if="supplyStore.error" class="error-message">
-        <span class="error-icon">⚠️</span>
+        <i class="fas fa-exclamation-triangle"></i>
         {{ supplyStore.error }}
       </div>
 

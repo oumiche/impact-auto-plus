@@ -165,37 +165,49 @@ const routes = [
   {
     path: '/vehicle-interventions',
     name: 'VehicleInterventions',
-    component: () => import('@/views/ComingSoon.vue'),
+    component: () => import('@/views/VehicleInterventions.vue'),
     meta: { requiresAuth: true, requiresTenant: true }
   },
   {
     path: '/intervention-prediagnostics',
     name: 'InterventionPrediagnostics',
-    component: () => import('@/views/ComingSoon.vue'),
+    component: () => import('@/views/InterventionPrediagnostics.vue'),
+    meta: { requiresAuth: true, requiresTenant: true }
+  },
+  {
+    path: '/intervention-prediagnostics/create',
+    name: 'InterventionPrediagnosticCreate',
+    component: () => import('@/views/InterventionPrediagnosticCreate.vue'),
+    meta: { requiresAuth: true, requiresTenant: true }
+  },
+  {
+    path: '/intervention-prediagnostics/:id/edit',
+    name: 'InterventionPrediagnosticEdit',
+    component: () => import('@/views/InterventionPrediagnosticEdit.vue'),
     meta: { requiresAuth: true, requiresTenant: true }
   },
   {
     path: '/intervention-quotes',
     name: 'InterventionQuotes',
-    component: () => import('@/views/ComingSoon.vue'),
+    component: () => import('@/views/InterventionQuotes.vue'),
     meta: { requiresAuth: true, requiresTenant: true }
   },
   {
     path: '/intervention-invoices',
     name: 'InterventionInvoices',
-    component: () => import('@/views/ComingSoon.vue'),
+    component: () => import('@/views/InterventionInvoices.vue'),
     meta: { requiresAuth: true, requiresTenant: true }
   },
   {
     path: '/intervention-work-authorizations',
     name: 'InterventionWorkAuthorizations',
-    component: () => import('@/views/ComingSoon.vue'),
+    component: () => import('@/views/InterventionWorkAuthorizations.vue'),
     meta: { requiresAuth: true, requiresTenant: true }
   },
   {
     path: '/intervention-reception-reports',
     name: 'InterventionReceptionReports',
-    component: () => import('@/views/ComingSoon.vue'),
+    component: () => import('@/views/InterventionReceptionReports.vue'),
     meta: { requiresAuth: true, requiresTenant: true }
   },
   // Rapports
@@ -215,31 +227,31 @@ const routes = [
   {
     path: '/parametres',
     name: 'Parametres',
-    component: () => import('@/views/ComingSoon.vue'),
+    component: () => import('@/views/SystemParameters.vue'),
     meta: { requiresAuth: true, requiresTenant: true, requiresRole: 'ROLE_ADMIN' }
   },
   {
     path: '/tenants',
     name: 'Tenants',
-    component: () => import('@/views/ComingSoon.vue'),
+    component: () => import('@/views/Tenants.vue'),
     meta: { requiresAuth: true, requiresTenant: true, requiresRole: 'ROLE_ADMIN' }
   },
   {
     path: '/user-tenant-permissions',
     name: 'UserTenantPermissions',
-    component: () => import('@/views/ComingSoon.vue'),
+    component: () => import('@/views/UserTenantPermissions.vue'),
     meta: { requiresAuth: true, requiresTenant: true, requiresRole: 'ROLE_ADMIN' }
   },
   {
     path: '/code-formats',
     name: 'CodeFormats',
-    component: () => import('@/views/ComingSoon.vue'),
+    component: () => import('@/views/CodeFormats.vue'),
     meta: { requiresAuth: true, requiresTenant: true, requiresRole: 'ROLE_ADMIN' }
   },
   {
     path: '/supply-prices',
     name: 'SupplyPrices',
-    component: () => import('@/views/ComingSoon.vue'),
+    component: () => import('@/views/SupplyPrices.vue'),
     meta: { requiresAuth: true, requiresTenant: true, requiresRole: 'ROLE_ADMIN' }
   },
   {

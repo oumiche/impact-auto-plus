@@ -1,10 +1,10 @@
 <template>
   <div class="selector">
     <label v-if="label">{{ label }} <span v-if="required" class="required">*</span></label>
-    <select v-model="selectedValue" @change="handleChange" :required="required">
-      <option value="">{{ placeholder }}</option>
+    <select v-model="selectedValue" @change="handleChange" :required="required" :disabled="disabled">
+      <option :value="null">{{ placeholder }}</option>
       <option v-for="item in items" :key="item.id" :value="item.id">
-        {{ item.name }} {{ item.code ? `(${item.code})` : '' }}
+        {{ item[displayField] || item.name }} {{ item.code ? `(${item.code})` : '' }}
       </option>
     </select>
   </div>
@@ -19,7 +19,9 @@ const props = defineProps({
   apiMethod: { type: String, required: true }, // 'getVehicleColors', 'getFuelTypes', etc.
   label: String,
   placeholder: { type: String, default: 'Sélectionner' },
-  required: { type: Boolean, default: false }
+  required: { type: Boolean, default: false },
+  displayField: { type: String, default: 'name' },
+  disabled: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
@@ -31,22 +33,41 @@ watch(() => props.modelValue, (newVal) => {
   selectedValue.value = newVal
 })
 
+// Watcher pour re-charger les items si l'API method change
+watch(() => props.apiMethod, async () => {
+  await loadItems()
+})
+
 onMounted(async () => {
   await loadItems()
+  // S'assurer que la valeur initiale est définie après le chargement
+  if (props.modelValue !== null && props.modelValue !== undefined) {
+    selectedValue.value = props.modelValue
+  }
 })
 
 const loadItems = async () => {
   try {
     const response = await apiService[props.apiMethod]({ limit: 1000, status: 'active' })
     items.value = response.data || []
+    
+    // Re-sélectionner la valeur après le chargement si elle existe
+    if (props.modelValue !== null && props.modelValue !== undefined) {
+      selectedValue.value = props.modelValue
+    }
   } catch (error) {
     console.error(`Error loading ${props.apiMethod}:`, error)
   }
 }
 
 const handleChange = () => {
-  emit('update:modelValue', selectedValue.value)
-  const selected = items.value.find(i => i.id == selectedValue.value)
+  // Convertir en number si c'est un nombre, sinon null
+  const value = selectedValue.value === null || selectedValue.value === '' 
+    ? null 
+    : Number(selectedValue.value)
+  
+  emit('update:modelValue', value)
+  const selected = items.value.find(i => i.id === value)
   emit('change', selected)
 }
 </script>
@@ -79,6 +100,13 @@ const handleChange = () => {
     &:focus {
       outline: none;
       border-color: #2563eb;
+    }
+
+    &:disabled {
+      background: #f3f4f6;
+      color: #9ca3af;
+      cursor: not-allowed;
+      opacity: 0.6;
     }
   }
 }

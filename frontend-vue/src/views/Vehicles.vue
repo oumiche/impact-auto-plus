@@ -2,7 +2,7 @@
   <DefaultLayout>
     <template #header-actions>
       <button @click="openCreateModal" class="btn-primary">
-        <span class="icon">➕</span>
+        <i class="fas fa-plus"></i>
         Nouveau véhicule
       </button>
     </template>
@@ -26,13 +26,13 @@
           class="vehicle-card"
         >
           <div class="vehicle-header">
-            <div class="vehicle-plate">{{ vehicle.plate_number || 'N/A' }}</div>
+            <div class="vehicle-plate">{{ vehicle.plateNumber || 'N/A' }}</div>
             <div class="vehicle-actions">
-              <button @click="openEditModal(vehicle)" class="btn-icon" title="Modifier">
-                ✏️
+              <button @click="openEditModal(vehicle)" class="btn-icon btn-edit" title="Modifier">
+                <i class="fas fa-edit"></i>
               </button>
-              <button @click="confirmDelete(vehicle)" class="btn-icon btn-danger" title="Supprimer">
-                ×
+              <button @click="confirmDelete(vehicle)" class="btn-icon btn-delete" title="Supprimer">
+                <i class="fas fa-trash"></i>
               </button>
             </div>
           </div>
@@ -42,27 +42,27 @@
             
             <div class="info-grid">
               <div class="info-item" v-if="vehicle.year">
-                <span class="icon">📅</span>
+                <i class="fas fa-calendar"></i>
                 <span>{{ vehicle.year }}</span>
               </div>
               <div class="info-item" v-if="vehicle.vin">
-                <span class="icon">🔢</span>
+                <i class="fas fa-hashtag"></i>
                 <span>{{ vehicle.vin }}</span>
               </div>
               <div class="info-item" v-if="vehicle.fuelType">
-                <span class="icon">⛽</span>
+                <i class="fas fa-gas-pump"></i>
                 <span>{{ vehicle.fuelType.name }}</span>
               </div>
               <div class="info-item" v-if="vehicle.color">
-                <span class="icon">🎨</span>
+                <i class="fas fa-palette"></i>
                 <span>{{ vehicle.color.name }}</span>
               </div>
               <div class="info-item" v-if="vehicle.mileage">
-                <span class="icon">📏</span>
+                <i class="fas fa-tachometer-alt"></i>
                 <span>{{ vehicle.mileage }} km</span>
               </div>
               <div class="info-item" v-if="vehicle.category">
-                <span class="icon">🚗</span>
+                <i class="fas fa-car"></i>
                 <span>{{ vehicle.category.name }}</span>
               </div>
             </div>
@@ -73,7 +73,7 @@
               {{ getStatusLabel(vehicle.status) }}
             </span>
             <span v-if="vehicle.garage" class="garage-badge">
-              🏢 {{ vehicle.garage.name }}
+              <i class="fas fa-warehouse"></i> {{ vehicle.garage.name }}
             </span>
           </div>
         </div>
@@ -90,18 +90,18 @@
       />
 
       <div v-else class="empty-state">
-        <div class="empty-icon">🚗</div>
+        <div class="empty-icon"><i class="fas fa-car-side"></i></div>
         <h3>Aucun véhicule</h3>
         <p>Commencez par ajouter votre premier véhicule</p>
         <button @click="openCreateModal" class="btn-primary">
-          <span class="icon">➕</span>
+          <i class="fas fa-plus"></i>
           Créer un véhicule
         </button>
       </div>
 
       <!-- Error Message -->
       <div v-if="vehicleStore.error" class="error-message">
-        <span class="error-icon">⚠️</span>
+        <i class="fas fa-exclamation-triangle"></i>
         {{ vehicleStore.error }}
       </div>
 
@@ -124,17 +124,17 @@
           </div>
 
           <div class="form-row">
-            <BrandSelector v-model="form.brand_id" required @change="handleBrandChange" />
-            <ModelSelector v-model="form.model_id" :brand-id="form.brand_id" required />
+            <BrandSelector v-model="form.brandId" required @change="handleBrandChange" />
+            <ModelSelector v-model="form.modelId" :brand-id="form.brandId" required />
           </div>
 
           <div class="form-row">
-            <SimpleSelector v-model="form.color_id" api-method="getVehicleColors" label="Couleur" placeholder="Sélectionner une couleur" required />
-            <SimpleSelector v-model="form.category_id" api-method="getVehicleCategories" label="Catégorie" placeholder="Sélectionner une catégorie" />
+            <SimpleSelector v-model="form.colorId" api-method="getVehicleColors" label="Couleur" placeholder="Sélectionner une couleur" required />
+            <SimpleSelector v-model="form.categoryId" api-method="getVehicleCategories" label="Catégorie" placeholder="Sélectionner une catégorie" />
           </div>
 
           <div class="form-row">
-            <SimpleSelector v-model="form.fuelType_id" api-method="getFuelTypes" label="Type de carburant" placeholder="Sélectionner" />
+            <SimpleSelector v-model="form.fuelTypeId" api-method="getFuelTypes" label="Type de carburant" placeholder="Sélectionner" />
             <div class="form-group">
               <label for="year">Année</label>
               <input id="year" v-model="form.year" type="number" min="1900" :max="new Date().getFullYear() + 1" placeholder="2023">
@@ -173,7 +173,7 @@
               <input id="purchaseDate" v-model="form.purchaseDate" type="date">
             </div>
             <div class="form-group">
-              <label for="purchasePrice">Prix d'achat (€)</label>
+              <label for="purchasePrice">Prix d'achat ({{ currency }})</label>
               <input id="purchasePrice" v-model="form.purchasePrice" type="number" step="0.01" placeholder="15000">
             </div>
           </div>
@@ -207,7 +207,7 @@
         title="Confirmer la suppression"
         size="small"
       >
-        <p>Êtes-vous sûr de vouloir supprimer le véhicule <strong>{{ vehicleToDelete?.plate_number }}</strong> ?</p>
+        <p>Êtes-vous sûr de vouloir supprimer le véhicule <strong>{{ vehicleToDelete?.plateNumber }}</strong> ?</p>
         <p class="warning-text">Cette action est irréversible.</p>
 
         <template #footer>
@@ -237,6 +237,7 @@ import Pagination from '@/components/common/Pagination.vue'
 import BrandSelector from '@/components/common/BrandSelector.vue'
 import ModelSelector from '@/components/common/ModelSelector.vue'
 import SimpleSelector from '@/components/common/SimpleSelector.vue'
+import apiService from '@/services/api.service'
 
 const authStore = useAuthStore()
 const vehicleStore = useVehicleStore()
@@ -250,15 +251,16 @@ const vehicleToDelete = ref(null)
 const searchQuery = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(12)
+const currency = ref('FCFA')
 
 const form = ref({
   plateNumber: '',
   vin: '',
-  brand_id: '',
-  model_id: '',
-  color_id: '',
-  category_id: '',
-  fuelType_id: '',
+  brandId: null,
+  modelId: null,
+  colorId: null,
+  categoryId: null,
+  fuelTypeId: null,
   year: null,
   mileage: 0,
   status: 'active',
@@ -299,7 +301,20 @@ const paginatedVehicles = computed(() => {
 
 onMounted(async () => {
   await loadVehicles()
+  await loadCurrency()
 })
+
+const loadCurrency = async () => {
+  try {
+    const result = await apiService.getCurrency()
+    if (result.success && result.data) {
+      currency.value = result.data.value || 'FCFA'
+    }
+  } catch (err) {
+    console.warn('Impossible de charger la devise, utilisation de la valeur par défaut:', err)
+    // Garder la valeur par défaut FCFA
+  }
+}
 
 const handleSearch = (query) => {
   currentPage.value = 1
@@ -323,11 +338,11 @@ const openCreateModal = () => {
   form.value = {
     plateNumber: '',
     vin: '',
-    brand_id: '',
-    model_id: '',
-    color_id: '',
-    category_id: '',
-    fuelType_id: '',
+    brandId: null,
+    modelId: null,
+    colorId: null,
+    categoryId: null,
+    fuelTypeId: null,
     year: null,
     mileage: 0,
     status: 'active',
@@ -347,11 +362,11 @@ const openEditModal = (vehicle) => {
     id: vehicle.id,
     plateNumber: vehicle.plateNumber || '',
     vin: vehicle.vin || '',
-    brand_id: vehicle.brand?.id || '',
-    model_id: vehicle.model?.id || '',
-    color_id: vehicle.color?.id || '',
-    category_id: vehicle.category?.id || '',
-    fuelType_id: vehicle.fuelType?.id || '',
+    brandId: vehicle.brand?.id || null,
+    modelId: vehicle.model?.id || null,
+    colorId: vehicle.color?.id || null,
+    categoryId: vehicle.category?.id || null,
+    fuelTypeId: vehicle.fuelType?.id || null,
     year: vehicle.year || null,
     mileage: vehicle.mileage || 0,
     status: vehicle.status || 'active',
@@ -367,7 +382,7 @@ const openEditModal = (vehicle) => {
 
 const handleBrandChange = () => {
   // Réinitialiser le modèle quand la marque change
-  form.value.model_id = ''
+  form.value.modelId = null
 }
 
 const handleSubmit = async () => {
@@ -383,6 +398,9 @@ const handleSubmit = async () => {
     }
 
     showModal.value = false
+    
+    // Recharger la liste pour avoir les données à jour
+    await loadVehicles()
   } catch (err) {
     console.error('Error saving vehicle:', err)
     error('Erreur lors de l\'enregistrement du véhicule')
@@ -403,6 +421,9 @@ const handleDelete = async () => {
     success('Véhicule supprimé avec succès')
     showDeleteModal.value = false
     vehicleToDelete.value = null
+    
+    // Recharger la liste
+    await loadVehicles()
   } catch (err) {
     console.error('Error deleting vehicle:', err)
     error('Erreur lors de la suppression du véhicule')

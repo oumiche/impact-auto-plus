@@ -11,14 +11,14 @@ export const useTenantStore = defineStore('tenant', () => {
   // ==================== ACTIONS ====================
   
   /**
-   * Récupérer tous les tenants accessibles
+   * Récupérer tous les tenants accessibles à l'utilisateur connecté
    */
   const fetchTenants = async () => {
     try {
       loading.value = true
       error.value = null
       
-      const response = await apiService.getTenants()
+      const response = await apiService.getUserTenants()
       tenants.value = response.tenants || []
       
       return tenants.value

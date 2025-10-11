@@ -49,7 +49,7 @@ class UserTenantPermissionController extends AbstractTenantController
             $user = $this->getUser();
             
             // Vérifier si c'est un super admin
-            $isSuperAdmin = $this->isSuperAdmin($user);
+            $isSuperAdmin = $this->isAdmin($user);
             
             $page = max(1, (int) $request->query->get('page', 1));
             $limit = max(1, min(100, (int) $request->query->get('limit', 10)));
@@ -167,7 +167,7 @@ class UserTenantPermissionController extends AbstractTenantController
             // Vérifier l'authentification
             $this->checkAuthentication();
             $user = $this->getUser();
-            $isSuperAdmin = $this->isSuperAdmin($user);
+            $isSuperAdmin = $this->isAdmin($user);
 
             $data = json_decode($request->getContent(), true);
 
@@ -568,6 +568,7 @@ class UserTenantPermissionController extends AbstractTenantController
     #[Route('/debug/user-roles', name: 'debug_user_roles', methods: ['GET'])]
     public function debugUserRoles(): JsonResponse
     {
+        /** @var User $user */
         $user = $this->getUser();
         if (!$user) {
             return new JsonResponse(['error' => 'No user authenticated'], 401);
@@ -593,5 +594,13 @@ class UserTenantPermissionController extends AbstractTenantController
     {
         // Utiliser la méthode de l'entité User
         return $user->isSuperAdmin();
+    }
+
+    /**
+     * Vérifier si l'utilisateur est un admin
+     */
+    private function isAdmin($user): bool
+    {
+        return $user->isAdmin();
     }
 }

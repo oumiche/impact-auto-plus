@@ -88,9 +88,11 @@ class ParameterController extends AbstractController
             $data = array_map(function(SystemParameter $param) {
                 return [
                     'id' => $param->getId(),
-                    'key' => $param->getKey(),
+                    'parameterKey' => $param->getKey(),
+                    'key' => $param->getKey(), // Alias pour compatibilité
                     'value' => $param->getValue(),
-                    'type' => $param->getDataType(),
+                    'dataType' => $param->getDataType(),
+                    'type' => $param->getDataType(), // Alias pour compatibilité
                     'category' => $param->getCategory(),
                     'description' => $param->getDescription(),
                     'isEditable' => $param->isEditable(),
@@ -98,6 +100,11 @@ class ParameterController extends AbstractController
                     'tenant' => $param->getTenant() ? [
                         'id' => $param->getTenant()->getId(),
                         'name' => $param->getTenant()->getName()
+                    ] : null,
+                    'createdBy' => $param->getCreatedBy() ? [
+                        'id' => $param->getCreatedBy()->getId(),
+                        'firstName' => $param->getCreatedBy()->getFirstName(),
+                        'lastName' => $param->getCreatedBy()->getLastName()
                     ] : null,
                     'createdAt' => $param->getCreatedAt()->format('Y-m-d H:i:s'),
                     'updatedAt' => $param->getUpdatedAt() ? $param->getUpdatedAt()->format('Y-m-d H:i:s') : null
@@ -144,7 +151,10 @@ class ParameterController extends AbstractController
                 ], 400);
             }
 
-            if (!isset($data['key']) || !isset($data['value'])) {
+            $key = $data['key'] ?? $data['parameterKey'] ?? null;
+            $value = $data['value'] ?? null;
+            
+            if (!$key || $value === null) {
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'Clé et valeur requises',
@@ -153,13 +163,19 @@ class ParameterController extends AbstractController
             }
 
             $parameter = new SystemParameter();
-            $parameter->setKey((string)$data['key']);
-            $parameter->setValue((string)$data['value']);
-            $parameter->setDataType((string)($data['type'] ?? 'string'));
+            $parameter->setKey((string)$key);
+            $parameter->setValue((string)$value);
+            $parameter->setDataType((string)($data['type'] ?? $data['dataType'] ?? 'string'));
             $parameter->setCategory((string)($data['category'] ?? 'general'));
             $parameter->setDescription(isset($data['description']) ? (string)$data['description'] : null);
             $parameter->setIsEditable(isset($data['isEditable']) ? (bool)$data['isEditable'] : true);
             $parameter->setIsPublic(isset($data['isPublic']) ? (bool)$data['isPublic'] : false);
+            
+            // Définir l'utilisateur qui crée le paramètre
+            $user = $this->getUser();
+            if ($user) {
+                $parameter->setCreatedBy($user);
+            }
 
             // Associer au tenant si spécifié
             if (isset($data['tenant_id'])) {
@@ -178,13 +194,22 @@ class ParameterController extends AbstractController
                 'message' => 'Paramètre créé avec succès',
                 'data' => [
                     'id' => $parameter->getId(),
-                    'key' => $parameter->getKey(),
+                    'parameterKey' => $parameter->getKey(),
+                    'key' => $parameter->getKey(), // Alias
                     'value' => $parameter->getValue(),
-                    'type' => $parameter->getDataType(),
+                    'dataType' => $parameter->getDataType(),
+                    'type' => $parameter->getDataType(), // Alias
                     'category' => $parameter->getCategory(),
                     'description' => $parameter->getDescription(),
                     'isEditable' => $parameter->isEditable(),
-                    'isPublic' => $parameter->isPublic()
+                    'isPublic' => $parameter->isPublic(),
+                    'createdBy' => $parameter->getCreatedBy() ? [
+                        'id' => $parameter->getCreatedBy()->getId(),
+                        'firstName' => $parameter->getCreatedBy()->getFirstName(),
+                        'lastName' => $parameter->getCreatedBy()->getLastName()
+                    ] : null,
+                    'createdAt' => $parameter->getCreatedAt()->format('Y-m-d H:i:s'),
+                    'updatedAt' => $parameter->getUpdatedAt() ? $parameter->getUpdatedAt()->format('Y-m-d H:i:s') : null
                 ],
                 'code' => 201
             ], 201);
@@ -224,14 +249,14 @@ class ParameterController extends AbstractController
                 ], 400);
             }
 
-            if (isset($data['key'])) {
-                $parameter->setKey((string)$data['key']);
+            if (isset($data['key']) || isset($data['parameterKey'])) {
+                $parameter->setKey((string)($data['key'] ?? $data['parameterKey']));
             }
             if (isset($data['value'])) {
                 $parameter->setValue((string)$data['value']);
             }
-            if (isset($data['type'])) {
-                $parameter->setDataType((string)$data['type']);
+            if (isset($data['type']) || isset($data['dataType'])) {
+                $parameter->setDataType((string)($data['type'] ?? $data['dataType']));
             }
             if (isset($data['category'])) {
                 $parameter->setCategory((string)$data['category']);
@@ -246,6 +271,12 @@ class ParameterController extends AbstractController
                 $parameter->setIsPublic((bool)$data['isPublic']);
             }
 
+            // Définir l'utilisateur qui modifie le paramètre
+            $user = $this->getUser();
+            if ($user) {
+                $parameter->setUpdatedBy($user);
+            }
+
             $parameter->setUpdatedAt(new \DateTime());
             $this->entityManager->flush();
 
@@ -254,13 +285,27 @@ class ParameterController extends AbstractController
                 'message' => 'Paramètre mis à jour avec succès',
                 'data' => [
                     'id' => $parameter->getId(),
-                    'key' => $parameter->getKey(),
+                    'parameterKey' => $parameter->getKey(),
+                    'key' => $parameter->getKey(), // Alias
                     'value' => $parameter->getValue(),
-                    'type' => $parameter->getDataType(),
+                    'dataType' => $parameter->getDataType(),
+                    'type' => $parameter->getDataType(), // Alias
                     'category' => $parameter->getCategory(),
                     'description' => $parameter->getDescription(),
                     'isEditable' => $parameter->isEditable(),
-                    'isPublic' => $parameter->isPublic()
+                    'isPublic' => $parameter->isPublic(),
+                    'createdBy' => $parameter->getCreatedBy() ? [
+                        'id' => $parameter->getCreatedBy()->getId(),
+                        'firstName' => $parameter->getCreatedBy()->getFirstName(),
+                        'lastName' => $parameter->getCreatedBy()->getLastName()
+                    ] : null,
+                    'updatedBy' => $parameter->getUpdatedBy() ? [
+                        'id' => $parameter->getUpdatedBy()->getId(),
+                        'firstName' => $parameter->getUpdatedBy()->getFirstName(),
+                        'lastName' => $parameter->getUpdatedBy()->getLastName()
+                    ] : null,
+                    'createdAt' => $parameter->getCreatedAt()->format('Y-m-d H:i:s'),
+                    'updatedAt' => $parameter->getUpdatedAt() ? $parameter->getUpdatedAt()->format('Y-m-d H:i:s') : null
                 ],
                 'code' => 200
             ]);

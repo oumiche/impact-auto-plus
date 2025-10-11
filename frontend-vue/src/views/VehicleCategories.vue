@@ -1,7 +1,7 @@
 <template>
   <DefaultLayout>
     <template #header-actions>
-      <button @click="openCreateModal" class="btn-primary">➕ Nouvelle catégorie</button>
+      <button @click="openCreateModal" class="btn-primary"><i class="fas fa-plus"></i> Nouvelle catégorie</button>
     </template>
     <div class="page">
       <SearchBar v-model="searchQuery" placeholder="Rechercher une catégorie..." @search="handleSearch" />
@@ -12,13 +12,13 @@
           <div class="item-header">
             <h3>{{ item.name }}</h3>
             <div class="item-actions">
-              <button @click="openEditModal(item)" class="btn-icon">✏️</button>
-              <button @click="confirmDelete(item)" class="btn-icon btn-danger" title="Supprimer">×</button>
+                <button @click="openEditModal(item)" class="btn-icon btn-edit" title="Modifier"><i class="fas fa-edit"></i></button>
+                <button @click="confirmDelete(item)" class="btn-icon btn-delete" title="Supprimer"><i class="fas fa-trash"></i></button>
             </div>
           </div>
           <div class="item-info">
             <div class="info-item" v-if="item.icon"><span class="icon">{{ item.icon }}</span><span>Icône</span></div>
-            <div class="info-item" v-if="item.description"><span class="icon">📝</span><span>{{ item.description }}</span></div>
+            <div class="info-item" v-if="item.description"><i class="fas fa-file-alt"></i><span>{{ item.description }}</span></div>
           </div>
         </div>
         </div>
@@ -31,10 +31,10 @@
         />
       </div>
       <div v-else class="empty-state">
-        <div class="empty-icon">🚗</div>
+        <div class="empty-icon"><i class="fas fa-list-alt"></i></div>
         <h3>Aucune catégorie de véhicule</h3>
         <p>Commencez par créer votre première catégorie</p>
-        <button @click="openCreateModal" class="btn-primary">➕ Créer une catégorie</button>
+        <button @click="openCreateModal" class="btn-primary"><i class="fas fa-plus"></i> Créer une catégorie</button>
       </div>
       <Modal v-model="showModal" :title="isEditing ? 'Modifier la catégorie' : 'Nouvelle catégorie'">
         <form @submit.prevent="handleSubmit" class="form">

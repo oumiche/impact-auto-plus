@@ -14,7 +14,7 @@ nelmio_cors:
         allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
         allow_headers: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'Origin']
         expose_headers: ['Link', 'Content-Type', 'Authorization']
-        max_age: 3600
+        max_age: 28800
         allow_credentials: true
     paths:
         '^/api/': 
@@ -33,4 +33,4 @@ nelmio_cors:
             allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
             expose_headers: ['Link', 'Content-Type', 'Authorization']
             allow_credentials: true
-            max_age: 3600
+            max_age: 28800

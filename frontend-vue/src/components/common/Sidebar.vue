@@ -8,7 +8,7 @@
         </transition>
       </div>
       <button @click="toggleSidebar" class="toggle-btn">
-        <span>{{ isCollapsed ? '→' : '←' }}</span>
+        <i :class="isCollapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left'"></i>
       </button>
     </div>
 
@@ -24,7 +24,7 @@
           class="nav-item"
           active-class="active"
         >
-          <span class="nav-icon">{{ item.icon }}</span>
+          <i :class="`fas ${item.icon}`" class="nav-icon"></i>
           <transition name="fade">
             <span v-if="!isCollapsed" class="nav-label">{{ item.label }}</span>
           </transition>
@@ -36,18 +36,20 @@
       <!-- Tenant Info -->
       <div v-if="authStore.currentTenant" class="tenant-info">
         <div class="tenant-card" @click="toggleTenantMenu">
-          <span class="tenant-icon">🏢</span>
+          <i class="fas fa-building tenant-icon"></i>
           <transition name="fade">
             <div v-if="!isCollapsed" class="tenant-details">
               <span class="tenant-name">{{ authStore.currentTenant.name }}</span>
-              <span class="tenant-action">Changer ▼</span>
+              <span class="tenant-action">
+                Changer <i class="fas fa-chevron-down"></i>
+              </span>
             </div>
           </transition>
         </div>
         <transition name="dropdown">
           <div v-if="showTenantMenu" class="dropdown-menu">
             <button @click="changeTenant" class="dropdown-item">
-              <span class="icon">🔄</span>
+              <i class="fas fa-sync-alt"></i>
               <span>Changer d'organisation</span>
             </button>
           </div>
@@ -73,7 +75,7 @@
             </div>
             <div class="dropdown-divider"></div>
             <button @click="handleLogout" class="dropdown-item logout">
-              <span class="icon">🚪</span>
+              <i class="fas fa-sign-out-alt"></i>
               <span>Se déconnecter</span>
             </button>
           </div>
@@ -100,53 +102,53 @@ const menuSections = computed(() => {
     {
       title: 'Tableau de Bord',
       items: [
-        { name: 'Dashboard', label: 'Dashboard', icon: '🏠' },
-        { name: 'TenantSelection', label: "Changer d'Organisation", icon: '🏢' }
+        { name: 'Dashboard', label: 'Dashboard', icon: 'fa-home' },
+        { name: 'TenantSelection', label: "Changer d'Organisation", icon: 'fa-building' }
       ]
     },
     {
       title: 'Données de base',
       items: [
-        { name: 'Marques', label: 'Marques Véhicules', icon: '🏷️' },
-        { name: 'Modeles', label: 'Modèles Véhicules', icon: '🚙' },
-        { name: 'VehicleCategories', label: 'Types Véhicules', icon: '🚗' },
-        { name: 'VehicleColors', label: 'Couleurs Véhicules', icon: '🎨' },
-        { name: 'FuelTypes', label: "Types d'énergie", icon: '⛽' },
-        { name: 'LicenceTypes', label: 'Types de permis', icon: '📜' },
-        { name: 'SupplyCategories', label: 'Types Fournitures', icon: '📁' },
-        { name: 'Supplies', label: 'Fournitures', icon: '📦' },
-        { name: 'InterventionTypes', label: "Types d'Intervention", icon: '🔧' },
-        { name: 'Collaborateurs', label: 'Collaborateurs', icon: '👔' }
+        { name: 'Marques', label: 'Marques Véhicules', icon: 'fa-tag' },
+        { name: 'Modeles', label: 'Modèles Véhicules', icon: 'fa-car' },
+        { name: 'VehicleCategories', label: 'Types Véhicules', icon: 'fa-list-alt' },
+        { name: 'VehicleColors', label: 'Couleurs Véhicules', icon: 'fa-palette' },
+        { name: 'FuelTypes', label: "Types d'énergie", icon: 'fa-gas-pump' },
+        { name: 'LicenceTypes', label: 'Types de permis', icon: 'fa-id-card' },
+        { name: 'SupplyCategories', label: 'Types Fournitures', icon: 'fa-folder-open' },
+        { name: 'Supplies', label: 'Fournitures', icon: 'fa-box' },
+        { name: 'InterventionTypes', label: "Types d'Intervention", icon: 'fa-wrench' },
+        { name: 'Collaborateurs', label: 'Collaborateurs', icon: 'fa-user-tie' }
       ]
     },
     {
       title: 'Gestion',
       items: [
-        { name: 'Garages', label: 'Garages', icon: '🔨' },
-        { name: 'Vehicles', label: 'Véhicules', icon: '🚗' },
-        { name: 'Drivers', label: 'Conducteurs', icon: '👤' },
-        { name: 'VehicleAssignments', label: 'Assignations', icon: '✅' },
-        { name: 'VehicleInsurances', label: 'Assurances', icon: '🛡️' },
-        { name: 'VehicleFuelLogs', label: 'Suivi de Carburant', icon: '⛽' },
-        { name: 'VehicleMaintenances', label: 'Entretiens', icon: '🔧' }
+        { name: 'Garages', label: 'Garages', icon: 'fa-warehouse' },
+        { name: 'Vehicles', label: 'Véhicules', icon: 'fa-car-side' },
+        { name: 'Drivers', label: 'Conducteurs', icon: 'fa-user' },
+        { name: 'VehicleAssignments', label: 'Assignations', icon: 'fa-user-check' },
+        { name: 'VehicleInsurances', label: 'Assurances', icon: 'fa-shield-alt' },
+        { name: 'VehicleFuelLogs', label: 'Suivi de Carburant', icon: 'fa-tachometer-alt' },
+        { name: 'VehicleMaintenances', label: 'Entretiens', icon: 'fa-tools' }
       ]
     },
     {
       title: 'Suivi',
       items: [
-        { name: 'VehicleInterventions', label: 'Interventions', icon: '🔧' },
-        { name: 'InterventionPrediagnostics', label: 'Prédiagnostics', icon: '📋' },
-        { name: 'InterventionQuotes', label: 'Devis', icon: '💰' },
-        { name: 'InterventionInvoices', label: 'Factures', icon: '🧾' },
-        { name: 'InterventionWorkAuthorizations', label: 'Autorisations', icon: '📝' },
-        { name: 'InterventionReceptionReports', label: 'Réception', icon: '📋' }
+        { name: 'VehicleInterventions', label: 'Interventions', icon: 'fa-clipboard-list' },
+        { name: 'InterventionPrediagnostics', label: 'Prédiagnostics', icon: 'fa-clipboard-check' },
+        { name: 'InterventionQuotes', label: 'Devis', icon: 'fa-file-invoice-dollar' },
+        { name: 'InterventionInvoices', label: 'Factures', icon: 'fa-file-invoice' },
+        { name: 'InterventionWorkAuthorizations', label: 'Autorisations', icon: 'fa-file-signature' },
+        { name: 'InterventionReceptionReports', label: 'Réception', icon: 'fa-clipboard' }
       ]
     },
     {
       title: 'Rapports',
       items: [
-        { name: 'Reports', label: 'Rapports', icon: '📊' },
-        { name: 'Analytics', label: 'Analytics', icon: '📈' }
+        { name: 'Reports', label: 'Rapports', icon: 'fa-chart-bar' },
+        { name: 'Analytics', label: 'Analytics', icon: 'fa-chart-line' }
       ]
     }
   ]
@@ -156,12 +158,12 @@ const menuSections = computed(() => {
     sections.push({
       title: 'Administration',
       items: [
-        { name: 'Parametres', label: 'Paramètres', icon: '⚙️' },
-        { name: 'Users', label: 'Utilisateurs', icon: '👥' },
-        { name: 'Tenants', label: 'Tenants', icon: '🏢' },
-        { name: 'UserTenantPermissions', label: 'Affectations', icon: '👥' },
-        { name: 'CodeFormats', label: 'Formats de Code', icon: '📟' },
-        { name: 'SupplyPrices', label: 'Registre des Prix', icon: '💲' }
+        { name: 'Parametres', label: 'Paramètres', icon: 'fa-cog' },
+        { name: 'Users', label: 'Utilisateurs', icon: 'fa-users' },
+        { name: 'Tenants', label: 'Tenants', icon: 'fa-building' },
+        { name: 'UserTenantPermissions', label: 'Affectations', icon: 'fa-user-shield' },
+        { name: 'CodeFormats', label: 'Formats de Code', icon: 'fa-code' },
+        { name: 'SupplyPrices', label: 'Registre des Prix', icon: 'fa-dollar-sign' }
       ]
     })
   }
@@ -171,8 +173,8 @@ const menuSections = computed(() => {
 
 const userInitials = computed(() => {
   if (!authStore.user) return '?'
-  const first = authStore.user.first_name?.charAt(0) || ''
-  const last = authStore.user.last_name?.charAt(0) || ''
+  const first = authStore.user.firstName?.charAt(0) || authStore.user.first_name?.charAt(0) || ''
+  const last = authStore.user.lastName?.charAt(0) || authStore.user.last_name?.charAt(0) || ''
   return (first + last).toUpperCase()
 })
 
@@ -353,8 +355,10 @@ const handleLogout = () => {
 }
 
 .nav-icon {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   flex-shrink: 0;
+  width: 24px;
+  text-align: center;
 }
 
 .nav-label {
@@ -399,8 +403,10 @@ const handleLogout = () => {
 }
 
 .tenant-icon {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   flex-shrink: 0;
+  width: 24px;
+  text-align: center;
 }
 
 .tenant-details {
@@ -510,8 +516,10 @@ const handleLogout = () => {
   text-align: left;
   font-weight: 500;
 
-  .icon {
-    font-size: 1.25rem;
+  i {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
   }
 
   &:hover {

@@ -197,6 +197,7 @@ class VehicleAssignmentController extends AbstractTenantController
                         'lastName' => $assignment->getDriver()->getLastName()
                     ],
                     'assignedDate' => $assignment->getAssignedDate()->format('Y-m-d'),
+                    'unassignedDate' => $assignment->getUnassignedDate() ? $assignment->getUnassignedDate()->format('Y-m-d') : null,
                     'status' => $assignment->getStatus(),
                     'statusLabel' => $assignment->getStatusLabel()
                 ],

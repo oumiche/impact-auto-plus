@@ -1,7 +1,7 @@
 <template>
   <DefaultLayout>
     <template #header-actions>
-      <button @click="openCreateModal" class="btn-primary">➕ Nouveau type de carburant</button>
+      <button @click="openCreateModal" class="btn-primary"><i class="fas fa-plus"></i> Nouveau type de carburant</button>
     </template>
     <div class="page">
       <SearchBar v-model="searchQuery" placeholder="Rechercher un type de carburant..." @search="handleSearch" />
@@ -12,13 +12,13 @@
           <div class="item-header">
             <h3>{{ item.name }}</h3>
             <div class="item-actions">
-              <button @click="openEditModal(item)" class="btn-icon">✏️</button>
-              <button @click="confirmDelete(item)" class="btn-icon btn-danger" title="Supprimer">×</button>
+                <button @click="openEditModal(item)" class="btn-icon btn-edit" title="Modifier"><i class="fas fa-edit"></i></button>
+                <button @click="confirmDelete(item)" class="btn-icon btn-delete" title="Supprimer"><i class="fas fa-trash"></i></button>
             </div>
           </div>
           <div class="item-info" v-if="item.description || item.isEcoFriendly">
-            <div class="info-item" v-if="item.description"><span class="icon">📝</span><span>{{ item.description }}</span></div>
-            <div class="info-item" v-if="item.isEcoFriendly"><span class="icon">🌱</span><span>Écologique</span></div>
+            <div class="info-item" v-if="item.description"><i class="fas fa-file-alt"></i><span>{{ item.description }}</span></div>
+            <div class="info-item" v-if="item.isEcoFriendly"><i class="fas fa-leaf"></i><span>Écologique</span></div>
           </div>
         </div>
         </div>
@@ -31,9 +31,9 @@
         />
       </div>
       <div v-else class="empty-state">
-        <div class="empty-icon">⛽</div>
+        <div class="empty-icon"><i class="fas fa-gas-pump"></i></div>
         <h3>Aucun type de carburant</h3>
-        <button @click="openCreateModal" class="btn-primary">➕ Créer</button>
+        <button @click="openCreateModal" class="btn-primary"><i class="fas fa-plus"></i> Créer</button>
       </div>
       <Modal v-model="showModal" :title="isEditing ? 'Modifier' : 'Nouveau type'">
         <form @submit.prevent="handleSubmit" class="form">

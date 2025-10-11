@@ -1,7 +1,7 @@
 <template>
   <DefaultLayout>
     <template #header-actions>
-      <button @click="openCreateModal" class="btn-primary">➕ Nouveau collaborateur</button>
+      <button @click="openCreateModal" class="btn-primary"><i class="fas fa-plus"></i> Nouveau collaborateur</button>
     </template>
     <div class="page">
       <SearchBar v-model="searchQuery" placeholder="Rechercher un collaborateur..." @search="handleSearch" />
@@ -12,17 +12,17 @@
             <div class="item-header">
               <div class="user-avatar">{{ getInitials(item) }}</div>
               <div class="item-actions">
-                <button @click="openEditModal(item)" class="btn-icon">✏️</button>
-                <button @click="confirmDelete(item)" class="btn-icon btn-danger" title="Supprimer">×</button>
+                <button @click="openEditModal(item)" class="btn-icon btn-edit" title="Modifier"><i class="fas fa-edit"></i></button>
+                <button @click="confirmDelete(item)" class="btn-icon btn-delete" title="Supprimer"><i class="fas fa-trash"></i></button>
               </div>
             </div>
             <div class="item-info">
               <h3>{{ item.firstName }} {{ item.lastName }}</h3>
-              <div class="info-item" v-if="item.employeeNumber"><span class="icon">🔢</span><span>{{ item.employeeNumber }}</span></div>
-              <div class="info-item" v-if="item.email"><span class="icon">✉️</span><span>{{ item.email }}</span></div>
-              <div class="info-item" v-if="item.phone"><span class="icon">📞</span><span>{{ item.phone }}</span></div>
-              <div class="info-item" v-if="item.position"><span class="icon">💼</span><span>{{ item.position }}</span></div>
-              <div class="info-item" v-if="item.department"><span class="icon">🏢</span><span>{{ item.department }}</span></div>
+              <div class="info-item" v-if="item.employeeNumber"><i class="fas fa-hashtag"></i><span>{{ item.employeeNumber }}</span></div>
+              <div class="info-item" v-if="item.email"><i class="fas fa-envelope"></i><span>{{ item.email }}</span></div>
+              <div class="info-item" v-if="item.phone"><i class="fas fa-phone"></i><span>{{ item.phone }}</span></div>
+              <div class="info-item" v-if="item.position"><i class="fas fa-briefcase"></i><span>{{ item.position }}</span></div>
+              <div class="info-item" v-if="item.department"><i class="fas fa-building"></i><span>{{ item.department }}</span></div>
             </div>
             <div class="item-footer">
               <span class="badge" :class="item.isActive ? 'badge-success' : 'badge-inactive'">{{ item.isActive ? 'Actif' : 'Inactif' }}</span>
@@ -39,9 +39,9 @@
         />
       </div>
       <div v-else class="empty-state">
-        <div class="empty-icon">👔</div>
+        <div class="empty-icon"><i class="fas fa-user-tie"></i></div>
         <h3>Aucun collaborateur</h3>
-        <button @click="openCreateModal" class="btn-primary">➕ Créer</button>
+        <button @click="openCreateModal" class="btn-primary"><i class="fas fa-plus"></i> Créer</button>
       </div>
       <Modal v-model="showModal" :title="isEditing ? 'Modifier' : 'Nouveau collaborateur'" size="medium">
         <form @submit.prevent="handleSubmit" class="form">

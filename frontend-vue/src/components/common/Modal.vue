@@ -35,8 +35,8 @@ const props = defineProps({
   },
   size: {
     type: String,
-    default: 'medium', // small, medium, large
-    validator: (value) => ['small', 'medium', 'large'].includes(value)
+    default: 'medium', // small, medium, large, xlarge
+    validator: (value) => ['small', 'medium', 'large', 'xlarge'].includes(value)
   },
   closeOnOverlay: {
     type: Boolean,
@@ -94,6 +94,10 @@ const handleOverlayClick = () => {
 
   &.modal-large {
     max-width: 900px;
+  }
+
+  &.modal-xlarge {
+    max-width: 1200px;
   }
 }
 

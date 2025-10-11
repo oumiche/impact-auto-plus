@@ -1,7 +1,7 @@
 <template>
   <DefaultLayout>
     <template #header-actions>
-      <button @click="openCreateModal" class="btn-primary">➕ Nouveau modèle</button>
+      <button @click="openCreateModal" class="btn-primary"><i class="fas fa-plus"></i> Nouveau modèle</button>
     </template>
     <div class="page">
       <SearchBar v-model="searchQuery" placeholder="Rechercher un modèle (nom, code, marque)..." @search="handleSearch" />
@@ -12,29 +12,29 @@
           <div class="item-header">
             <h3>{{ item.name }}</h3>
             <div class="item-actions">
-              <button @click="openEditModal(item)" class="btn-icon">✏️</button>
-              <button @click="confirmDelete(item)" class="btn-icon btn-danger" title="Supprimer">×</button>
+              <button @click="openEditModal(item)" class="btn-icon btn-edit" title="Modifier"><i class="fas fa-edit"></i></button>
+              <button @click="confirmDelete(item)" class="btn-icon btn-delete" title="Supprimer"><i class="fas fa-trash"></i></button>
             </div>
           </div>
           <div class="item-info">
             <div class="info-item" v-if="item.marque">
-              <span class="icon">🏷️</span>
+              <i class="fas fa-tag"></i>
               <span><strong>{{ item.marque?.name || item.marque }}</strong></span>
             </div>
             <div class="info-item" v-if="item.marque?.code">
-              <span class="icon">🔢</span>
+              <i class="fas fa-hashtag"></i>
               <span>Code marque: {{ item.marque.code }}</span>
             </div>
             <div class="info-item" v-if="item.marque?.country">
-              <span class="icon">🌍</span>
+              <i class="fas fa-globe"></i>
               <span>{{ item.marque.country }}</span>
             </div>
             <div class="info-item" v-if="item.code">
-              <span class="icon">📋</span>
+              <i class="fas fa-barcode"></i>
               <span>Code modèle: {{ item.code }}</span>
             </div>
             <div class="info-item" v-if="item.description">
-              <span class="icon">📝</span>
+              <i class="fas fa-file-alt"></i>
               <span>{{ item.description }}</span>
             </div>
           </div>
@@ -54,10 +54,10 @@
         />
       </div>
       <div v-else class="empty-state">
-        <div class="empty-icon">🚙</div>
+        <div class="empty-icon"><i class="fas fa-car"></i></div>
         <h3>Aucun modèle</h3>
         <p>Commencez par créer votre premier modèle</p>
-        <button @click="openCreateModal" class="btn-primary">➕ Créer un modèle</button>
+        <button @click="openCreateModal" class="btn-primary"><i class="fas fa-plus"></i> Créer un modèle</button>
       </div>
       <Modal v-model="showModal" :title="isEditing ? 'Modifier le modèle' : 'Nouveau modèle'" size="medium">
         <form @submit.prevent="handleSubmit" class="form">

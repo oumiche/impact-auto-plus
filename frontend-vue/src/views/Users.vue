@@ -2,50 +2,70 @@
   <DefaultLayout>
     <template #header-actions>
       <button @click="openCreateModal" class="btn-primary">
-        <span class="icon">➕</span>
+        <i class="fas fa-plus"></i>
         Nouvel utilisateur
       </button>
     </template>
 
     <div class="users-page">
+      <!-- Search Bar -->
+      <SearchBar
+        v-model="searchQuery"
+        placeholder="Rechercher un utilisateur (nom, email)..."
+        @search="handleSearch"
+      />
+
+      <!-- Filters -->
+      <div class="filters">
+        <div class="filter-group">
+          <label>Statut</label>
+          <select v-model="filters.status" @change="loadUsers">
+            <option value="all">Tous</option>
+            <option value="active">Actifs</option>
+            <option value="inactive">Inactifs</option>
+          </select>
+        </div>
+      </div>
+
       <!-- Loading -->
       <LoadingSpinner v-if="loading && !users.length" text="Chargement des utilisateurs..." />
 
       <!-- Users List -->
-      <div v-else-if="users.length > 0" class="users-grid">
-        <div
-          v-for="user in users"
-          :key="user.id"
-          class="user-card"
-        >
+      <div v-else-if="users.length > 0">
+        <div class="users-grid">
+          <div
+            v-for="user in users"
+            :key="user.id"
+            class="user-card"
+          >
           <div class="user-header">
             <div class="user-avatar">
               {{ getUserInitials(user) }}
             </div>
             <div class="user-actions">
-              <button @click="openEditModal(user)" class="btn-icon" title="Modifier">
-                ✏️
+              <button @click="openEditModal(user)" class="btn-icon btn-edit" title="Modifier">
+                <i class="fas fa-edit"></i>
               </button>
-              <button @click="confirmDelete(user)" class="btn-icon btn-danger" title="Supprimer">
-                ×
+              <button @click="confirmDelete(user)" class="btn-icon btn-delete" title="Supprimer">
+                <i class="fas fa-trash"></i>
               </button>
             </div>
           </div>
 
           <div class="user-info">
-            <h3>{{ user.first_name }} {{ user.last_name }}</h3>
+            <h3>{{ user.firstName }} {{ user.lastName }}</h3>
             
             <div class="info-items">
               <div class="info-item">
-                <span class="icon">✉️</span>
+                <i class="fas fa-envelope"></i>
                 <span>{{ user.email }}</span>
               </div>
               <div class="info-item" v-if="user.username">
-                <span class="icon">👤</span>
+                <i class="fas fa-user"></i>
                 <span>{{ user.username }}</span>
               </div>
               <div class="info-item" v-if="user.phone">
-                <span class="icon">📞</span>
+                <i class="fas fa-phone"></i>
                 <span>{{ user.phone }}</span>
               </div>
             </div>
@@ -62,28 +82,34 @@
                 {{ getRoleLabel(role) }}
               </span>
             </div>
-            <span class="badge" :class="user.is_active ? 'badge-success' : 'badge-inactive'">
-              {{ user.is_active ? 'Actif' : 'Inactif' }}
+            <span class="badge" :class="user.isActive ? 'badge-success' : 'badge-inactive'">
+              {{ user.isActive ? 'Actif' : 'Inactif' }}
             </span>
           </div>
+          </div>
         </div>
+
+        <!-- Pagination -->
+        <Pagination
+          v-if="totalPages > 1"
+          :current-page="currentPage"
+          :total-pages="totalPages"
+          :total="pagination.total || 0"
+          @page-change="handlePageChange"
+        />
       </div>
 
       <!-- Empty State -->
       <div v-else class="empty-state">
-        <div class="empty-icon">👥</div>
+        <div class="empty-icon">
+          <i class="fas fa-users"></i>
+        </div>
         <h3>Aucun utilisateur</h3>
         <p>Commencez par créer votre premier utilisateur</p>
         <button @click="openCreateModal" class="btn-primary">
-          <span class="icon">➕</span>
+          <i class="fas fa-plus"></i>
           Créer un utilisateur
         </button>
-      </div>
-
-      <!-- Error Message -->
-      <div v-if="error" class="error-message">
-        <span class="error-icon">⚠️</span>
-        {{ error }}
       </div>
 
       <!-- Create/Edit Modal -->
@@ -98,7 +124,7 @@
               <label for="first_name">Prénom *</label>
               <input
                 id="first_name"
-                v-model="form.first_name"
+                v-model="form.firstName"
                 type="text"
                 required
                 placeholder="Jean"
@@ -109,7 +135,7 @@
               <label for="last_name">Nom *</label>
               <input
                 id="last_name"
-                v-model="form.last_name"
+                v-model="form.lastName"
                 type="text"
                 required
                 placeholder="Dupont"
@@ -150,15 +176,6 @@
                 placeholder="01 23 45 67 89"
               >
             </div>
-
-            <div class="form-group">
-              <label for="user_type">Type d'utilisateur</label>
-              <select id="user_type" v-model="form.user_type">
-                <option value="admin">Administrateur</option>
-                <option value="manager">Manager</option>
-                <option value="user">Utilisateur</option>
-              </select>
-            </div>
           </div>
 
           <div class="form-group" v-if="!isEditing">
@@ -187,6 +204,14 @@
                 <input
                   v-model="form.roles"
                   type="checkbox"
+                  value="ROLE_SUPER_ADMIN"
+                >
+                <span>Super Admin</span>
+              </label>
+              <label class="checkbox-label">
+                <input
+                  v-model="form.roles"
+                  type="checkbox"
                   value="ROLE_ADMIN"
                 >
                 <span>Administrateur</span>
@@ -195,9 +220,49 @@
                 <input
                   v-model="form.roles"
                   type="checkbox"
-                  value="ROLE_SUPER_ADMIN"
+                  value="ROLE_GESTIONNAIRE"
                 >
-                <span>Super Administrateur</span>
+                <span>Gestionnaire</span>
+              </label>
+              <label class="checkbox-label">
+                <input
+                  v-model="form.roles"
+                  type="checkbox"
+                  value="ROLE_SECRETAIRE"
+                >
+                <span>Secrétaire</span>
+              </label>
+              <label class="checkbox-label">
+                <input
+                  v-model="form.roles"
+                  type="checkbox"
+                  value="ROLE_EXPERT"
+                >
+                <span>Expert</span>
+              </label>
+              <label class="checkbox-label">
+                <input
+                  v-model="form.roles"
+                  type="checkbox"
+                  value="ROLE_REPARATEUR"
+                >
+                <span>Réparateur</span>
+              </label>
+              <label class="checkbox-label">
+                <input
+                  v-model="form.roles"
+                  type="checkbox"
+                  value="ROLE_CONDUCTEUR"
+                >
+                <span>Conducteur</span>
+              </label>
+              <label class="checkbox-label">
+                <input
+                  v-model="form.roles"
+                  type="checkbox"
+                  value="ROLE_VERIFICATEUR"
+                >
+                <span>Vérificateur</span>
               </label>
             </div>
           </div>
@@ -205,7 +270,7 @@
           <div class="form-group">
             <label class="checkbox-label">
               <input
-                v-model="form.is_active"
+                v-model="form.isActive"
                 type="checkbox"
               >
               <span>Utilisateur actif</span>
@@ -230,7 +295,7 @@
         title="Confirmer la suppression"
         size="small"
       >
-        <p>Êtes-vous sûr de vouloir supprimer l'utilisateur <strong>{{ userToDelete?.first_name }} {{ userToDelete?.last_name }}</strong> ?</p>
+        <p>Êtes-vous sûr de vouloir supprimer l'utilisateur <strong>{{ userToDelete?.firstName }} {{ userToDelete?.lastName }}</strong> ?</p>
         <p class="warning-text">Cette action est irréversible.</p>
 
         <template #footer>
@@ -248,11 +313,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useNotification } from '@/composables/useNotification'
 import DefaultLayout from '@/components/layouts/DefaultLayout.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import SearchBar from '@/components/common/SearchBar.vue'
+import Pagination from '@/components/common/Pagination.vue'
 import Modal from '@/components/common/Modal.vue'
 import apiService from '@/services/api.service'
 
@@ -265,19 +332,31 @@ const showDeleteModal = ref(false)
 const isEditing = ref(false)
 const submitting = ref(false)
 const loading = ref(false)
-const error = ref(null)
 const userToDelete = ref(null)
 
+const searchQuery = ref('')
+const filters = ref({
+  status: 'all'
+})
+
+const pagination = ref({
+  total: 0,
+  page: 1,
+  limit: 12
+})
+
+const currentPage = computed(() => pagination.value.page)
+const totalPages = computed(() => Math.ceil(pagination.value.total / pagination.value.limit))
+
 const form = ref({
-  first_name: '',
-  last_name: '',
+  firstName: '',
+  lastName: '',
   email: '',
   username: '',
   phone: '',
-  user_type: 'user',
   password: '',
   roles: ['ROLE_USER'],
-  is_active: true
+  isActive: true
 })
 
 onMounted(async () => {
@@ -285,30 +364,72 @@ onMounted(async () => {
 })
 
 const loadUsers = async () => {
+  loading.value = true
   try {
-    loading.value = true
-    const response = await apiService.getUsers()
-    users.value = response.users || response.data || []
+    const params = {
+      page: pagination.value.page,
+      limit: pagination.value.limit
+    }
+
+    if (searchQuery.value) {
+      params.search = searchQuery.value
+    }
+
+    if (filters.value.status !== 'all') {
+      params.status = filters.value.status
+    }
+
+    const response = await apiService.getUsers(params)
+    
+    if (response.success) {
+      users.value = response.data || []
+      pagination.value.total = response.pagination?.total || response.data?.length || 0
+    } else {
+      throw new Error(response.message || 'Erreur lors du chargement')
+    }
   } catch (err) {
     console.error('Error loading users:', err)
-    error.value = err.response?.data?.message || err.message
+    const errorMsg = err.response?.data?.message || err.message || 'Erreur lors du chargement des utilisateurs'
+    error(errorMsg)
   } finally {
     loading.value = false
   }
 }
 
+const handleSearch = () => {
+  pagination.value.page = 1
+  loadUsers()
+}
+
+const handlePageChange = (page) => {
+  pagination.value.page = page
+  loadUsers()
+}
+
+const getUserTypeFromRoles = (roles) => {
+  // Détermine le userType basé sur le rôle le plus élevé
+  if (roles.includes('ROLE_SUPER_ADMIN')) return 'super_admin'
+  if (roles.includes('ROLE_ADMIN')) return 'admin'
+  if (roles.includes('ROLE_GESTIONNAIRE')) return 'gestionnaire'
+  if (roles.includes('ROLE_SECRETAIRE')) return 'secretaire'
+  if (roles.includes('ROLE_EXPERT')) return 'expert'
+  if (roles.includes('ROLE_REPARATEUR')) return 'reparateur'
+  if (roles.includes('ROLE_CONDUCTEUR')) return 'conducteur'
+  if (roles.includes('ROLE_VERIFICATEUR')) return 'verificateur'
+  return 'user'
+}
+
 const openCreateModal = () => {
   isEditing.value = false
   form.value = {
-    first_name: '',
-    last_name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     username: '',
     phone: '',
-    user_type: 'user',
     password: '',
     roles: ['ROLE_USER'],
-    is_active: true
+    isActive: true
   }
   showModal.value = true
 }
@@ -317,14 +438,13 @@ const openEditModal = (user) => {
   isEditing.value = true
   form.value = {
     id: user.id,
-    first_name: user.first_name || '',
-    last_name: user.last_name || '',
+    firstName: user.firstName || '',
+    lastName: user.lastName || '',
     email: user.email || '',
     username: user.username || '',
     phone: user.phone || '',
-    user_type: user.user_type || 'user',
     roles: user.roles || ['ROLE_USER'],
-    is_active: user.is_active !== false
+    isActive: user.isActive !== false
   }
   showModal.value = true
 }
@@ -333,20 +453,24 @@ const handleSubmit = async () => {
   try {
     submitting.value = true
 
+    // Calculer automatiquement le userType à partir des rôles
+    const userType = getUserTypeFromRoles(form.value.roles)
+    
+    const data = {
+      ...form.value,
+      userType
+    }
+
     if (isEditing.value) {
-      const response = await apiService.updateUser(form.value.id, form.value)
-      const index = users.value.findIndex(u => u.id === form.value.id)
-      if (index !== -1) {
-        users.value[index] = response.user || response.data
-      }
+      await apiService.updateUser(form.value.id, data)
       success('Utilisateur modifié avec succès')
     } else {
-      const response = await apiService.createUser(form.value)
-      users.value.unshift(response.user || response.data)
+      await apiService.createUser(data)
       success('Utilisateur créé avec succès')
     }
 
     showModal.value = false
+    await loadUsers()
   } catch (err) {
     console.error('Error saving user:', err)
     error('Erreur lors de l\'enregistrement de l\'utilisateur')
@@ -364,10 +488,10 @@ const handleDelete = async () => {
   try {
     submitting.value = true
     await apiService.deleteUser(userToDelete.value.id)
-    users.value = users.value.filter(u => u.id !== userToDelete.value.id)
     success('Utilisateur supprimé avec succès')
     showDeleteModal.value = false
     userToDelete.value = null
+    await loadUsers()
   } catch (err) {
     console.error('Error deleting user:', err)
     error('Erreur lors de la suppression de l\'utilisateur')
@@ -377,8 +501,8 @@ const handleDelete = async () => {
 }
 
 const getUserInitials = (user) => {
-  const first = user.first_name?.charAt(0) || ''
-  const last = user.last_name?.charAt(0) || ''
+  const first = user.firstName?.charAt(0) || ''
+  const last = user.lastName?.charAt(0) || ''
   return (first + last).toUpperCase() || '?'
 }
 
@@ -390,6 +514,12 @@ const getRoleClass = (role) => {
   const classes = {
     'ROLE_SUPER_ADMIN': 'role-super-admin',
     'ROLE_ADMIN': 'role-admin',
+    'ROLE_GESTIONNAIRE': 'role-manager',
+    'ROLE_SECRETAIRE': 'role-secretaire',
+    'ROLE_EXPERT': 'role-expert',
+    'ROLE_REPARATEUR': 'role-reparateur',
+    'ROLE_CONDUCTEUR': 'role-conducteur',
+    'ROLE_VERIFICATEUR': 'role-verificateur',
     'ROLE_MANAGER': 'role-manager',
     'ROLE_USER': 'role-user'
   }
@@ -399,81 +529,22 @@ const getRoleClass = (role) => {
 const getRoleLabel = (role) => {
   const labels = {
     'ROLE_SUPER_ADMIN': 'Super Admin',
-    'ROLE_ADMIN': 'Admin',
+    'ROLE_ADMIN': 'Administrateur',
+    'ROLE_GESTIONNAIRE': 'Gestionnaire',
+    'ROLE_SECRETAIRE': 'Secrétaire',
+    'ROLE_EXPERT': 'Expert',
+    'ROLE_REPARATEUR': 'Réparateur',
+    'ROLE_CONDUCTEUR': 'Conducteur',
+    'ROLE_VERIFICATEUR': 'Vérificateur',
     'ROLE_MANAGER': 'Manager',
     'ROLE_USER': 'Utilisateur'
   }
-  return labels[role] || role
+  return labels[role] || role.replace('ROLE_', '').replace('_', ' ')
 }
 </script>
 
 <style scoped lang="scss">
-.users-page {
-}
-
-.btn-primary {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-
-  &:hover:not(:disabled) {
-    background: #1e40af;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .icon {
-    font-size: 1.2rem;
-  }
-}
-
-.btn-secondary {
-  padding: 0.75rem 1.5rem;
-  background: #f5f5f5;
-  color: #333;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-
-  &:hover {
-    background: #e5e5e5;
-  }
-}
-
-.btn-danger {
-  padding: 0.75rem 1.5rem;
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-
-  &:hover:not(:disabled) {
-    background: #dc2626;
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
+@import './crud-styles.scss';
 
 .users-grid {
   display: grid;
@@ -517,25 +588,6 @@ const getRoleLabel = (role) => {
 .user-actions {
   display: flex;
   gap: 0.5rem;
-}
-
-.btn-icon {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: #f5f5f5;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.3s;
-
-  &:hover {
-    background: #e5e5e5;
-  }
-
-  &.btn-danger:hover {
-    background: #fee;
-  }
 }
 
 .user-info {
@@ -605,145 +657,47 @@ const getRoleLabel = (role) => {
     color: #1e40af;
   }
 
+  &.role-secretaire {
+    background: #fde68a;
+    color: #92400e;
+  }
+
+  &.role-expert {
+    background: #fcd34d;
+    color: #78350f;
+  }
+
+  &.role-reparateur {
+    background: #fdba74;
+    color: #9a3412;
+  }
+
+  &.role-conducteur {
+    background: #a5f3fc;
+    color: #155e75;
+  }
+
+  &.role-verificateur {
+    background: #c7d2fe;
+    color: #3730a3;
+  }
+
   &.role-user {
     background: #d1fae5;
     color: #065f46;
   }
 }
 
-.badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 600;
-
-  &.badge-success {
-    background: #d1fae5;
-    color: #065f46;
-  }
-
-  &.badge-inactive {
-    background: #f8d7da;
-    color: #721c24;
-  }
-}
-
-.empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: white;
-  border-radius: 12px;
-
-  .empty-icon {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-  }
-
-  h3 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-    color: #333;
-  }
-
-  p {
-    color: #666;
-    margin-bottom: 2rem;
-  }
-}
-
-.error-message {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #fee;
-  color: #c33;
-  border-radius: 8px;
-  border-left: 4px solid #c33;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  .error-icon {
-    font-size: 1.2rem;
-  }
-}
-
-.user-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-
-  label {
-    font-weight: 600;
-    color: #333;
-    font-size: 0.95rem;
-  }
-
-  input[type="text"],
-  input[type="email"],
-  input[type="tel"],
-  input[type="password"],
-  select {
-    padding: 0.75rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.3s;
-
-    &:focus {
-      outline: none;
-      border-color: #2563eb;
-    }
-  }
-
-  select {
-    cursor: pointer;
-  }
-}
-
+// Styles spécifiques aux checkboxes de rôles
 .checkbox-group {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-
-  input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-  }
-}
-
-.warning-text {
-  color: #ef4444;
-  font-weight: 600;
-  margin-top: 0.5rem;
-}
-
+// Media queries spécifiques
 @media (max-width: 768px) {
   .users-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .form-row {
     grid-template-columns: 1fr;
   }
 }

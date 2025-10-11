@@ -378,8 +378,8 @@ class TenantController extends AbstractController
             $tenant = new Tenant();
             $tenant->setName($data['name']);
             
-            // Générer le slug automatiquement à partir du nom
-            $baseSlug = $tenant->generateSlug($data['name']);
+            // Utiliser le slug fourni ou le générer automatiquement à partir du nom
+            $baseSlug = !empty($data['slug']) ? $data['slug'] : $tenant->generateSlug($data['name']);
             $slug = $baseSlug;
             $counter = 1;
             
@@ -548,6 +548,101 @@ class TenantController extends AbstractController
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la mise à jour du tenant: ' . $e->getMessage(),
+                'code' => 500
+            ], 500);
+        }
+    }
+
+    #[Route('/admin/{id}/logo', name: 'api_tenants_admin_upload_logo', methods: ['POST'])]
+    public function uploadLogo(int $id, Request $request): JsonResponse
+    {
+        try {
+            $tenant = $this->tenantRepository->find($id);
+            
+            if (!$tenant) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Tenant non trouvé',
+                    'code' => 404
+                ], 404);
+            }
+
+            $uploadedFile = $request->files->get('logo');
+            
+            if (!$uploadedFile) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Aucun fichier fourni',
+                    'code' => 400
+                ], 400);
+            }
+
+            // Valider le fichier
+            $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+            $maxFileSize = 2 * 1024 * 1024; // 2MB
+
+            if (!in_array($uploadedFile->getMimeType(), $allowedMimeTypes)) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Type de fichier non autorisé. Formats acceptés: JPEG, PNG, GIF, WEBP, SVG',
+                    'code' => 400
+                ], 400);
+            }
+
+            if ($uploadedFile->getSize() > $maxFileSize) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Fichier trop volumineux. Taille maximum: 2MB',
+                    'code' => 400
+                ], 400);
+            }
+
+            // Créer le répertoire d'upload si nécessaire
+            $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/tenants';
+            if (!is_dir($uploadsDir)) {
+                mkdir($uploadsDir, 0755, true);
+            }
+
+            // Supprimer l'ancien logo s'il existe
+            if ($tenant->getLogoUrl()) {
+                $oldLogoPath = $this->getParameter('kernel.project_dir') . '/public' . $tenant->getLogoUrl();
+                if (file_exists($oldLogoPath) && is_file($oldLogoPath)) {
+                    unlink($oldLogoPath);
+                }
+            }
+
+            // Générer un nom de fichier unique
+            $extension = $uploadedFile->guessExtension() ?: 'png';
+            $fileName = 'tenant_' . $tenant->getId() . '_' . uniqid() . '.' . $extension;
+            
+            // Déplacer le fichier
+            $uploadedFile->move($uploadsDir, $fileName);
+
+            // Mettre à jour l'URL du logo
+            $logoUrl = '/uploads/tenants/' . $fileName;
+            $tenant->setLogoUrl($logoUrl);
+            $tenant->setUpdatedAt(new \DateTimeImmutable());
+            
+            $this->entityManager->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Logo uploadé avec succès',
+                'data' => [
+                    'logoUrl' => $logoUrl,
+                    'tenant' => [
+                        'id' => $tenant->getId(),
+                        'name' => $tenant->getName(),
+                        'logoUrl' => $tenant->getLogoUrl()
+                    ]
+                ],
+                'code' => 200
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'upload du logo: ' . $e->getMessage(),
                 'code' => 500
             ], 500);
         }

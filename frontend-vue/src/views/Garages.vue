@@ -2,7 +2,7 @@
   <DefaultLayout>
     <template #header-actions>
       <button @click="openCreateModal" class="btn-primary">
-        <span class="icon">➕</span>
+        <i class="fas fa-plus"></i>
         Nouveau garage
       </button>
     </template>
@@ -28,30 +28,30 @@
           <div class="garage-header">
             <h3>{{ garage.name }}</h3>
             <div class="garage-actions">
-              <button @click="openEditModal(garage)" class="btn-icon" title="Modifier">
-                ✏️
+              <button @click="openEditModal(garage)" class="btn-icon btn-edit" title="Modifier">
+                <i class="fas fa-edit"></i>
               </button>
-              <button @click="confirmDelete(garage)" class="btn-icon btn-danger" title="Supprimer">
-                ×
+              <button @click="confirmDelete(garage)" class="btn-icon btn-delete" title="Supprimer">
+                <i class="fas fa-trash"></i>
               </button>
             </div>
           </div>
 
           <div class="garage-info">
             <div class="info-item" v-if="garage.address">
-              <span class="icon">📍</span>
+              <i class="fas fa-map-marker-alt"></i>
               <span>{{ garage.address }}</span>
             </div>
             <div class="info-item" v-if="garage.city">
-              <span class="icon">🏙️</span>
+              <i class="fas fa-city"></i>
               <span>{{ garage.city }} {{ garage.postal_code }}</span>
             </div>
             <div class="info-item" v-if="garage.phone">
-              <span class="icon">📞</span>
+              <i class="fas fa-phone"></i>
               <span>{{ garage.phone }}</span>
             </div>
             <div class="info-item" v-if="garage.email">
-              <span class="icon">✉️</span>
+              <i class="fas fa-envelope"></i>
               <span>{{ garage.email }}</span>
             </div>
           </div>
@@ -75,18 +75,18 @@
 
       <!-- Empty State -->
       <div v-else class="empty-state">
-        <div class="empty-icon">🏢</div>
+        <div class="empty-icon"><i class="fas fa-warehouse"></i></div>
         <h3>Aucun garage</h3>
         <p>Commencez par créer votre premier garage</p>
         <button @click="openCreateModal" class="btn-primary">
-          <span class="icon">➕</span>
+          <i class="fas fa-plus"></i>
           Créer un garage
         </button>
       </div>
 
       <!-- Error Message -->
       <div v-if="garageStore.error" class="error-message">
-        <span class="error-icon">⚠️</span>
+        <i class="fas fa-exclamation-triangle"></i>
         {{ garageStore.error }}
       </div>
 

@@ -15,12 +15,12 @@
               <h3>{{ item.name }}</h3>
             </div>
             <div class="item-actions">
-              <button @click="openEditModal(item)" class="btn-icon">✏️</button>
-              <button @click="confirmDelete(item)" class="btn-icon btn-danger" title="Supprimer">×</button>
+                <button @click="openEditModal(item)" class="btn-icon btn-edit" title="Modifier"><i class="fas fa-edit"></i></button>
+                <button @click="confirmDelete(item)" class="btn-icon btn-delete" title="Supprimer"><i class="fas fa-trash"></i></button>
             </div>
           </div>
           <div class="item-info">
-            <div class="info-item" v-if="item.hexCode"><span class="icon">🎨</span><span>{{ item.hexCode }}</span></div>
+            <div class="info-item" v-if="item.hexCode"><i class="fas fa-palette"></i><span>{{ item.hexCode }}</span></div>
           </div>
         </div>
         </div>
@@ -33,10 +33,10 @@
         />
       </div>
       <div v-else class="empty-state">
-        <div class="empty-icon">🎨</div>
+        <div class="empty-icon"><i class="fas fa-palette"></i></div>
         <h3>Aucune couleur</h3>
         <p>Commencez par créer votre première couleur</p>
-        <button @click="openCreateModal" class="btn-primary">➕ Créer une couleur</button>
+        <button @click="openCreateModal" class="btn-primary"><i class="fas fa-plus"></i> Créer une couleur</button>
       </div>
       <Modal v-model="showModal" :title="isEditing ? 'Modifier la couleur' : 'Nouvelle couleur'">
         <form @submit.prevent="handleSubmit" class="form">

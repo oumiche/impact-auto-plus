@@ -1,7 +1,7 @@
 <template>
   <DefaultLayout>
     <template #header-actions>
-      <button @click="openCreateModal" class="btn-primary">➕ Nouvelle catégorie</button>
+      <button @click="openCreateModal" class="btn-primary"><i class="fas fa-plus"></i> Nouvelle catégorie</button>
     </template>
     <div class="page">
       <SearchBar v-model="searchQuery" placeholder="Rechercher une catégorie de fourniture..." @search="handleSearch" />
@@ -12,12 +12,12 @@
           <div class="item-header">
             <h3>{{ item.name }}</h3>
             <div class="item-actions">
-              <button @click="openEditModal(item)" class="btn-icon">✏️</button>
-              <button @click="confirmDelete(item)" class="btn-icon btn-danger" title="Supprimer">×</button>
+                <button @click="openEditModal(item)" class="btn-icon btn-edit" title="Modifier"><i class="fas fa-edit"></i></button>
+                <button @click="confirmDelete(item)" class="btn-icon btn-delete" title="Supprimer"><i class="fas fa-trash"></i></button>
             </div>
           </div>
           <div class="item-info" v-if="item.description">
-            <div class="info-item"><span class="icon">📝</span><span>{{ item.description }}</span></div>
+            <div class="info-item"><i class="fas fa-file-alt"></i><span>{{ item.description }}</span></div>
           </div>
         </div>
         </div>
@@ -30,9 +30,9 @@
         />
       </div>
       <div v-else class="empty-state">
-        <div class="empty-icon">📁</div>
+        <div class="empty-icon"><i class="fas fa-folder-open"></i></div>
         <h3>Aucune catégorie de fourniture</h3>
-        <button @click="openCreateModal" class="btn-primary">➕ Créer</button>
+        <button @click="openCreateModal" class="btn-primary"><i class="fas fa-plus"></i> Créer</button>
       </div>
       <Modal v-model="showModal" :title="isEditing ? 'Modifier' : 'Nouvelle catégorie'">
         <form @submit.prevent="handleSubmit" class="form">

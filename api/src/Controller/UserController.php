@@ -121,8 +121,12 @@ class UserController extends AbstractController
                     'lastName' => $user->getLastName(),
                     'email' => $user->getEmail(),
                     'phone' => $user->getPhone(),
+                    'username' => $user->getUsername(),
                     'role' => $user->getUserType(),
+                    'userType' => $user->getUserType(),
+                    'roles' => $user->getRoles(),
                     'status' => $user->isActive() ? 'active' : 'inactive',
+                    'isActive' => $user->isActive(),
                     'isEmailVerified' => $user->getEmailVerifiedAt() !== null,
                     'mustChangePassword' => false, // Pas de propriété dans l'entité actuelle
                     'createdAt' => $user->getCreatedAt() ? $user->getCreatedAt()->format('Y-m-d H:i:s') : null,
@@ -205,8 +209,8 @@ class UserController extends AbstractController
             $user->setLastName((string)$data['lastName']);
             $user->setEmail((string)$data['email']);
             $user->setPhone(isset($data['phone']) ? (string)$data['phone'] : null);
-            $user->setUserType((string)$data['role']);
-            $user->setIsActive(($data['status'] ?? 'active') === 'active');
+            $user->setUserType((string)($data['userType'] ?? $data['role'] ?? 'user'));
+            $user->setIsActive($data['isActive'] ?? true);
             
             if (isset($data['isEmailVerified']) && $data['isEmailVerified']) {
                 $user->setEmailVerifiedAt(new \DateTimeImmutable());
@@ -216,8 +220,13 @@ class UserController extends AbstractController
                 $user->setPassword(password_hash($data['password'], PASSWORD_DEFAULT));
             }
             
-            // Générer un username basé sur l'email
-            $user->setUsername((string)$data['email']);
+            // Utiliser le username fourni ou générer à partir de l'email
+            $user->setUsername((string)($data['username'] ?? $data['email']));
+            
+            // Assigner les rôles
+            if (isset($data['roles']) && is_array($data['roles'])) {
+                $user->setRoles($data['roles']);
+            }
 
             $this->entityManager->persist($user);
             $this->entityManager->flush();
@@ -231,8 +240,12 @@ class UserController extends AbstractController
                     'lastName' => $user->getLastName(),
                     'email' => $user->getEmail(),
                     'phone' => $user->getPhone(),
+                    'username' => $user->getUsername(),
                     'role' => $user->getUserType(),
+                    'userType' => $user->getUserType(),
+                    'roles' => $user->getRoles(),
                     'status' => $user->isActive() ? 'active' : 'inactive',
+                    'isActive' => $user->isActive(),
                     'isEmailVerified' => $user->getEmailVerifiedAt() !== null,
                     'mustChangePassword' => false
                 ],
@@ -270,16 +283,25 @@ class UserController extends AbstractController
             }
             if (isset($data['email'])) {
                 $user->setEmail((string)$data['email']);
-                $user->setUsername((string)$data['email']); // Mettre à jour le username aussi
+            }
+            if (isset($data['username'])) {
+                $user->setUsername((string)$data['username']);
             }
             if (isset($data['phone'])) {
                 $user->setPhone((string)$data['phone']);
             }
-            if (isset($data['role'])) {
+            if (isset($data['userType'])) {
+                $user->setUserType((string)$data['userType']);
+            } elseif (isset($data['role'])) {
                 $user->setUserType((string)$data['role']);
             }
-            if (isset($data['status'])) {
+            if (isset($data['isActive'])) {
+                $user->setIsActive((bool)$data['isActive']);
+            } elseif (isset($data['status'])) {
                 $user->setIsActive($data['status'] === 'active');
+            }
+            if (isset($data['roles']) && is_array($data['roles'])) {
+                $user->setRoles($data['roles']);
             }
             if (isset($data['isEmailVerified'])) {
                 if ($data['isEmailVerified']) {
@@ -302,8 +324,12 @@ class UserController extends AbstractController
                     'lastName' => $user->getLastName(),
                     'email' => $user->getEmail(),
                     'phone' => $user->getPhone(),
+                    'username' => $user->getUsername(),
                     'role' => $user->getUserType(),
+                    'userType' => $user->getUserType(),
+                    'roles' => $user->getRoles(),
                     'status' => $user->isActive() ? 'active' : 'inactive',
+                    'isActive' => $user->isActive(),
                     'isEmailVerified' => $user->getEmailVerifiedAt() !== null,
                     'mustChangePassword' => false
                 ],
