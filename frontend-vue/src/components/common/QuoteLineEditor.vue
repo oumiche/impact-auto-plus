@@ -1,16 +1,5 @@
 <template>
   <div class="quote-line-editor">
-    <div class="editor-header">
-      <h4>
-        <i class="fas fa-list-ol"></i>
-        Lignes du devis
-      </h4>
-      <button type="button" @click="addLine" class="btn-add-line">
-        <i class="fas fa-plus-circle"></i>
-        Ajouter une ligne
-      </button>
-    </div>
-
     <div v-if="lines.length === 0" class="no-lines">
       <i class="fas fa-info-circle"></i>
       Aucune ligne. Cliquez sur "Ajouter une ligne"
@@ -42,12 +31,19 @@
           <SupplySelector
             v-model="line.supplyId"
             :required="true"
+            :disabled="props.disabled"
             @change="handleSupplyChange(line, $event)"
+          />
+          <PriceIndicator
+            v-if="line.priceSuggestion"
+            :suggestion="line.priceSuggestion"
+            :current-price="line.unitPrice"
+            :loading="line.loadingPrice"
           />
         </div>
         
         <div class="col-type">
-          <select v-model="line.workType" required @change="calculateLineTotal(line)">
+          <select v-model="line.workType" required :disabled="props.disabled" @change="calculateLineTotal(line)">
             <option value="supply">Fourniture</option>
             <option value="labor">Main d'œuvre</option>
             <option value="other">Autre</option>
@@ -61,6 +57,7 @@
             min="0.01"
             step="0.01"
             required
+            :disabled="props.disabled"
             @input="calculateLineTotal(line)"
           />
         </div>
@@ -72,6 +69,7 @@
             min="0"
             step="100"
             required
+            :disabled="props.disabled"
             @input="calculateLineTotal(line)"
           />
         </div>
@@ -85,6 +83,7 @@
               max="100"
               step="0.01"
               placeholder="%"
+              :disabled="props.disabled"
               @input="handleDiscountPercentageChange(line)"
             />
             <span class="or">ou</span>
@@ -92,8 +91,9 @@
               v-model.number="line.discountAmount"
               type="number"
               min="0"
-              step="100"
+              step="1"
               placeholder="XOF"
+              :disabled="props.disabled"
               @input="handleDiscountAmountChange(line)"
             />
           </div>
@@ -106,6 +106,7 @@
             min="0"
             max="100"
             step="0.01"
+            :disabled="props.disabled"
             @input="calculateLineTotal(line)"
           />
         </div>
@@ -116,6 +117,7 @@
         
         <div class="col-actions">
           <button
+            v-if="!props.disabled"
             type="button"
             @click="removeLine(index)"
             class="btn-icon btn-delete"
@@ -126,43 +128,23 @@
         </div>
       </div>
     </div>
-
-    <!-- Totaux -->
-    <div v-if="lines.length > 0" class="totals-section">
-      <div class="totals-grid">
-        <div class="total-row">
-          <span class="total-label">Sous-total HT:</span>
-          <span class="total-value">{{ formatCurrency(totals.subtotal) }}</span>
-        </div>
-        <div class="total-row" v-if="totals.totalDiscount > 0">
-          <span class="total-label">Remises:</span>
-          <span class="total-value discount">- {{ formatCurrency(totals.totalDiscount) }}</span>
-        </div>
-        <div class="total-row">
-          <span class="total-label">Total HT:</span>
-          <span class="total-value">{{ formatCurrency(totals.totalHT) }}</span>
-        </div>
-        <div class="total-row">
-          <span class="total-label">TVA:</span>
-          <span class="total-value">{{ formatCurrency(totals.totalTVA) }}</span>
-        </div>
-        <div class="total-row grand-total">
-          <span class="total-label">Total TTC:</span>
-          <span class="total-value">{{ formatCurrency(totals.totalTTC) }}</span>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
 import SupplySelector from './SupplySelector.vue'
+import PriceIndicator from './PriceIndicator.vue'
+import apiService from '@/services/api.service'
 
 const props = defineProps({
   modelValue: {
     type: Array,
     default: () => []
+  },
+  disabled: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -170,9 +152,12 @@ const emit = defineEmits(['update:modelValue', 'change'])
 
 // État
 const lines = ref([...props.modelValue])
+const isUpdating = ref(false)
+const isCalculating = ref(false)
 
 // Watchers
 watch(() => props.modelValue, (newVal) => {
+  if (isUpdating.value) return
   lines.value = [...newVal]
 }, { deep: true })
 
@@ -231,33 +216,86 @@ const removeLine = (index) => {
   lines.value.splice(index, 1)
 }
 
-const handleSupplyChange = (line, supply) => {
+const handleSupplyChange = async (line, supply) => {
   if (supply && supply.unitPrice) {
     line.unitPrice = supply.unitPrice
     calculateLineTotal(line)
   }
+  
+  // Charger la suggestion de prix
+  if (supply && supply.id) {
+    line.loadingPrice = true
+    try {
+      const response = await apiService.getPriceSuggestion({
+        supply: supply.id,
+        description: supply.name
+      })
+      
+      if (response.success && response.data) {
+        line.priceSuggestion = response.data
+      }
+    } catch (err) {
+      console.warn('Impossible de charger la suggestion de prix:', err)
+    } finally {
+      line.loadingPrice = false
+    }
+  }
 }
 
 const handleDiscountPercentageChange = (line) => {
+  if (isCalculating.value) return
+  isCalculating.value = true
+  
+  // Valider le pourcentage (0-100)
+  if (line.discountPercentage < 0) {
+    line.discountPercentage = 0
+  }
+  if (line.discountPercentage > 100) {
+    line.discountPercentage = 100
+  }
+  
+  const qty = parseFloat(line.quantity) || 0
+  const price = parseFloat(line.unitPrice) || 0
+  const subtotal = qty * price
+  
   if (line.discountPercentage) {
-    const subtotal = (parseFloat(line.quantity) || 0) * (parseFloat(line.unitPrice) || 0)
-    line.discountAmount = (subtotal * parseFloat(line.discountPercentage)) / 100
+    line.discountAmount = Math.round((subtotal * parseFloat(line.discountPercentage)) / 100)
   } else {
-    line.discountAmount = null
+    line.discountAmount = 0
   }
   calculateLineTotal(line)
+  
+  setTimeout(() => {
+    isCalculating.value = false
+  }, 0)
 }
 
 const handleDiscountAmountChange = (line) => {
-  if (line.discountAmount) {
-    const subtotal = (parseFloat(line.quantity) || 0) * (parseFloat(line.unitPrice) || 0)
-    if (subtotal > 0) {
-      line.discountPercentage = (parseFloat(line.discountAmount) / subtotal) * 100
-    }
+  if (isCalculating.value) return
+  isCalculating.value = true
+  
+  const qty = parseFloat(line.quantity) || 0
+  const price = parseFloat(line.unitPrice) || 0
+  const subtotal = qty * price
+  
+  // Valider que la remise ne dépasse pas le sous-total
+  if (line.discountAmount < 0) {
+    line.discountAmount = 0
+  }
+  if (line.discountAmount > subtotal) {
+    line.discountAmount = subtotal
+  }
+  
+  if (line.discountAmount && subtotal > 0) {
+    line.discountPercentage = Math.round(((parseFloat(line.discountAmount) / subtotal) * 100) * 100) / 100
   } else {
-    line.discountPercentage = null
+    line.discountPercentage = 0
   }
   calculateLineTotal(line)
+  
+  setTimeout(() => {
+    isCalculating.value = false
+  }, 0)
 }
 
 const calculateLineTotal = (line) => {
@@ -269,6 +307,8 @@ const calculateLineTotal = (line) => {
 }
 
 const emitUpdate = () => {
+  isUpdating.value = true
+  
   // Ajouter lineNumber automatiquement
   const linesWithNumbers = lines.value.map((line, index) => ({
     ...line,
@@ -280,6 +320,11 @@ const emitUpdate = () => {
     lines: linesWithNumbers,
     totals: totals.value
   })
+  
+  // Réinitialiser le flag après un court délai pour permettre les futures mises à jour
+  setTimeout(() => {
+    isUpdating.value = false
+  }, 0)
 }
 
 const formatCurrency = (amount) => {
@@ -304,51 +349,6 @@ defineExpose({
   gap: 1rem;
 }
 
-.editor-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #e5e7eb;
-
-  h4 {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #374151;
-    margin: 0;
-
-    i {
-      color: #3b82f6;
-    }
-  }
-}
-
-.btn-add-line {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.5rem 1rem;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-  transition: all 0.2s;
-
-  &:hover {
-    background: #2563eb;
-  }
-
-  i {
-    font-size: 1rem;
-  }
-}
-
 .no-lines {
   display: flex;
   align-items: center;
@@ -369,7 +369,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  overflow-x: auto;
+  overflow: visible;
 }
 
 .table-header,
@@ -377,7 +377,13 @@ defineExpose({
   display: grid;
   grid-template-columns: 40px 2fr 1fr 0.8fr 1.2fr 1.5fr 0.8fr 1.2fr 50px;
   gap: 0.5rem;
-  align-items: center;
+  align-items: start;
+}
+
+.col-supply {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .table-header {
@@ -453,58 +459,28 @@ defineExpose({
   justify-content: center;
 }
 
-.totals-section {
-  padding: 1.5rem;
-  background: #f9fafb;
-  border-radius: 8px;
-  border: 2px solid #e5e7eb;
-}
-
-.totals-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  max-width: 400px;
-  margin-left: auto;
-}
-
-.total-row {
-  display: flex;
-  justify-content: space-between;
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
-  padding: 0.5rem 0;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 0.85rem;
 
-  &:not(:last-child) {
-    border-bottom: 1px solid #e5e7eb;
-  }
+  &.btn-delete {
+    background: #fef2f2;
+    color: #dc2626;
 
-  &.grand-total {
-    padding: 1rem 0;
-    border-top: 3px solid #3b82f6;
-    margin-top: 0.5rem;
-
-    .total-label,
-    .total-value {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #1f2937;
+    &:hover {
+      background: #dc2626;
+      color: white;
+      transform: scale(1.15);
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
     }
-  }
-}
-
-.total-label {
-  font-weight: 600;
-  color: #6b7280;
-  font-size: 0.95rem;
-}
-
-.total-value {
-  font-weight: 700;
-  color: #1f2937;
-  font-size: 1.05rem;
-
-  &.discount {
-    color: #ef4444;
   }
 }
 </style>

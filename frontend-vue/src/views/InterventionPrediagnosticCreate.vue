@@ -11,6 +11,13 @@
       <p>Créez un nouveau prédiagnostic d'intervention</p>
     </template>
 
+    <template #header-actions>
+      <button @click="goBack" class="btn-secondary" type="button">
+        <i class="fas fa-arrow-left"></i>
+        Retour
+      </button>
+    </template>
+
     <div class="form-page-container">
       <form @submit.prevent="handleSubmit" class="form-page">
         <!-- Intervention -->
@@ -39,11 +46,13 @@
               />
             </div>
 
-            <SimpleSelector
+            <SearchableSelector
               v-model="form.expertId"
               api-method="getCollaborateurs"
               label="Expert"
-              placeholder="Sélectionner un expert"
+              display-field="firstName"
+              secondary-field="lastName"
+              placeholder="Rechercher un expert..."
             />
           </div>
         </div>
@@ -73,12 +82,18 @@
               <div class="item-number">{{ index + 1 }}</div>
               
               <div class="item-fields">
-                <input
-                  v-model="item.operationLabel"
-                  type="text"
-                  placeholder="Description de l'opération (ex: Changer pare-choc avant)"
-                  required
-                />
+                <div class="operation-description">
+                  <label>
+                    <i class="fas fa-file-lines"></i>
+                    Description de l'opération
+                  </label>
+                  <textarea
+                    v-model="item.operationLabel"
+                    placeholder="Décrivez l'opération à réaliser (ex: Remplacer le pare-choc avant droit, repeindre et polir...)"
+                    rows="2"
+                    required
+                  ></textarea>
+                </div>
                 
                 <div class="item-checkboxes">
                   <label class="checkbox-label">
@@ -141,7 +156,7 @@ import { useRouter } from 'vue-router'
 import { useNotification } from '@/composables/useNotification'
 import DefaultLayout from '@/components/layouts/DefaultLayout.vue'
 import InterventionSelector from '@/components/common/InterventionSelector.vue'
-import SimpleSelector from '@/components/common/SimpleSelector.vue'
+import SearchableSelector from '@/components/common/SearchableSelector.vue'
 import apiService from '@/services/api.service'
 
 const router = useRouter()
@@ -353,6 +368,51 @@ const goBack = () => {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.operation-description {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.95rem;
+
+    i {
+      color: #3b82f6;
+      font-size: 0.9rem;
+    }
+  }
+
+  textarea {
+    width: 100%;
+    padding: 0.875rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 60px;
+    transition: all 0.3s;
+    background: #f9fafb;
+
+    &:focus {
+      outline: none;
+      border-color: #3b82f6;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    &::placeholder {
+      color: #9ca3af;
+      font-style: italic;
+    }
+  }
 }
 
 .item-checkboxes {

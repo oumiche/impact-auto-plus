@@ -1,71 +1,79 @@
 <template>
   <div class="intervention-selector">
     <label v-if="label">{{ label }} <span v-if="required" class="required">*</span></label>
-    
-    <div class="selector-input">
+    <input
+      v-if="required"
+      type="hidden"
+      :value="modelValue"
+      required
+    />
+    <div class="search-container">
       <input
-        ref="searchInput"
         v-model="searchQuery"
         type="text"
         :placeholder="placeholder"
-        :required="required"
+        :disabled="disabled"
         @input="handleSearch"
         @focus="handleFocus"
         @blur="handleBlur"
+        class="search-input"
       />
-      <i class="fas fa-search search-icon"></i>
-      <i v-if="loading" class="fas fa-spinner fa-spin loading-icon"></i>
-    </div>
-
-    <!-- Dropdown avec résultats -->
-    <div v-if="showDropdown && (interventions.length > 0 || searchQuery)" class="dropdown">
-      <div v-if="loading" class="dropdown-loading">
-        <i class="fas fa-spinner fa-spin"></i>
-        Recherche en cours...
-      </div>
-      
-      <div v-else-if="interventions.length === 0" class="dropdown-empty">
-        <i class="fas fa-info-circle"></i>
-        Aucune intervention trouvée
-      </div>
-      
-      <div v-else class="dropdown-list">
+      <div v-if="showDropdown && (filteredInterventions.length > 0 || loading)" class="dropdown">
+        <div v-if="loading" class="loading">Recherche...</div>
         <div
-          v-for="intervention in interventions"
+          v-for="intervention in filteredInterventions"
           :key="intervention.id"
           class="dropdown-item"
-          :class="{ 'selected': intervention.id === selectedId }"
-          @mousedown.prevent="selectIntervention(intervention)"
+          @mousedown="selectIntervention(intervention)"
         >
-          <div class="intervention-info">
-            <div class="intervention-number">
-              <i class="fas fa-wrench"></i>
-              {{ intervention.interventionNumber || `INT-${intervention.id}` }}
-            </div>
-            <div class="intervention-title">{{ intervention.title }}</div>
-            <div class="intervention-meta">
-              <StatusBadge :status="intervention.currentStatus" :show-icon="false" />
-              <span v-if="intervention.vehicle" class="vehicle-info">
-                {{ getVehicleLabel(intervention.vehicle) }}
-              </span>
-            </div>
+          <div class="intervention-number">
+            <i class="fas fa-wrench"></i>
+            {{ intervention.interventionNumber || `INT-${intervention.id}` }}
+          </div>
+          <div class="intervention-title">{{ intervention.title }}</div>
+          <div class="intervention-details">
+            <StatusBadge :status="intervention.currentStatus" :show-icon="false" />
+            <span v-if="intervention.vehicle" class="vehicle-info">
+              {{ getVehicleLabel(intervention.vehicle) }}
+            </span>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Intervention sélectionnée -->
-    <div v-if="selectedIntervention" class="selected-intervention">
-      <div class="selected-info">
-        <i class="fas fa-check-circle"></i>
-        <div>
-          <strong>{{ selectedIntervention.interventionNumber || `INT-${selectedIntervention.id}` }}</strong>
-          <span>{{ selectedIntervention.title }}</span>
+        <div v-if="!loading && filteredInterventions.length === 0" class="no-results">
+          Aucune intervention trouvée
         </div>
       </div>
-      <button type="button" @click="clearSelection" class="btn-clear">
-        <i class="fas fa-times"></i>
+      <button
+        v-if="selectedIntervention"
+        type="button"
+        class="clear-btn"
+        @click="clearSelection"
+        title="Effacer"
+      >
+        ×
       </button>
+    </div>
+    <div v-if="selectedIntervention" class="selected-badge">
+      <div class="badge-header">
+        <span class="badge-number">
+          <i class="fas fa-wrench"></i>
+          {{ selectedIntervention.interventionNumber || `INT-${selectedIntervention.id}` }}
+        </span>
+        <span class="badge-title">{{ selectedIntervention.title }}</span>
+      </div>
+      <div v-if="selectedIntervention.vehicle" class="badge-vehicle">
+        <i class="fas fa-car"></i>
+        <span class="vehicle-info">
+          <span v-if="getVehicleBrand(selectedIntervention.vehicle)" class="vehicle-brand">
+            {{ getVehicleBrand(selectedIntervention.vehicle) }}
+          </span>
+          <span v-if="getVehicleModel(selectedIntervention.vehicle)" class="vehicle-model">
+            {{ getVehicleModel(selectedIntervention.vehicle) }}
+          </span>
+        </span>
+        <span v-if="getVehiclePlate(selectedIntervention.vehicle)" class="vehicle-plate">
+          • {{ getVehiclePlate(selectedIntervention.vehicle) }}
+        </span>
+      </div>
     </div>
   </div>
 </template>
@@ -86,82 +94,113 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  disabled: {
+    type: Boolean,
+    default: false
+  },
   statusFilter: {
     type: Array,
-    default: () => ['reported', 'in_prediagnostic']  // Interventions éligibles au prédiag
+    default: () => []
   }
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
 
-// État
 const searchQuery = ref('')
-const searchInput = ref(null)
-const interventions = ref([])
+const filteredInterventions = ref([])
 const selectedIntervention = ref(null)
-const selectedId = ref(props.modelValue)
 const showDropdown = ref(false)
 const loading = ref(false)
-const searchTimeout = ref(null)
+const initialInterventions = ref([])
+let searchTimeout = null
 
-// Méthodes
+// Charger les 5 premières interventions au montage
+onMounted(async () => {
+  if (props.modelValue) {
+    await loadSelectedIntervention()
+  }
+  await loadInitialInterventions()
+})
+
+watch(() => props.modelValue, async (newVal) => {
+  if (newVal && (!selectedIntervention.value || selectedIntervention.value.id !== newVal)) {
+    await loadSelectedIntervention()
+  } else if (!newVal) {
+    selectedIntervention.value = null
+    searchQuery.value = ''
+  }
+})
+
+const loadSelectedIntervention = async () => {
+  try {
+    const response = await apiService.getVehicleIntervention(props.modelValue)
+    if (response.success && response.data) {
+      selectedIntervention.value = response.data
+      searchQuery.value = response.data.interventionNumber || `INT-${response.data.id}`
+    }
+  } catch (err) {
+    console.error('Error loading selected intervention:', err)
+  }
+}
+
 const loadInitialInterventions = async () => {
   try {
-    loading.value = true
-    
     const params = {
       limit: 5,
-      page: 1
+      page: 1,
+      sortBy: 'reportedDate',
+      sortOrder: 'DESC'
     }
-
-    // Filtrer par statuts si fournis
-    if (props.statusFilter && props.statusFilter.length > 0) {
-      params.status = props.statusFilter.join(',')
-    }
-
-    const response = await apiService.getVehicleInterventions(params)
     
-    if (response.success && response.data) {
-      interventions.value = response.data
+    // Filtre de statut optionnel (si backend le supporte)
+    if (props.statusFilter && props.statusFilter.length > 0) {
+      // Envoyer le premier statut seulement pour éviter les problèmes
+      params.status = props.statusFilter[0]
     }
-  } catch (error) {
-    console.error('Error loading initial interventions:', error)
-  } finally {
-    loading.value = false
+    
+    const result = await apiService.getVehicleInterventions(params)
+    
+    if (result.success) {
+      initialInterventions.value = result.data || []
+      // TOUJOURS initialiser filteredInterventions
+      filteredInterventions.value = initialInterventions.value
+    }
+  } catch (err) {
+    console.error('Error loading initial interventions:', err)
   }
 }
 
 const handleSearch = () => {
-  clearTimeout(searchTimeout.value)
+  if (searchTimeout) clearTimeout(searchTimeout)
   
-  searchTimeout.value = setTimeout(async () => {
+  searchTimeout = setTimeout(async () => {
+    // Si vide, afficher les 5 premières interventions
     if (searchQuery.value.length < 2) {
-      await loadInitialInterventions()
+      filteredInterventions.value = initialInterventions.value
       return
     }
 
+    loading.value = true
     try {
-      loading.value = true
-      
       const params = {
         search: searchQuery.value,
         limit: 20,
-        page: 1
+        sortBy: 'reportedDate',
+        sortOrder: 'DESC'
       }
-
-      // Filtrer par statuts si fournis
-      if (props.statusFilter && props.statusFilter.length > 0) {
-        params.status = props.statusFilter.join(',')
-      }
-
-      const response = await apiService.getVehicleInterventions(params)
       
-      if (response.success && response.data) {
-        interventions.value = response.data
+      // Filtre de statut optionnel
+      if (props.statusFilter && props.statusFilter.length > 0) {
+        params.status = props.statusFilter[0]
       }
-    } catch (error) {
-      console.error('Error searching interventions:', error)
-      interventions.value = []
+      
+      const result = await apiService.getVehicleInterventions(params)
+      if (result.success) {
+        filteredInterventions.value = result.data || []
+      }
+    } catch (err) {
+      console.error('Error searching interventions:', err)
+      filteredInterventions.value = []
     } finally {
       loading.value = false
     }
@@ -170,21 +209,14 @@ const handleSearch = () => {
 
 const handleFocus = () => {
   showDropdown.value = true
-  if (interventions.value.length === 0) {
-    loadInitialInterventions()
+  if (!searchQuery.value) {
+    filteredInterventions.value = initialInterventions.value
   }
-}
-
-const handleBlur = () => {
-  setTimeout(() => {
-    showDropdown.value = false
-  }, 200)
 }
 
 const selectIntervention = (intervention) => {
   selectedIntervention.value = intervention
-  selectedId.value = intervention.id
-  searchQuery.value = ''
+  searchQuery.value = intervention.interventionNumber || `INT-${intervention.id}`
   showDropdown.value = false
   emit('update:modelValue', intervention.id)
   emit('change', intervention)
@@ -192,10 +224,16 @@ const selectIntervention = (intervention) => {
 
 const clearSelection = () => {
   selectedIntervention.value = null
-  selectedId.value = null
   searchQuery.value = ''
+  filteredInterventions.value = []
   emit('update:modelValue', null)
   emit('change', null)
+}
+
+const handleBlur = () => {
+  setTimeout(() => {
+    showDropdown.value = false
+  }, 200)
 }
 
 const getVehicleLabel = (vehicle) => {
@@ -209,39 +247,20 @@ const getVehicleLabel = (vehicle) => {
   return vehicle
 }
 
-// Watchers
-watch(() => props.modelValue, async (newVal) => {
-  if (newVal && newVal !== selectedId.value) {
-    // Charger l'intervention sélectionnée
-    try {
-      const response = await apiService.getVehicleIntervention(newVal)
-      if (response.success && response.data) {
-        selectedIntervention.value = response.data
-        selectedId.value = newVal
-      }
-    } catch (error) {
-      console.error('Error loading intervention:', error)
-    }
-  } else if (!newVal) {
-    selectedIntervention.value = null
-    selectedId.value = null
-  }
-})
+const getVehicleBrand = (vehicle) => {
+  if (!vehicle) return ''
+  return vehicle.brand?.name || vehicle.brandName || ''
+}
 
-// Lifecycle
-onMounted(async () => {
-  if (props.modelValue) {
-    try {
-      const response = await apiService.getVehicleIntervention(props.modelValue)
-      if (response.success && response.data) {
-        selectedIntervention.value = response.data
-        selectedId.value = props.modelValue
-      }
-    } catch (error) {
-      console.error('Error loading intervention:', error)
-    }
-  }
-})
+const getVehicleModel = (vehicle) => {
+  if (!vehicle) return ''
+  return vehicle.model?.name || vehicle.modelName || ''
+}
+
+const getVehiclePlate = (vehicle) => {
+  if (!vehicle) return ''
+  return vehicle.registrationNumber || vehicle.plateNumber || vehicle.plate_number || ''
+}
 </script>
 
 <style scoped lang="scss">
@@ -252,183 +271,193 @@ onMounted(async () => {
 
   label {
     font-weight: 600;
-    color: #374151;
-    font-size: 0.9rem;
-  }
-}
+    color: #333;
+    font-size: 0.95rem;
 
-.selector-input {
-  position: relative;
-
-  input {
-    width: 100%;
-    padding: 0.75rem 2.5rem 0.75rem 2.5rem;
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.2s;
-
-    &:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    .required {
+      color: #ef4444;
     }
   }
 
-  .search-icon {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9ca3af;
-    pointer-events: none;
+  .search-container {
+    position: relative;
+
+    .search-input {
+      width: 100%;
+      padding: 0.75rem;
+      padding-right: 2.5rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s;
+      font-family: inherit;
+
+      &:focus {
+        outline: none;
+        border-color: #2563eb;
+      }
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #e0e0e0;
+      border: none;
+      border-radius: 50%;
+      width: 1.5rem;
+      height: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: #666;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #d0d0d0;
+        color: #333;
+      }
+    }
+
+    .dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 0.25rem;
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 1000;
+
+      .loading,
+      .no-results {
+        padding: 1rem;
+        text-align: center;
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      .dropdown-item {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+        border-bottom: 1px solid #f3f4f6;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        &:hover {
+          background: #f5f5f5;
+        }
+
+        .intervention-number {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-weight: 700;
+          color: #1f2937;
+          font-size: 0.95rem;
+
+          i {
+            color: #3b82f6;
+            font-size: 0.875rem;
+          }
+        }
+
+        .intervention-title {
+          color: #4b5563;
+          font-size: 0.9rem;
+        }
+
+        .intervention-details {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          font-size: 0.85rem;
+
+          .vehicle-info {
+            color: #6b7280;
+          }
+        }
+      }
+    }
   }
 
-  .loading-icon {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #3b82f6;
-  }
-}
-
-.dropdown {
-  position: absolute;
-  z-index: 1000;
-  width: 100%;
-  max-height: 400px;
-  overflow-y: auto;
-  background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  margin-top: 0.25rem;
-}
-
-.dropdown-loading,
-.dropdown-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 1.5rem;
-  color: #6b7280;
-  font-size: 0.9rem;
-
-  i {
-    font-size: 1.25rem;
-  }
-}
-
-.dropdown-list {
-  padding: 0.5rem;
-}
-
-.dropdown-item {
-  padding: 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background: #f3f4f6;
-  }
-
-  &.selected {
-    background: #eff6ff;
-    border: 2px solid #3b82f6;
-  }
-}
-
-.intervention-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.intervention-number {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
-  color: #1f2937;
-  font-size: 0.95rem;
-
-  i {
-    color: #3b82f6;
-  }
-}
-
-.intervention-title {
-  color: #4b5563;
-  font-size: 0.9rem;
-}
-
-.intervention-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.85rem;
-
-  .vehicle-info {
-    color: #6b7280;
-  }
-}
-
-.selected-intervention {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem;
-  background: #d1fae5;
-  border: 2px solid #10b981;
-  border-radius: 8px;
-}
-
-.selected-info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: #065f46;
-
-  i {
-    font-size: 1.5rem;
-    color: #10b981;
-  }
-
-  div {
-    display: flex;
+  .selected-badge {
+    display: inline-flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #e0f2fe;
+    color: #0369a1;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    width: fit-content;
 
-    strong {
-      font-size: 0.95rem;
+    .badge-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
     }
 
-    span {
+    .badge-number {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-weight: 700;
+
+      i {
+        font-size: 0.875rem;
+      }
+    }
+
+    .badge-title {
       font-size: 0.85rem;
       opacity: 0.9;
     }
-  }
-}
 
-.btn-clear {
-  background: transparent;
-  border: none;
-  color: #065f46;
-  cursor: pointer;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
+    .badge-vehicle {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.85rem;
+      padding-top: 0.375rem;
+      border-top: 1px solid rgba(3, 105, 161, 0.2);
+      color: #0c4a6e;
 
-  &:hover {
-    background: #a7f3d0;
+      i {
+        font-size: 0.8rem;
+      }
+
+      .vehicle-info {
+        display: flex;
+        gap: 0.375rem;
+
+        .vehicle-brand {
+          font-weight: 600;
+        }
+
+        .vehicle-model {
+          font-weight: 500;
+        }
+      }
+
+      .vehicle-plate {
+        font-weight: 700;
+        margin-left: 0.25rem;
+      }
+    }
   }
 }
 </style>
-

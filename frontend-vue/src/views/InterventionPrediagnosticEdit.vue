@@ -11,11 +11,30 @@
       <p>Modifiez les informations du prédiagnostic</p>
     </template>
 
+    <template #header-actions>
+      <button @click="goBack" class="btn-secondary" type="button">
+        <i class="fas fa-arrow-left"></i>
+        Retour
+      </button>
+      <button @click="printPrediagnostic" class="btn-secondary" type="button">
+        <i class="fas fa-print"></i>
+        Imprimer
+      </button>
+      <button 
+        v-if="interventionStatus === 'in_prediagnostic'"
+        @click="validatePrediagnostic" 
+        class="btn-success" 
+        type="button"
+        :disabled="validating"
+      >
+        <i v-if="validating" class="fas fa-spinner fa-spin"></i>
+        <i v-else class="fas fa-check"></i>
+        {{ validating ? 'Validation...' : 'Valider le prédiagnostic' }}
+      </button>
+    </template>
+
     <!-- Loading state -->
-    <div v-if="loading" class="loading-state">
-      <i class="fas fa-spinner fa-spin"></i>
-      <p>Chargement...</p>
-    </div>
+    <LoadingSpinner v-if="loading" text="Chargement du prédiagnostic..." />
 
     <div v-else class="form-page-container">
       <form @submit.prevent="handleSubmit" class="form-page">
@@ -45,11 +64,13 @@
               />
             </div>
 
-            <SimpleSelector
+            <SearchableSelector
               v-model="form.expertId"
               api-method="getCollaborateurs"
               label="Expert"
-              placeholder="Sélectionner un expert"
+              display-field="firstName"
+              secondary-field="lastName"
+              placeholder="Rechercher un expert..."
             />
           </div>
         </div>
@@ -79,12 +100,18 @@
               <div class="item-number">{{ index + 1 }}</div>
               
               <div class="item-fields">
-                <input
-                  v-model="item.operationLabel"
-                  type="text"
-                  placeholder="Description de l'opération"
-                  required
-                />
+                <div class="operation-description">
+                  <label>
+                    <i class="fas fa-file-lines"></i>
+                    Description de l'opération
+                  </label>
+                  <textarea
+                    v-model="item.operationLabel"
+                    placeholder="Décrivez l'opération à réaliser (ex: Remplacer le pare-choc avant droit, repeindre et polir...)"
+                    rows="2"
+                    required
+                  ></textarea>
+                </div>
                 
                 <div class="item-checkboxes">
                   <label class="checkbox-label">
@@ -234,6 +261,21 @@
       <i class="fas fa-exclamation-triangle"></i>
       {{ errorMessage }}
     </div>
+
+    <!-- Modal de confirmation de validation -->
+    <ConfirmDialog
+      v-model="showValidateModal"
+      title="Valider le prédiagnostic"
+      message="Êtes-vous sûr de vouloir valider ce prédiagnostic ?"
+      warning="Le statut de l'intervention passera en 'Prédiagnostic terminé' et permettra la création de devis."
+      type="info"
+      confirm-text="Valider"
+      cancel-text="Annuler"
+      loading-text="Validation..."
+      :loading="validating"
+      @confirm="executeValidation"
+      @cancel="closeValidateModal"
+    />
   </DefaultLayout>
 </template>
 
@@ -242,10 +284,13 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useNotification } from '@/composables/useNotification'
 import DefaultLayout from '@/components/layouts/DefaultLayout.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import InterventionSelector from '@/components/common/InterventionSelector.vue'
-import SimpleSelector from '@/components/common/SimpleSelector.vue'
+import SearchableSelector from '@/components/common/SearchableSelector.vue'
 import DocumentUploader from '@/components/common/DocumentUploader.vue'
 import apiService from '@/services/api.service'
+import pdfService from '@/services/pdf.service'
 
 const router = useRouter()
 const route = useRoute()
@@ -256,7 +301,9 @@ const prediagnosticId = computed(() => route.params.id)
 // État
 const loading = ref(true)
 const saving = ref(false)
+const validating = ref(false)
 const errorMessage = ref('')
+const interventionStatus = ref(null)
 
 // Attachments
 const existingAttachments = ref([])
@@ -409,9 +456,9 @@ const loadPrediagnostic = async () => {
       const prediag = response.data
       
       form.value = {
-        interventionId: prediag.intervention?.id || null,
-        prediagnosticDate: prediag.prediagnosticDate ? prediag.prediagnosticDate.split('T')[0] : new Date().toISOString().split('T')[0],
-        expertId: prediag.expert?.id || null,
+        interventionId: prediag.interventionId || null,
+        prediagnosticDate: prediag.prediagnosticDate ? prediag.prediagnosticDate.split(/[T\s]/)[0] : new Date().toISOString().split('T')[0],
+        expertId: prediag.expertId || null,
         items: prediag.items ? prediag.items.map(item => ({
           id: item.id,
           operationLabel: item.operationLabel || '',
@@ -421,6 +468,9 @@ const loadPrediagnostic = async () => {
           isControl: item.isControl || false
         })) : []
       }
+      
+      // Charger le statut de l'intervention
+      interventionStatus.value = prediag.intervention?.currentStatus || null
       
       // Charger les attachments
       await loadAttachments()
@@ -488,6 +538,74 @@ const handleSubmit = async () => {
 
 const goBack = () => {
   router.push({ name: 'InterventionPrediagnostics' })
+}
+
+// Validation du prédiagnostic
+const showValidateModal = ref(false)
+
+const validatePrediagnostic = () => {
+  showValidateModal.value = true
+}
+
+const closeValidateModal = () => {
+  showValidateModal.value = false
+}
+
+const executeValidation = async () => {
+  validating.value = true
+
+  try {
+    // Mettre à jour le statut de l'intervention
+    const response = await apiService.updateVehicleIntervention(form.value.interventionId, {
+      currentStatus: 'prediagnostic_completed'
+    })
+
+    if (response.success) {
+      success('Prédiagnostic validé avec succès')
+      closeValidateModal()
+      // Recharger les données pour mettre à jour l'interface
+      await loadPrediagnostic()
+    } else {
+      throw new Error(response.message || 'Erreur lors de la validation')
+    }
+  } catch (err) {
+    console.error('Error validating prediagnostic:', err)
+    error(err.response?.data?.message || err.message || 'Erreur lors de la validation')
+  } finally {
+    validating.value = false
+  }
+}
+
+// Impression PDF
+const printPrediagnostic = async () => {
+  try {
+    // Récupérer les données complètes du prédiagnostic et de l'intervention
+    const [prediagnosticResponse, interventionResponse] = await Promise.all([
+      apiService.getInterventionPrediagnostic(prediagnosticId.value),
+      apiService.getVehicleIntervention(form.value.interventionId)
+    ])
+
+    if (!prediagnosticResponse.success || !interventionResponse.success) {
+      throw new Error('Erreur lors du chargement des données')
+    }
+
+    // Générer le PDF
+    const filename = `prediagnostic-${prediagnosticResponse.data.interventionId}-${new Date().toISOString().split('T')[0]}.pdf`
+    
+    pdfService.createPrediagnosticPDF(
+      prediagnosticResponse.data,
+      interventionResponse.data
+    )
+    
+    // Télécharger automatiquement
+    pdfService.download(filename)
+    
+    success('PDF de prédiagnostic généré avec succès')
+
+  } catch (err) {
+    console.error('Error generating PDF:', err)
+    error('Erreur lors de la génération du PDF: ' + err.message)
+  }
 }
 
 // Lifecycle
@@ -622,6 +740,51 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.operation-description {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.95rem;
+
+    i {
+      color: #3b82f6;
+      font-size: 0.9rem;
+    }
+  }
+
+  textarea {
+    width: 100%;
+    padding: 0.875rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 60px;
+    transition: all 0.3s;
+    background: #f9fafb;
+
+    &:focus {
+      outline: none;
+      border-color: #3b82f6;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    &::placeholder {
+      color: #9ca3af;
+      font-style: italic;
+    }
+  }
 }
 
 .item-checkboxes {
@@ -901,6 +1064,34 @@ onMounted(() => {
   padding-top: 2rem;
   border-top: 2px solid #e5e7eb;
   margin-top: 2rem;
+}
+
+.btn-success {
+  background: #16a34a;
+  color: white;
+  border: none;
+  padding: 0.625rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background: #15803d;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  i {
+    font-size: 0.9rem;
+  }
 }
 
 .loading-state {

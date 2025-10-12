@@ -18,6 +18,9 @@ class InterventionFieldVerification
     #[ORM\JoinColumn(nullable: false)]
     private ?VehicleIntervention $intervention = null;
 
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    private ?string $verificationNumber = null;
+
     #[ORM\Column(type: 'integer')]
     private int $verifiedBy;
 
@@ -61,6 +64,17 @@ class InterventionFieldVerification
     public function setIntervention(?VehicleIntervention $intervention): self
     {
         $this->intervention = $intervention;
+        return $this;
+    }
+
+    public function getVerificationNumber(): ?string
+    {
+        return $this->verificationNumber;
+    }
+
+    public function setVerificationNumber(?string $verificationNumber): self
+    {
+        $this->verificationNumber = $verificationNumber;
         return $this;
     }
 

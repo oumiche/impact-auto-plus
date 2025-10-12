@@ -20,11 +20,8 @@ class InterventionPrediagnostic
     #[ORM\JoinColumn(nullable: false)]
     private ?VehicleIntervention $intervention = null;
 
-
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $prediagnosticDate = null;
-
-
 
     #[ORM\Column(type: 'string', length: 20, nullable: true)]
     private ?string $vehiclePlate = null;

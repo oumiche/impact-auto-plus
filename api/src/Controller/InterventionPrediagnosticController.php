@@ -131,6 +131,7 @@ class InterventionPrediagnosticController extends AbstractTenantController
                         'code' => $entityCode ? $entityCode->getCode() : null,
                         'intervention' => [
                             'id' => $prediagnostic->getIntervention()->getId(),
+                            'interventionNumber' => $prediagnostic->getIntervention()->getInterventionNumber(),
                             'title' => $prediagnostic->getIntervention()->getTitle(),
                             'currentStatus' => $prediagnostic->getIntervention()->getCurrentStatus(),
                             'statusLabel' => $prediagnostic->getIntervention()->getStatusLabel(),
@@ -149,9 +150,11 @@ class InterventionPrediagnosticController extends AbstractTenantController
                         ],
                         'prediagnosticDate' => $prediagnostic->getPrediagnosticDate() ? 
                             $prediagnostic->getPrediagnosticDate()->format('Y-m-d H:i:s') : null,
-                        'expertId' => $prediagnostic->getExpert() ? $prediagnostic->getExpert()->getId() : null,
-                        'expertName' => $prediagnostic->getExpert() ? 
-                            $prediagnostic->getExpert()->getFirstName() . ' ' . $prediagnostic->getExpert()->getLastName() : null,
+                        'expert' => $prediagnostic->getExpert() ? [
+                            'id' => $prediagnostic->getExpert()->getId(),
+                            'firstName' => $prediagnostic->getExpert()->getFirstName(),
+                            'lastName' => $prediagnostic->getExpert()->getLastName()
+                        ] : null,
                         'items' => $this->formatItems($prediagnostic->getItems()),
                         'createdAt' => $prediagnostic->getCreatedAt() ? 
                             $prediagnostic->getCreatedAt()->format('Y-m-d H:i:s') : null,
@@ -163,6 +166,7 @@ class InterventionPrediagnosticController extends AbstractTenantController
                         'code' => null,
                         'intervention' => [
                             'id' => $prediagnostic->getIntervention() ? $prediagnostic->getIntervention()->getId() : null,
+                            'interventionNumber' => $prediagnostic->getIntervention() ? $prediagnostic->getIntervention()->getInterventionNumber() : null,
                             'title' => $prediagnostic->getIntervention() ? $prediagnostic->getIntervention()->getTitle() : 'N/A',
                             'currentStatus' => $prediagnostic->getIntervention() ? $prediagnostic->getIntervention()->getCurrentStatus() : 'unknown',
                             'statusLabel' => $prediagnostic->getIntervention() ? $prediagnostic->getIntervention()->getStatusLabel() : 'Inconnu',
@@ -181,8 +185,7 @@ class InterventionPrediagnosticController extends AbstractTenantController
                         ],
                         'prediagnosticDate' => $prediagnostic->getPrediagnosticDate() ? 
                             $prediagnostic->getPrediagnosticDate()->format('Y-m-d H:i:s') : null,
-                        'expertId' => null,
-                        'expertName' => null,
+                        'expert' => null,
                         'items' => [],
                         'createdAt' => $prediagnostic->getCreatedAt() ? 
                             $prediagnostic->getCreatedAt()->format('Y-m-d H:i:s') : null,
@@ -248,11 +251,20 @@ class InterventionPrediagnosticController extends AbstractTenantController
                 'id' => $prediagnostic->getId(),
                 'code' => $entityCode ? $entityCode->getCode() : null,
                 'interventionId' => $prediagnostic->getIntervention()->getId(),
+                'intervention' => [
+                    'id' => $prediagnostic->getIntervention()->getId(),
+                    'interventionNumber' => $prediagnostic->getIntervention()->getInterventionNumber(),
+                    'currentStatus' => $prediagnostic->getIntervention()->getCurrentStatus(),
+                    'statusLabel' => $prediagnostic->getIntervention()->getStatusLabel()
+                ],
                 'prediagnosticDate' => $prediagnostic->getPrediagnosticDate() ? 
                     $prediagnostic->getPrediagnosticDate()->format('Y-m-d H:i:s') : null,
+                'expert' => $prediagnostic->getExpert() ? [
+                    'id' => $prediagnostic->getExpert()->getId(),
+                    'firstName' => $prediagnostic->getExpert()->getFirstName(),
+                    'lastName' => $prediagnostic->getExpert()->getLastName()
+                ] : null,
                 'expertId' => $prediagnostic->getExpert() ? $prediagnostic->getExpert()->getId() : null,
-                'expertName' => $prediagnostic->getExpert() ? 
-                    $prediagnostic->getExpert()->getFirstName() . ' ' . $prediagnostic->getExpert()->getLastName() : null,
                 'signatureExpert' => $prediagnostic->getSignatureExpert(),
                 'signatureRepairer' => $prediagnostic->getSignatureRepairer(),
                 'signatureInsured' => $prediagnostic->getSignatureInsured(),

@@ -1,14 +1,14 @@
 <template>
   <DefaultLayout>
     <template #header>
-      <h1>Autorisations de travail</h1>
-      <p>Gérez les autorisations d'accord pour les réparations</p>
+      <h1>Accord Travaux</h1>
+      <p>Gérez les accords de travaux pour les réparations</p>
     </template>
 
     <template #header-actions>
-      <button @click="openCreateModal" class="btn-primary">
+      <button @click="goToCreate" class="btn-primary">
         <i class="fas fa-plus"></i>
-        Nouvelle autorisation
+        Nouvel accord
       </button>
     </template>
 
@@ -100,10 +100,7 @@
     </FilterPanel>
 
     <!-- Loading state -->
-    <div v-if="loading" class="loading-state">
-      <i class="fas fa-spinner fa-spin"></i>
-      <p>Chargement des autorisations...</p>
-    </div>
+    <LoadingSpinner v-if="loading" text="Chargement des autorisations..." />
 
     <!-- Tableau d'autorisations -->
     <div v-else-if="authorizations.length > 0" class="table-container">
@@ -115,7 +112,6 @@
             <th>Devis réf.</th>
             <th>Autorisé par</th>
             <th>Date</th>
-            <th>Lignes</th>
             <th>Statut</th>
             <th class="actions-column">Actions</th>
           </tr>
@@ -126,24 +122,31 @@
               <i class="fas fa-file-signature"></i>
               {{ auth.authorizationNumber }}
             </td>
-            <td>{{ auth.intervention?.interventionNumber }} - {{ auth.intervention?.title }}</td>
-            <td>{{ auth.quote?.quoteNumber || '-' }}</td>
+            <td>
+              <div class="intervention-cell">
+                <span class="intervention-number">{{ auth.intervention?.interventionNumber }}</span>
+                <span class="intervention-title">{{ auth.intervention?.title }}</span>
+              </div>
+            </td>
+            <td>
+              <span v-if="auth.quote" class="quote-reference">
+                {{ auth.quote.quoteNumber }}
+              </span>
+              <span v-else class="no-quote">-</span>
+            </td>
             <td>{{ getCollaboratorLabel(auth.authorizedBy) }}</td>
             <td>{{ formatDate(auth.authorizationDate) }}</td>
-            <td>
-              <span class="badge-count">{{ auth.lines?.length || 0 }} ligne(s)</span>
-            </td>
             <td>
               <span v-if="auth.isValidated" class="validated-badge">
                 <i class="fas fa-check-circle"></i> Validée
               </span>
-              <button v-else @click="validateAuthorization(auth)" class="btn-validate-small">
-                <i class="fas fa-check"></i> Valider
-              </button>
+              <span v-else class="pending-badge">
+                <i class="fas fa-clock"></i> En attente
+              </span>
             </td>
             <td class="actions-column">
               <div class="action-buttons">
-                <button @click="openEditModal(auth)" class="btn-icon btn-edit" title="Modifier">
+                <button @click="goToEdit(auth.id)" class="btn-icon btn-edit" title="Modifier">
                   <i class="fas fa-edit"></i>
                 </button>
                 <button @click="confirmDelete(auth)" class="btn-icon btn-delete" title="Supprimer">
@@ -161,11 +164,11 @@
       <div class="empty-icon">
         <i class="fas fa-file-signature"></i>
       </div>
-      <h3>Aucune autorisation</h3>
-      <p>Commencez par créer votre première autorisation de travail</p>
-      <button @click="openCreateModal" class="btn-primary">
+      <h3>Aucun accord</h3>
+      <p>Commencez par créer votre premier accord de travaux</p>
+      <button @click="goToCreate" class="btn-primary">
         <i class="fas fa-plus"></i>
-        Créer une autorisation
+        Créer un accord
       </button>
     </div>
 
@@ -178,95 +181,19 @@
       @page-change="handlePageChange"
     />
 
-    <!-- Modal Créer/Modifier -->
-    <Modal
-      v-model="showModal"
-      :title="isEditing ? 'Modifier l\'autorisation' : 'Nouvelle autorisation'"
-      size="xlarge"
-      @close="closeModal"
-    >
-      <form @submit.prevent="handleSubmit" class="auth-form">
-        <!-- Intervention et Devis -->
-        <div class="form-section">
-          <h4><i class="fas fa-wrench"></i> Intervention et Devis</h4>
-          
-          <div class="form-row">
-            <InterventionSelector
-              v-model="form.interventionId"
-              label="Intervention"
-              required
-              :status-filter="['approved', 'in_approval']"
-            />
-
-            <div class="form-group">
-              <label>Devis de référence (optionnel)</label>
-              <select v-model="form.quoteId" @change="handleQuoteChange">
-                <option :value="null">Aucun devis</option>
-                <option v-for="quote in availableQuotes" :key="quote.id" :value="quote.id">
-                  {{ quote.quoteNumber }} - {{ formatCurrency(quote.totalAmount) }}
-                </option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Collaborateur et Date -->
-        <div class="form-section">
-          <h4><i class="fas fa-calendar"></i> Informations d'autorisation</h4>
-          
-          <div class="form-row">
-            <SimpleSelector
-              v-model="form.authorizedById"
-              api-method="getCollaborateurs"
-              label="Autorisé par"
-              placeholder="Sélectionner un collaborateur"
-              required
-            />
-
-            <div class="form-group">
-              <label>Date d'autorisation <span class="required">*</span></label>
-              <input
-                v-model="form.authorizationDate"
-                type="date"
-                required
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Instructions spéciales -->
-        <div class="form-section">
-          <h4><i class="fas fa-file-alt"></i> Instructions spéciales</h4>
-          
-          <div class="form-group">
-            <textarea
-              v-model="form.specialInstructions"
-              rows="3"
-              placeholder="Conditions, restrictions ou instructions particulières..."
-            ></textarea>
-          </div>
-        </div>
-
-        <!-- Lignes autorisées -->
-        <div class="form-section">
-          <QuoteLineEditor
-            v-model="form.lines"
-            @change="handleLinesChange"
-          />
-        </div>
-      </form>
-
-      <template #footer>
-        <button type="button" @click="closeModal" class="btn-secondary">
-          Annuler
-        </button>
-        <button type="submit" @click="handleSubmit" class="btn-primary" :disabled="saving">
-          <i v-if="saving" class="fas fa-spinner fa-spin"></i>
-          <i v-else class="fas fa-save"></i>
-          {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
-        </button>
-      </template>
-    </Modal>
+    <!-- Modal de confirmation de suppression -->
+    <ConfirmDialog
+      v-model="showDeleteModal"
+      title="Confirmer la suppression"
+      message="Êtes-vous sûr de vouloir supprimer cet accord de travaux ?"
+      warning="Cette action est irréversible."
+      type="danger"
+      confirm-text="Supprimer"
+      cancel-text="Annuler"
+      loading-text="Suppression..."
+      :loading="deleting"
+      @confirm="executeDelete"
+    />
 
     <!-- Notifications d'erreur -->
     <div v-if="errorMessage" class="error-message">
@@ -277,53 +204,36 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useNotification } from '@/composables/useNotification'
 import DefaultLayout from '@/components/layouts/DefaultLayout.vue'
-import Modal from '@/components/common/Modal.vue'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import SearchBar from '@/components/common/SearchBar.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import FilterPanel from '@/components/common/FilterPanel.vue'
-import InterventionSelector from '@/components/common/InterventionSelector.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SimpleSelector from '@/components/common/SimpleSelector.vue'
-import QuoteLineEditor from '@/components/common/QuoteLineEditor.vue'
 import BrandSelectorSearch from '@/components/common/BrandSelectorSearch.vue'
 import ModelSelector from '@/components/common/ModelSelector.vue'
 import apiService from '@/services/api.service'
 
-// Notifications
+// Notifications et navigation
+const router = useRouter()
 const { success, error, warning } = useNotification()
 
 // État
 const authorizations = ref([])
-const availableQuotes = ref([])
 const loading = ref(false)
-const saving = ref(false)
 const errorMessage = ref('')
 
 // Modals
-const showModal = ref(false)
 const showFiltersPanel = ref(false)
-const isEditing = ref(false)
 
-// Formulaire
-const form = ref({
-  interventionId: null,
-  quoteId: null,
-  authorizedById: null,
-  authorizationDate: new Date().toISOString().split('T')[0],
-  specialInstructions: '',
-  lines: []
-})
-
-// Totaux
-const authTotals = ref({
-  subtotal: 0,
-  totalDiscount: 0,
-  totalHT: 0,
-  totalTVA: 0,
-  totalTTC: 0
-})
+// Modal de suppression
+const showDeleteModal = ref(false)
+const itemToDelete = ref(null)
+const deleting = ref(false)
 
 // Recherche et filtres
 const searchQuery = ref('')
@@ -507,154 +417,30 @@ const handlePageChange = (page) => {
   loadAuthorizations()
 }
 
-const openCreateModal = () => {
-  isEditing.value = false
-  resetForm()
-  showModal.value = true
+const goToCreate = () => {
+  router.push({ name: 'InterventionWorkAuthorizationCreate' })
 }
 
-const openEditModal = (auth) => {
-  isEditing.value = true
-  form.value = {
-    id: auth.id,
-    interventionId: auth.intervention?.id || null,
-    quoteId: auth.quote?.id || null,
-    authorizedById: auth.authorizedBy?.id || null,
-    authorizationDate: auth.authorizationDate ? auth.authorizationDate.split('T')[0] : new Date().toISOString().split('T')[0],
-    specialInstructions: auth.specialInstructions || '',
-    lines: auth.lines ? auth.lines.map(line => ({
-      id: line.id,
-      supplyId: line.supply?.id || null,
-      workType: line.workType || 'supply',
-      description: line.description || '',
-      quantity: parseFloat(line.quantity) || 1,
-      unitPrice: parseFloat(line.unitPrice) || 0,
-      discountPercentage: parseFloat(line.discountPercentage) || null,
-      discountAmount: parseFloat(line.discountAmount) || null,
-      taxRate: parseFloat(line.taxRate) || 18,
-      lineTotal: parseFloat(line.lineTotal) || 0,
-      notes: line.notes || ''
-    })) : []
-  }
-  
-  // Load quotes for this intervention
-  if (form.value.interventionId) {
-    loadQuotesForIntervention(form.value.interventionId)
-  }
-  
-  showModal.value = true
+const goToEdit = (id) => {
+  router.push({ name: 'InterventionWorkAuthorizationEdit', params: { id } })
 }
 
-const closeModal = () => {
-  showModal.value = false
-  resetForm()
+const confirmDelete = (auth) => {
+  itemToDelete.value = auth
+  showDeleteModal.value = true
 }
 
-const resetForm = () => {
-  form.value = {
-    interventionId: null,
-    quoteId: null,
-    authorizedById: null,
-    authorizationDate: new Date().toISOString().split('T')[0],
-    specialInstructions: '',
-    lines: []
-  }
-  availableQuotes.value = []
-  authTotals.value = {
-    subtotal: 0,
-    totalDiscount: 0,
-    totalHT: 0,
-    totalTVA: 0,
-    totalTTC: 0
-  }
-}
+const executeDelete = async () => {
+  if (!itemToDelete.value) return
 
-const handleLinesChange = (data) => {
-  authTotals.value = data.totals
-}
-
-const handleSubmit = async () => {
-  try {
-    if (!form.value.interventionId) {
-      warning('Veuillez sélectionner une intervention')
-      return
-    }
-
-    if (!form.value.authorizedById) {
-      warning('Veuillez sélectionner la personne qui autorise')
-      return
-    }
-
-    if (form.value.lines.length === 0) {
-      warning('Veuillez ajouter au moins une ligne')
-      return
-    }
-
-    saving.value = true
-
-    const data = {
-      interventionId: form.value.interventionId,
-      quoteId: form.value.quoteId || null,
-      authorizedById: form.value.authorizedById,
-      authorizationDate: form.value.authorizationDate,
-      specialInstructions: form.value.specialInstructions || null,
-      lines: form.value.lines
-    }
-
-    let response
-    if (isEditing.value) {
-      response = await apiService.updateInterventionWorkAuthorization(form.value.id, data)
-    } else {
-      response = await apiService.createInterventionWorkAuthorization(data)
-    }
-
-    if (response.success) {
-      success(isEditing.value ? 'Autorisation modifiée avec succès' : 'Autorisation créée avec succès')
-      closeModal()
-      await loadAuthorizations()
-    } else {
-      throw new Error(response.message || 'Erreur lors de l\'enregistrement')
-    }
-  } catch (err) {
-    console.error('Error saving authorization:', err)
-    error(err.response?.data?.message || err.message || 'Erreur lors de l\'enregistrement')
-  } finally {
-    saving.value = false
-  }
-}
-
-const validateAuthorization = async (auth) => {
-  if (!confirm(`Êtes-vous sûr de vouloir valider l'autorisation ${auth.authorizationNumber} ?`)) {
-    return
-  }
+  deleting.value = true
 
   try {
-    const response = await apiService.updateInterventionWorkAuthorization(auth.id, {
-      ...auth,
-      isValidated: true
-    })
-
-    if (response.success) {
-      success('Autorisation validée avec succès')
-      await loadAuthorizations()
-    } else {
-      throw new Error(response.message || 'Erreur lors de la validation')
-    }
-  } catch (err) {
-    console.error('Error validating authorization:', err)
-    error(err.response?.data?.message || err.message || 'Erreur lors de la validation')
-  }
-}
-
-const confirmDelete = async (auth) => {
-  if (!confirm(`Êtes-vous sûr de vouloir supprimer l'autorisation ${auth.authorizationNumber} ?`)) {
-    return
-  }
-
-  try {
-    const response = await apiService.deleteInterventionWorkAuthorization(auth.id)
+    const response = await apiService.deleteInterventionWorkAuthorization(itemToDelete.value.id)
     if (response.success) {
       success('Autorisation supprimée avec succès')
+      showDeleteModal.value = false
+      itemToDelete.value = null
       await loadAuthorizations()
     } else {
       throw new Error(response.message || 'Erreur lors de la suppression')
@@ -662,6 +448,8 @@ const confirmDelete = async (auth) => {
   } catch (err) {
     console.error('Error deleting authorization:', err)
     error(err.response?.data?.message || err.message || 'Erreur lors de la suppression')
+  } finally {
+    deleting.value = false
   }
 }
 
@@ -694,11 +482,6 @@ const formatCurrency = (amount) => {
 }
 
 // Watchers
-watch(() => form.value.interventionId, (newVal) => {
-  if (newVal && !isEditing.value) {
-    loadQuotesForIntervention(newVal)
-  }
-})
 
 // Lifecycle
 onMounted(() => {
@@ -721,6 +504,33 @@ onMounted(() => {
   }
 }
 
+.intervention-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  .intervention-number {
+    font-weight: 600;
+    color: #3b82f6;
+    font-size: 0.9rem;
+  }
+
+  .intervention-title {
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+}
+
+.quote-reference {
+  font-weight: 600;
+  color: #059669;
+}
+
+.no-quote {
+  color: #9ca3af;
+  font-style: italic;
+}
+
 .row-validated {
   background: #f0fdf4 !important;
 }
@@ -741,26 +551,19 @@ onMounted(() => {
   }
 }
 
-.btn-validate-small {
+.pending-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
   padding: 0.375rem 0.75rem;
-  background: #10b981;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 600;
-  transition: all 0.2s;
-
-  &:hover {
-    background: #059669;
-  }
 
   i {
-    font-size: 0.85rem;
+    color: #f59e0b;
   }
 }
 

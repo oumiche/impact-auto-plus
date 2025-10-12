@@ -93,10 +93,7 @@
     </FilterPanel>
 
     <!-- Loading state -->
-    <div v-if="loading" class="loading-state">
-      <i class="fas fa-spinner fa-spin"></i>
-      <p>Chargement des factures...</p>
-    </div>
+    <LoadingSpinner v-if="loading" text="Chargement des factures..." />
 
     <!-- Tableau de factures -->
     <div v-else-if="invoices.length > 0" class="table-container">
@@ -364,6 +361,7 @@ import Modal from '@/components/common/Modal.vue'
 import SearchBar from '@/components/common/SearchBar.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import FilterPanel from '@/components/common/FilterPanel.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import InterventionSelector from '@/components/common/InterventionSelector.vue'
 import QuoteLineEditor from '@/components/common/QuoteLineEditor.vue'
 import BrandSelectorSearch from '@/components/common/BrandSelectorSearch.vue'
@@ -627,8 +625,8 @@ const openEditModal = (invoice) => {
     id: invoice.id,
     interventionId: invoice.intervention?.id || null,
     quoteId: invoice.quote?.id || null,
-    invoiceDate: invoice.invoiceDate ? invoice.invoiceDate.split('T')[0] : new Date().toISOString().split('T')[0],
-    dueDate: invoice.dueDate ? invoice.dueDate.split('T')[0] : getDefaultDueDate(),
+    invoiceDate: invoice.invoiceDate ? invoice.invoiceDate.split(/[T\s]/)[0] : new Date().toISOString().split('T')[0],
+    dueDate: invoice.dueDate ? invoice.dueDate.split(/[T\s]/)[0] : getDefaultDueDate(),
     lines: invoice.lines ? invoice.lines.map(line => ({
       id: line.id,
       supplyId: line.supply?.id || null,

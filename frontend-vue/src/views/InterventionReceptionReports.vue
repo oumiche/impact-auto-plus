@@ -102,10 +102,7 @@
     </FilterPanel>
 
     <!-- Loading state -->
-    <div v-if="loading" class="loading-state">
-      <i class="fas fa-spinner fa-spin"></i>
-      <p>Chargement des rapports...</p>
-    </div>
+    <LoadingSpinner v-if="loading" text="Chargement des rapports..." />
 
     <!-- Tableau de rapports -->
     <div v-else-if="reports.length > 0" class="table-container">
@@ -341,6 +338,7 @@ import Modal from '@/components/common/Modal.vue'
 import SearchBar from '@/components/common/SearchBar.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import FilterPanel from '@/components/common/FilterPanel.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import InterventionSelector from '@/components/common/InterventionSelector.vue'
 import SimpleSelector from '@/components/common/SimpleSelector.vue'
 import DocumentUploader from '@/components/common/DocumentUploader.vue'
@@ -525,7 +523,7 @@ const openEditModal = (report) => {
     id: report.id,
     interventionId: report.intervention?.id || null,
     receivedBy: report.receivedBy || null,
-    receptionDate: report.receptionDate ? report.receptionDate.split('T')[0] : new Date().toISOString().split('T')[0],
+    receptionDate: report.receptionDate ? report.receptionDate.split(/[T\s]/)[0] : new Date().toISOString().split('T')[0],
     vehicleCondition: report.vehicleCondition || '',
     workCompleted: report.workCompleted || '',
     remainingIssues: report.remainingIssues || '',

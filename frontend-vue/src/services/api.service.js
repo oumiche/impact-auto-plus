@@ -923,6 +923,14 @@ export default {
     const response = await apiClient.get('/supply-prices/analytics', { params })
     return response.data
   },
+  
+  /**
+   * Obtenir une suggestion de prix
+   */
+  async getPriceSuggestion(params = {}) {
+    const response = await apiClient.get('/supply-prices/suggestion', { params })
+    return response.data
+  },
 
   // ==================== VEHICLE INTERVENTIONS ====================
   
@@ -1066,9 +1074,24 @@ export default {
     const response = await apiClient.put(`/intervention-quotes/${id}`, data)
     return response.data
   },
+  
+  async validateInterventionQuote(id) {
+    const response = await apiClient.post(`/intervention-quotes/${id}/validate`)
+    return response.data
+  },
+
+  async cancelInterventionQuoteValidation(id) {
+    const response = await apiClient.post(`/intervention-quotes/${id}/cancel-validation`)
+    return response.data
+  },
 
   async deleteInterventionQuote(id) {
     const response = await apiClient.delete(`/intervention-quotes/${id}`)
+    return response.data
+  },
+
+  async getQuoteLinesForAuthorization(quoteId) {
+    const response = await apiClient.get(`/intervention-quotes/${quoteId}/lines-for-authorization`)
     return response.data
   },
 
@@ -1117,6 +1140,16 @@ export default {
 
   async updateInterventionWorkAuthorization(id, data) {
     const response = await apiClient.put(`/intervention-work-authorizations/${id}`, data)
+    return response.data
+  },
+
+  async validateInterventionWorkAuthorization(id) {
+    const response = await apiClient.post(`/intervention-work-authorizations/${id}/validate`)
+    return response.data
+  },
+
+  async cancelInterventionWorkAuthorizationValidation(id) {
+    const response = await apiClient.post(`/intervention-work-authorizations/${id}/cancel-validation`)
     return response.data
   },
 
@@ -1266,6 +1299,166 @@ export default {
 
   async deleteInvoiceAttachment(id, fileId) {
     const response = await apiClient.delete(`/intervention-invoices/${id}/attachments/${fileId}`)
+    return response.data
+  },
+
+  // ==================== INTERVENTION FIELD VERIFICATIONS ====================
+  
+  async getInterventionFieldVerifications(params = {}) {
+    const response = await apiClient.get('/intervention-field-verifications', { params })
+    return response.data
+  },
+
+  async getInterventionFieldVerification(id) {
+    const response = await apiClient.get(`/intervention-field-verifications/${id}`)
+    return response.data
+  },
+
+  async createInterventionFieldVerification(data) {
+    const response = await apiClient.post('/intervention-field-verifications', data)
+    return response.data
+  },
+
+  async updateInterventionFieldVerification(id, data) {
+    const response = await apiClient.put(`/intervention-field-verifications/${id}`, data)
+    return response.data
+  },
+
+  async deleteInterventionFieldVerification(id) {
+    const response = await apiClient.delete(`/intervention-field-verifications/${id}`)
+    return response.data
+  },
+
+  async getFieldVerificationAttachments(verificationId) {
+    const response = await apiClient.get(`/intervention-field-verifications/${verificationId}/attachments`)
+    return response.data
+  },
+
+  async uploadFieldVerificationAttachment(verificationId, file, description = '') {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (description) {
+      formData.append('description', description)
+    }
+
+    const response = await apiClient.post(
+      `/intervention-field-verifications/${verificationId}/attachments`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    )
+    return response.data
+  },
+
+  async deleteFieldVerificationAttachment(verificationId, fileId) {
+    const response = await apiClient.delete(`/intervention-field-verifications/${verificationId}/attachments/${fileId}`)
+    return response.data
+  },
+
+  // ==================== REPORTS ====================
+  
+  async getReports(params = {}) {
+    const response = await apiClient.get('/reports', { params })
+    return response.data
+  },
+
+  async getReport(id) {
+    const response = await apiClient.get(`/reports/${id}`)
+    return response.data
+  },
+
+  async createReport(data) {
+    const response = await apiClient.post('/reports', data)
+    return response.data
+  },
+
+  async deleteReport(id) {
+    const response = await apiClient.delete(`/reports/${id}`)
+    return response.data
+  },
+
+  async getReportTypes() {
+    const response = await apiClient.get('/reports/types')
+    return response.data
+  },
+
+  async getReportStats() {
+    const response = await apiClient.get('/reports/stats')
+    return response.data
+  },
+
+  // Cache management
+  async invalidateReportCache(id) {
+    const response = await apiClient.post(`/reports/${id}/invalidate-cache`)
+    return response.data
+  },
+
+  async invalidateReportCacheByType(type) {
+    const response = await apiClient.post(`/reports/invalidate-cache/${type}`)
+    return response.data
+  },
+
+  async cleanupReportCache() {
+    const response = await apiClient.post('/reports/cleanup-cache')
+    return response.data
+  },
+
+  async getReportCacheStats() {
+    const response = await apiClient.get('/reports/cache/stats')
+    return response.data
+  },
+
+  async optimizeReportCache() {
+    const response = await apiClient.post('/reports/cache/optimize')
+    return response.data
+  },
+
+  async cleanupOldReports(days = 30) {
+    const response = await apiClient.post(`/reports/cleanup-old?days=${days}`)
+    return response.data
+  },
+
+  async warmupReportCache(types = 'dashboard,kpis') {
+    const response = await apiClient.post(`/reports/cache/warmup?types=${types}`)
+    return response.data
+  },
+
+  // Business reports
+  async getReportDashboard(refresh = false) {
+    const response = await apiClient.get(`/reports/dashboard?refresh=${refresh}`)
+    return response.data
+  },
+
+  async getReportKPIs(startDate = null, endDate = null) {
+    const params = {}
+    if (startDate) params.startDate = startDate
+    if (endDate) params.endDate = endDate
+    const response = await apiClient.get('/reports/kpis', { params })
+    return response.data
+  },
+
+  async getReportCostsByVehicle(vehicleId = null, startDate = null, endDate = null) {
+    const params = {}
+    if (vehicleId) params.vehicleId = vehicleId
+    if (startDate) params.startDate = startDate
+    if (endDate) params.endDate = endDate
+    const response = await apiClient.get('/reports/costs/by-vehicle', { params })
+    return response.data
+  },
+
+  async getReportMaintenanceSchedule(days = 90) {
+    const response = await apiClient.get(`/reports/maintenance/schedule?days=${days}`)
+    return response.data
+  },
+
+  async getReportFailuresAnalysis(startDate = null, endDate = null) {
+    const params = {}
+    if (startDate) params.startDate = startDate
+    if (endDate) params.endDate = endDate
+    const response = await apiClient.get('/reports/failures/analysis', { params })
     return response.data
   }
 }

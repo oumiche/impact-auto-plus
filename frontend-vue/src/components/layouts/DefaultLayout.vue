@@ -55,9 +55,27 @@ const pageTitle = computed(() => {
     'VehicleInterventions': 'Interventions',
     'InterventionPrediagnostics': 'Prédiagnostics',
     'InterventionQuotes': 'Devis',
-    'InterventionInvoices': 'Factures',
-    'InterventionWorkAuthorizations': 'Autorisations de Travaux',
+    'InterventionWorkAuthorizations': 'Accord Travaux',
+    'InterventionFieldVerifications': 'Vérifications Terrain',
     'InterventionReceptionReports': 'Rapports de Réception',
+    'InterventionInvoices': 'Factures',
+    
+    // Prédiagnostics
+    'InterventionPrediagnosticCreate': 'Nouveau Prédiagnostic',
+    'InterventionPrediagnosticEdit': 'Modifier Prédiagnostic',
+    
+    // Devis
+    'InterventionQuoteCreate': 'Nouveau Devis',
+    'InterventionQuoteEdit': 'Modifier Devis',
+    
+    // Accords de travaux
+    'InterventionWorkAuthorizationCreate': 'Nouvel Accord Travaux',
+    'InterventionWorkAuthorizationEdit': 'Modifier l\'Accord Travaux',
+    
+    // Vérifications terrain
+    'InterventionFieldVerifications': 'Vérifications Terrain',
+    'InterventionFieldVerificationCreate': 'Nouvelle Vérification Terrain',
+    'InterventionFieldVerificationEdit': 'Modifier Vérification Terrain',
     
     // Rapports
     'Reports': 'Rapports',

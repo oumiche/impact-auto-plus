@@ -90,27 +90,28 @@
     </FilterPanel>
 
     <!-- Loading state -->
-    <div v-if="loading" class="loading-state">
-      <i class="fas fa-spinner fa-spin"></i>
-      <p>Chargement des prédiagnostics...</p>
-    </div>
+    <LoadingSpinner v-if="loading" text="Chargement des prédiagnostics..." />
 
     <!-- Tableau de prédiagnostics -->
     <div v-else-if="prediagnostics.length > 0" class="table-container">
       <table class="data-table">
         <thead>
           <tr>
+            <th>N° Prédiagnostic</th>
             <th>Intervention</th>
             <th>Véhicule</th>
             <th>Expert</th>
             <th>Date</th>
-            <th>Opérations</th>
-            <th>Types</th>
+            <th>Statut</th>
             <th class="actions-column">Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="prediag in prediagnostics" :key="prediag.id">
+            <td class="code-cell">
+              <i class="fas fa-file-alt"></i>
+              {{ prediag.code || `PRED-${prediag.id}` }}
+            </td>
             <td class="intervention-cell">
               <i class="fas fa-wrench"></i>
               {{ prediag.intervention?.interventionNumber || `INT-${prediag.intervention?.id}` }}
@@ -119,23 +120,7 @@
             <td>{{ getExpertLabel(prediag.expert) }}</td>
             <td>{{ formatDate(prediag.prediagnosticDate) }}</td>
             <td>
-              <span class="badge-count">{{ prediag.items?.length || 0 }} opération(s)</span>
-            </td>
-            <td>
-              <div class="operations-types">
-                <span v-if="hasOperationType(prediag.items, 'isExchange')" class="op-badge exchange">
-                  <i class="fas fa-exchange-alt"></i> Échange
-                </span>
-                <span v-if="hasOperationType(prediag.items, 'isRepair')" class="op-badge repair">
-                  <i class="fas fa-wrench"></i> Réparation
-                </span>
-                <span v-if="hasOperationType(prediag.items, 'isPainting')" class="op-badge painting">
-                  <i class="fas fa-paint-brush"></i> Peinture
-                </span>
-                <span v-if="hasOperationType(prediag.items, 'isControl')" class="op-badge control">
-                  <i class="fas fa-check-square"></i> Contrôle
-                </span>
-              </div>
+              <StatusBadge :status="prediag.intervention?.currentStatus || 'unknown'" />
             </td>
             <td class="actions-column">
               <div class="action-buttons">
@@ -179,6 +164,21 @@
       <i class="fas fa-exclamation-triangle"></i>
       {{ errorMessage }}
     </div>
+
+    <!-- Modal de confirmation de suppression -->
+    <ConfirmDialog
+      v-model="showDeleteModal"
+      title="Confirmer la suppression"
+      message="Êtes-vous sûr de vouloir supprimer ce prédiagnostic ?"
+      warning="Cette action est irréversible."
+      type="danger"
+      confirm-text="Supprimer"
+      cancel-text="Annuler"
+      loading-text="Suppression..."
+      :loading="deleting"
+      @confirm="executeDelete"
+      @cancel="closeDeleteModal"
+    />
   </DefaultLayout>
 </template>
 
@@ -190,6 +190,10 @@ import DefaultLayout from '@/components/layouts/DefaultLayout.vue'
 import SearchBar from '@/components/common/SearchBar.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import FilterPanel from '@/components/common/FilterPanel.vue'
+import SimpleSelector from '@/components/common/SimpleSelector.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+import StatusBadge from '@/components/common/StatusBadge.vue'
 import BrandSelectorSearch from '@/components/common/BrandSelectorSearch.vue'
 import ModelSelector from '@/components/common/ModelSelector.vue'
 import apiService from '@/services/api.service'
@@ -203,6 +207,11 @@ const prediagnostics = ref([])
 const loading = ref(false)
 const errorMessage = ref('')
 const showFiltersPanel = ref(false)
+
+// Modal de suppression
+const showDeleteModal = ref(false)
+const itemToDelete = ref(null)
+const deleting = ref(false)
 
 // Recherche et filtres
 const searchQuery = ref('')
@@ -335,16 +344,27 @@ const goToEdit = (id) => {
   router.push({ name: 'InterventionPrediagnosticEdit', params: { id } })
 }
 
-const confirmDelete = async (prediag) => {
-  const interventionNumber = prediag.intervention?.interventionNumber || `INT-${prediag.intervention?.id}`
-  if (!confirm(`Êtes-vous sûr de vouloir supprimer le prédiagnostic de ${interventionNumber} ?`)) {
-    return
-  }
+const confirmDelete = (prediag) => {
+  itemToDelete.value = prediag
+  showDeleteModal.value = true
+}
 
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+  itemToDelete.value = null
+  deleting.value = false
+}
+
+const executeDelete = async () => {
+  if (!itemToDelete.value) return
+  
+  deleting.value = true
+  
   try {
-    const response = await apiService.deleteInterventionPrediagnostic(prediag.id)
+    const response = await apiService.deleteInterventionPrediagnostic(itemToDelete.value.id)
     if (response.success) {
       success('Prédiagnostic supprimé avec succès')
+      closeDeleteModal()
       await loadPrediagnostics()
     } else {
       throw new Error(response.message || 'Erreur lors de la suppression')
@@ -352,6 +372,8 @@ const confirmDelete = async (prediag) => {
   } catch (err) {
     console.error('Error deleting prediagnostic:', err)
     error(err.response?.data?.message || err.message || 'Erreur lors de la suppression')
+  } finally {
+    deleting.value = false
   }
 }
 
@@ -393,10 +415,6 @@ const formatDate = (dateString) => {
   })
 }
 
-const hasOperationType = (items, type) => {
-  return items.some(item => item[type] === true)
-}
-
 // Lifecycle
 onMounted(() => {
   loadPrediagnostics()
@@ -406,15 +424,23 @@ onMounted(() => {
 <style scoped lang="scss">
 @import './crud-styles.scss';
 
+.code-cell {
+  font-weight: 600;
+  color: #059669;
+  
+  i {
+    color: #059669;
+    margin-right: 0.5rem;
+  }
+}
+
 .intervention-cell {
-  font-weight: 700;
-  color: #1f2937;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  font-weight: 600;
+  color: #3b82f6;
 
   i {
     color: #3b82f6;
+    margin-right: 0.5rem;
   }
 }
 
@@ -428,45 +454,5 @@ onMounted(() => {
   font-weight: 600;
 }
 
-.operations-types {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-}
-
-.op-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  white-space: nowrap;
-
-  i {
-    font-size: 0.75rem;
-  }
-
-  &.exchange {
-    background: #dbeafe;
-    color: #1e40af;
-  }
-
-  &.repair {
-    background: #fef3c7;
-    color: #92400e;
-  }
-
-  &.painting {
-    background: #f3e8ff;
-    color: #6b21a8;
-  }
-
-  &.control {
-    background: #d1fae5;
-    color: #065f46;
-  }
-}
 </style>
 

@@ -193,9 +193,15 @@ const routes = [
     meta: { requiresAuth: true, requiresTenant: true }
   },
   {
-    path: '/intervention-invoices',
-    name: 'InterventionInvoices',
-    component: () => import('@/views/InterventionInvoices.vue'),
+    path: '/intervention-quotes/create',
+    name: 'InterventionQuoteCreate',
+    component: () => import('@/views/InterventionQuoteCreate.vue'),
+    meta: { requiresAuth: true, requiresTenant: true }
+  },
+  {
+    path: '/intervention-quotes/:id/edit',
+    name: 'InterventionQuoteEdit',
+    component: () => import('@/views/InterventionQuoteEdit.vue'),
     meta: { requiresAuth: true, requiresTenant: true }
   },
   {
@@ -205,22 +211,98 @@ const routes = [
     meta: { requiresAuth: true, requiresTenant: true }
   },
   {
+    path: '/intervention-work-authorizations/create',
+    name: 'InterventionWorkAuthorizationCreate',
+    component: () => import('@/views/InterventionWorkAuthorizationCreate.vue'),
+    meta: { 
+      requiresAuth: true, 
+      requiresTenant: true,
+      title: 'Nouvel Accord Travaux'
+    }
+  },
+  {
+    path: '/intervention-work-authorizations/:id/edit',
+    name: 'InterventionWorkAuthorizationEdit',
+    component: () => import('@/views/InterventionWorkAuthorizationEdit.vue'),
+    meta: { 
+      requiresAuth: true, 
+      requiresTenant: true,
+      title: 'Modifier l\'Accord Travaux'
+    }
+  },
+  {
     path: '/intervention-reception-reports',
     name: 'InterventionReceptionReports',
     component: () => import('@/views/InterventionReceptionReports.vue'),
     meta: { requiresAuth: true, requiresTenant: true }
   },
+  {
+    path: '/intervention-reception-reports/create',
+    name: 'InterventionReceptionReportCreate',
+    component: () => import('@/views/InterventionReceptionReportCreate.vue'),
+    meta: { requiresAuth: true, requiresTenant: true }
+  },
+  {
+    path: '/intervention-reception-reports/:id/edit',
+    name: 'InterventionReceptionReportEdit',
+    component: () => import('@/views/InterventionReceptionReportEdit.vue'),
+    meta: { requiresAuth: true, requiresTenant: true }
+  },
+  {
+    path: '/intervention-invoices',
+    name: 'InterventionInvoices',
+    component: () => import('@/views/InterventionInvoices.vue'),
+    meta: { requiresAuth: true, requiresTenant: true }
+  },
+  {
+    path: '/intervention-invoices/create',
+    name: 'InterventionInvoiceCreate',
+    component: () => import('@/views/InterventionInvoiceCreate.vue'),
+    meta: { requiresAuth: true, requiresTenant: true }
+  },
+  {
+    path: '/intervention-invoices/:id/edit',
+    name: 'InterventionInvoiceEdit',
+    component: () => import('@/views/InterventionInvoiceEdit.vue'),
+    meta: { requiresAuth: true, requiresTenant: true }
+  },
+  {
+    path: '/intervention-field-verifications',
+    name: 'InterventionFieldVerifications',
+    component: () => import('@/views/InterventionFieldVerifications.vue'),
+    meta: { requiresAuth: true, requiresTenant: true }
+  },
+  {
+    path: '/intervention-field-verifications/create',
+    name: 'InterventionFieldVerificationCreate',
+    component: () => import('@/views/InterventionFieldVerificationCreate.vue'),
+    meta: { 
+      requiresAuth: true, 
+      requiresTenant: true,
+      title: 'Nouvelle Vérification Terrain'
+    }
+  },
+  {
+    path: '/intervention-field-verifications/:id/edit',
+    name: 'InterventionFieldVerificationEdit',
+    component: () => import('@/views/InterventionFieldVerificationEdit.vue'),
+    meta: { 
+      requiresAuth: true, 
+      requiresTenant: true,
+      title: 'Modifier Vérification Terrain'
+    }
+  },
   // Rapports
   {
     path: '/reports',
     name: 'Reports',
-    component: () => import('@/views/ComingSoon.vue'),
+    component: () => import('@/views/Reports.vue'),
     meta: { requiresAuth: true, requiresTenant: true }
   },
   {
     path: '/analytics',
     name: 'Analytics',
-    component: () => import('@/views/ComingSoon.vue'),
+    component: () => import('@/views/Analytics.vue'),
     meta: { requiresAuth: true, requiresTenant: true }
   },
   // Administration

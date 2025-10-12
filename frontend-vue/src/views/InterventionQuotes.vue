@@ -6,7 +6,7 @@
     </template>
 
     <template #header-actions>
-      <button @click="openCreateModal" class="btn-primary">
+      <button @click="goToCreate" class="btn-primary">
         <i class="fas fa-plus"></i>
         Nouveau devis
       </button>
@@ -100,10 +100,7 @@
     </FilterPanel>
 
     <!-- Loading state -->
-    <div v-if="loading" class="loading-state">
-      <i class="fas fa-spinner fa-spin"></i>
-      <p>Chargement des devis...</p>
-    </div>
+    <LoadingSpinner v-if="loading" text="Chargement des devis..." />
 
     <!-- Tableau de devis -->
     <div v-else-if="quotes.length > 0" class="table-container">
@@ -114,7 +111,6 @@
             <th>Intervention</th>
             <th>Garage</th>
             <th>Date émission</th>
-            <th>Valide jusqu'au</th>
             <th>Montant TTC</th>
             <th>Statut</th>
             <th class="actions-column">Actions</th>
@@ -129,19 +125,18 @@
             <td>{{ quote.intervention?.interventionNumber }} - {{ quote.intervention?.title }}</td>
             <td>{{ getGarageLabel(quote.garage) }}</td>
             <td>{{ formatDate(quote.quoteDate) }}</td>
-            <td>{{ formatDate(quote.validUntil) }}</td>
             <td class="amount-cell">{{ formatCurrency(quote.totalAmount) }}</td>
             <td>
               <span v-if="quote.isValidated" class="validated-badge">
                 <i class="fas fa-check-circle"></i> Validé
               </span>
-              <button v-else @click="validateQuote(quote)" class="btn-validate-small">
-                <i class="fas fa-check"></i> Valider
-              </button>
+              <span v-else class="pending-badge">
+                <i class="fas fa-clock"></i> En attente
+              </span>
             </td>
             <td class="actions-column">
               <div class="action-buttons">
-                <button @click="openEditModal(quote)" class="btn-icon btn-edit" title="Modifier">
+                <button @click="goToEdit(quote.id)" class="btn-icon btn-edit" title="Modifier">
                   <i class="fas fa-edit"></i>
                 </button>
                 <button @click="confirmDelete(quote)" class="btn-icon btn-delete" title="Supprimer">
@@ -161,7 +156,7 @@
       </div>
       <h3>Aucun devis</h3>
       <p>Commencez par créer votre premier devis</p>
-      <button @click="openCreateModal" class="btn-primary">
+      <button @click="goToCreate" class="btn-primary">
         <i class="fas fa-plus"></i>
         Créer un devis
       </button>
@@ -176,157 +171,60 @@
       @page-change="handlePageChange"
     />
 
-    <!-- Modal Créer/Modifier -->
-    <Modal
-      v-model="showModal"
-      :title="isEditing ? 'Modifier le devis' : 'Nouveau devis'"
-      size="xlarge"
-      @close="closeModal"
-    >
-      <form @submit.prevent="handleSubmit" class="quote-form">
-        <!-- Intervention et Garage -->
-        <div class="form-section">
-          <h4><i class="fas fa-wrench"></i> Intervention et Garage</h4>
-          
-          <div class="form-row">
-            <InterventionSelector
-              v-model="form.interventionId"
-              label="Intervention"
-              required
-              :status-filter="['prediagnostic_completed', 'in_quote']"
-            />
-
-            <SimpleSelector
-              v-model="form.garageId"
-              api-method="getGarages"
-              label="Garage"
-              placeholder="Sélectionner un garage"
-            />
-          </div>
-        </div>
-
-        <!-- Dates -->
-        <div class="form-section">
-          <h4><i class="fas fa-calendar"></i> Dates</h4>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label>Date d'émission <span class="required">*</span></label>
-              <input
-                v-model="form.quoteDate"
-                type="date"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Valable jusqu'au</label>
-              <input
-                v-model="form.validUntil"
-                type="date"
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Date de réception</label>
-              <input
-                v-model="form.receivedDate"
-                type="date"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Lignes du devis -->
-        <div class="form-section">
-          <QuoteLineEditor
-            v-model="form.lines"
-            @change="handleLinesChange"
-          />
-        </div>
-
-        <!-- Notes -->
-        <div class="form-section">
-          <h4><i class="fas fa-sticky-note"></i> Notes</h4>
-          
-          <div class="form-group">
-            <textarea
-              v-model="form.notes"
-              rows="3"
-              placeholder="Notes additionnelles..."
-            ></textarea>
-          </div>
-        </div>
-      </form>
-
-      <template #footer>
-        <button type="button" @click="closeModal" class="btn-secondary">
-          Annuler
-        </button>
-        <button type="submit" @click="handleSubmit" class="btn-primary" :disabled="saving">
-          <i v-if="saving" class="fas fa-spinner fa-spin"></i>
-          <i v-else class="fas fa-save"></i>
-          {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
-        </button>
-      </template>
-    </Modal>
-
     <!-- Notifications d'erreur -->
     <div v-if="errorMessage" class="error-message">
       <i class="fas fa-exclamation-triangle"></i>
       {{ errorMessage }}
     </div>
+
+    <!-- Modal de confirmation de suppression -->
+    <ConfirmDialog
+      v-model="showDeleteModal"
+      title="Confirmer la suppression"
+      message="Êtes-vous sûr de vouloir supprimer ce devis ?"
+      warning="Cette action est irréversible."
+      type="danger"
+      confirm-text="Supprimer"
+      cancel-text="Annuler"
+      loading-text="Suppression..."
+      :loading="deleting"
+      @confirm="executeDelete"
+      @cancel="closeDeleteModal"
+    />
   </DefaultLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useNotification } from '@/composables/useNotification'
 import DefaultLayout from '@/components/layouts/DefaultLayout.vue'
-import Modal from '@/components/common/Modal.vue'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import SearchBar from '@/components/common/SearchBar.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import FilterPanel from '@/components/common/FilterPanel.vue'
-import InterventionSelector from '@/components/common/InterventionSelector.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import SimpleSelector from '@/components/common/SimpleSelector.vue'
-import QuoteLineEditor from '@/components/common/QuoteLineEditor.vue'
 import BrandSelectorSearch from '@/components/common/BrandSelectorSearch.vue'
 import ModelSelector from '@/components/common/ModelSelector.vue'
 import apiService from '@/services/api.service'
 
-// Notifications
+// Notifications et navigation
+const router = useRouter()
 const { success, error, warning } = useNotification()
 
 // État
 const quotes = ref([])
 const loading = ref(false)
-const saving = ref(false)
 const errorMessage = ref('')
 
 // Modals
-const showModal = ref(false)
 const showFiltersPanel = ref(false)
-const isEditing = ref(false)
 
-// Formulaire
-const form = ref({
-  interventionId: null,
-  garageId: null,
-  quoteDate: new Date().toISOString().split('T')[0],
-  validUntil: null,
-  receivedDate: null,
-  lines: [],
-  notes: ''
-})
-
-// Totaux (mis à jour par QuoteLineEditor)
-const quoteTotals = ref({
-  subtotal: 0,
-  totalDiscount: 0,
-  totalHT: 0,
-  totalTVA: 0,
-  totalTTC: 0
-})
+// Modal de suppression
+const showDeleteModal = ref(false)
+const itemToDelete = ref(null)
+const deleting = ref(false)
 
 // Recherche et filtres
 const searchQuery = ref('')
@@ -458,151 +356,35 @@ const handlePageChange = (page) => {
   loadQuotes()
 }
 
-const openCreateModal = () => {
-  isEditing.value = false
-  resetForm()
-  showModal.value = true
+const goToCreate = () => {
+  router.push({ name: 'InterventionQuoteCreate' })
 }
 
-const openEditModal = (quote) => {
-  isEditing.value = true
-  form.value = {
-    id: quote.id,
-    interventionId: quote.intervention?.id || null,
-    garageId: quote.garage?.id || null,
-    quoteDate: quote.quoteDate ? quote.quoteDate.split('T')[0] : new Date().toISOString().split('T')[0],
-    validUntil: quote.validUntil ? quote.validUntil.split('T')[0] : null,
-    receivedDate: quote.receivedDate ? quote.receivedDate.split('T')[0] : null,
-    lines: quote.lines ? quote.lines.map(line => ({
-      id: line.id,
-      supplyId: line.supply?.id || null,
-      workType: line.workType || 'supply',
-      quantity: parseFloat(line.quantity) || 1,
-      unitPrice: parseFloat(line.unitPrice) || 0,
-      discountPercentage: parseFloat(line.discountPercentage) || null,
-      discountAmount: parseFloat(line.discountAmount) || null,
-      taxRate: parseFloat(line.taxRate) || 18,
-      lineTotal: parseFloat(line.lineTotal) || 0,
-      notes: line.notes || ''
-    })) : [],
-    notes: quote.notes || ''
-  }
-  showModal.value = true
+const goToEdit = (id) => {
+  router.push({ name: 'InterventionQuoteEdit', params: { id } })
 }
 
-const closeModal = () => {
-  showModal.value = false
-  resetForm()
+const confirmDelete = (quote) => {
+  itemToDelete.value = quote
+  showDeleteModal.value = true
 }
 
-const resetForm = () => {
-  form.value = {
-    interventionId: null,
-    garageId: null,
-    quoteDate: new Date().toISOString().split('T')[0],
-    validUntil: null,
-    receivedDate: null,
-    lines: [],
-    notes: ''
-  }
-  quoteTotals.value = {
-    subtotal: 0,
-    totalDiscount: 0,
-    totalHT: 0,
-    totalTVA: 0,
-    totalTTC: 0
-  }
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+  itemToDelete.value = null
+  deleting.value = false
 }
 
-const handleLinesChange = (data) => {
-  quoteTotals.value = data.totals
-}
-
-const handleSubmit = async () => {
+const executeDelete = async () => {
+  if (!itemToDelete.value) return
+  
+  deleting.value = true
+  
   try {
-    if (!form.value.interventionId) {
-      warning('Veuillez sélectionner une intervention')
-      return
-    }
-
-    if (form.value.lines.length === 0) {
-      warning('Veuillez ajouter au moins une ligne au devis')
-      return
-    }
-
-    saving.value = true
-
-    const data = {
-      interventionId: form.value.interventionId,
-      garageId: form.value.garageId || null,
-      quoteDate: form.value.quoteDate,
-      validUntil: form.value.validUntil || null,
-      receivedDate: form.value.receivedDate || null,
-      totalAmount: quoteTotals.value.totalTTC,
-      laborCost: calculateLaborCost(),
-      partsCost: calculatePartsCost(),
-      taxAmount: quoteTotals.value.totalTVA,
-      lines: form.value.lines,
-      notes: form.value.notes || null
-    }
-
-    let response
-    if (isEditing.value) {
-      response = await apiService.updateInterventionQuote(form.value.id, data)
-    } else {
-      response = await apiService.createInterventionQuote(data)
-    }
-
-    if (response.success) {
-      success(isEditing.value ? 'Devis modifié avec succès' : 'Devis créé avec succès')
-      closeModal()
-      await loadQuotes()
-    } else {
-      throw new Error(response.message || 'Erreur lors de l\'enregistrement')
-    }
-  } catch (err) {
-    console.error('Error saving quote:', err)
-    error(err.response?.data?.message || err.message || 'Erreur lors de l\'enregistrement')
-  } finally {
-    saving.value = false
-  }
-}
-
-const validateQuote = async (quote) => {
-  if (!confirm(`Êtes-vous sûr de vouloir valider le devis ${quote.quoteNumber} ?`)) {
-    return
-  }
-
-  try {
-    // TODO: Implémenter la validation côté backend
-    // Pour le moment, on met à jour isValidated
-    const response = await apiService.updateInterventionQuote(quote.id, {
-      ...quote,
-      isValidated: true,
-      validatedAt: new Date().toISOString()
-    })
-
-    if (response.success) {
-      success('Devis validé avec succès')
-      await loadQuotes()
-    } else {
-      throw new Error(response.message || 'Erreur lors de la validation')
-    }
-  } catch (err) {
-    console.error('Error validating quote:', err)
-    error(err.response?.data?.message || err.message || 'Erreur lors de la validation')
-  }
-}
-
-const confirmDelete = async (quote) => {
-  if (!confirm(`Êtes-vous sûr de vouloir supprimer le devis ${quote.quoteNumber} ?`)) {
-    return
-  }
-
-  try {
-    const response = await apiService.deleteInterventionQuote(quote.id)
+    const response = await apiService.deleteInterventionQuote(itemToDelete.value.id)
     if (response.success) {
       success('Devis supprimé avec succès')
+      closeDeleteModal()
       await loadQuotes()
     } else {
       throw new Error(response.message || 'Erreur lors de la suppression')
@@ -610,24 +392,14 @@ const confirmDelete = async (quote) => {
   } catch (err) {
     console.error('Error deleting quote:', err)
     error(err.response?.data?.message || err.message || 'Erreur lors de la suppression')
+  } finally {
+    deleting.value = false
   }
 }
 
 // Helpers
-const calculateLaborCost = () => {
-  return form.value.lines
-    .filter(line => line.workType === 'labor')
-    .reduce((sum, line) => sum + (parseFloat(line.lineTotal) || 0), 0)
-}
-
-const calculatePartsCost = () => {
-  return form.value.lines
-    .filter(line => line.workType === 'supply')
-    .reduce((sum, line) => sum + (parseFloat(line.lineTotal) || 0), 0)
-}
-
 const getGarageLabel = (garage) => {
-  if (!garage) return ''
+  if (!garage) return 'N/A'
   return typeof garage === 'object' ? garage.name : garage
 }
 
@@ -697,26 +469,19 @@ onMounted(() => {
   }
 }
 
-.btn-validate-small {
+.pending-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
   padding: 0.375rem 0.75rem;
-  background: #10b981;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 600;
-  transition: all 0.2s;
-
-  &:hover {
-    background: #059669;
-  }
 
   i {
-    font-size: 0.85rem;
+    color: #f59e0b;
   }
 }
 

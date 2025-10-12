@@ -80,8 +80,17 @@ class InterventionQuoteController extends AbstractTenantController
                         'id' => $quote->getId(),
                         'quoteNumber' => $quote->getQuoteNumber(),
                         'interventionId' => $quote->getIntervention()->getId(),
-                        'interventionCode' => $quote->getIntervention()->getInterventionNumber(),
-                            'vehicle' => [
+                        'intervention' => [
+                            'id' => $quote->getIntervention()->getId(),
+                            'interventionNumber' => $quote->getIntervention()->getInterventionNumber(),
+                            'title' => $quote->getIntervention()->getTitle(),
+                            'currentStatus' => $quote->getIntervention()->getCurrentStatus(),
+                        ],
+                        'garage' => $quote->getGarage() ? [
+                            'id' => $quote->getGarage()->getId(),
+                            'name' => $quote->getGarage()->getName(),
+                        ] : null,
+                        'vehicle' => [
                             'brand' => $quote->getIntervention()->getVehicle()->getBrand() ? $quote->getIntervention()->getVehicle()->getBrand()->getName() : '',
                             'model' => $quote->getIntervention()->getVehicle()->getModel() ? $quote->getIntervention()->getVehicle()->getModel()->getName() : '',
                             'plateNumber' => $quote->getIntervention()->getVehicle()->getPlateNumber(),
@@ -98,6 +107,7 @@ class InterventionQuoteController extends AbstractTenantController
                         'linesCount' => $quote->getLines()->count(),
                         'isExpired' => $quote->isExpired(),
                         'daysUntilExpiry' => $quote->getDaysUntilExpiry(),
+                        'isValidated' => $quote->isValidated(),
                     ];
                 }, $quotes);
                 $logger->info("Data array mapping completed successfully");
@@ -175,6 +185,11 @@ class InterventionQuoteController extends AbstractTenantController
                     'partsCost' => $quote->getPartsCost(),
                     'taxAmount' => $quote->getTaxAmount(),
                     'notes' => $quote->getNotes(),
+                    'observations' => $quote->getNotes(),
+                    'isValidated' => $quote->isValidated(),
+                    'validatedAt' => $quote->getValidatedAt() ? $quote->getValidatedAt()->format('Y-m-d H:i:s') : null,
+                    'validatedBy' => $quote->getValidatedBy(),
+                    'hasAuthorization' => !empty($this->entityManager->getRepository(InterventionWorkAuthorization::class)->findBy(['quote' => $quote])),
                     'createdAt' => $quote->getCreatedAt()->format('Y-m-d H:i:s'),
                     'lines' => array_map(function($line) {
                         $supply = $line->getSupply();
@@ -364,8 +379,8 @@ class InterventionQuoteController extends AbstractTenantController
             } catch (\Exception $e) {
                 error_log("Erreur génération code devis: " . $e->getMessage());
                 // Fallback vers le système séquentiel en cas d'erreur
-                $quoteNumber = $this->codeGenerationService->generateQuoteNumber($currentTenant);
-                $quote->setQuoteNumber($quoteNumber);
+                $quoteNumber = $this->codeGenerationService->generateQuoteCode($quote->getId(), $currentTenant, $this->getUser());
+                $quote->setQuoteNumber($quoteNumber->getCode());
                 $this->entityManager->flush();
                 error_log("Fallback quote number: " . $quoteNumber);
             }
@@ -392,8 +407,14 @@ class InterventionQuoteController extends AbstractTenantController
     public function update(Request $request, int $id): JsonResponse
     {
         try {
+            error_log("=== UPDATE DEVIS DEBUG ===");
+            error_log("Quote ID: " . $id);
+            error_log("Request content: " . $request->getContent());
+            
             $currentTenant = $this->checkAuthAndGetTenant($request);
             $data = json_decode($request->getContent(), true);
+            
+            error_log("Data decoded: " . json_encode($data));
 
             if (!$data) {
                 return new JsonResponse([
@@ -404,6 +425,7 @@ class InterventionQuoteController extends AbstractTenantController
             }
 
             $quote = $this->quoteRepository->find($id);
+            error_log("Quote found: " . ($quote ? 'YES' : 'NO'));
             if (!$quote || $quote->getIntervention()->getTenant() !== $currentTenant) {
                 return new JsonResponse([
                     'success' => false,
@@ -413,7 +435,7 @@ class InterventionQuoteController extends AbstractTenantController
             }
 
             // Vérifier que le garage existe et appartient au tenant (si fourni)
-            if (isset($data['garageId'])) {
+            if (isset($data['garageId']) && $data['garageId'] !== null) {
                 $garage = $this->garageRepository->find($data['garageId']);
                 if (!$garage || $garage->getTenant() !== $currentTenant) {
                     return new JsonResponse([
@@ -423,20 +445,20 @@ class InterventionQuoteController extends AbstractTenantController
                     ], 404);
                 }
                 $quote->setGarage($garage);
-            } elseif (isset($data['garageId']) && $data['garageId'] === null) {
+            } elseif (array_key_exists('garageId', $data) && $data['garageId'] === null) {
                 $quote->setGarage(null);
             }
 
             // Mettre à jour les propriétés
-            if (isset($data['quoteDate'])) {
+            if (array_key_exists('quoteDate', $data) && !empty($data['quoteDate'])) {
                 $quote->setQuoteDate(new \DateTime($data['quoteDate']));
             }
             
-            if (isset($data['validUntil'])) {
+            if (array_key_exists('validUntil', $data) && !empty($data['validUntil'])) {
                 $quote->setValidUntil(new \DateTime($data['validUntil']));
             }
             
-            if (isset($data['receivedDate'])) {
+            if (array_key_exists('receivedDate', $data)) {
                 if (!empty($data['receivedDate'])) {
                     $quote->setReceivedDate(new \DateTime($data['receivedDate']));
                 } else {
@@ -444,32 +466,32 @@ class InterventionQuoteController extends AbstractTenantController
                 }
             }
             
-            if (isset($data['totalAmount'])) {
+            if (array_key_exists('totalAmount', $data)) {
                 $quote->setTotalAmount($data['totalAmount']);
             }
             
-            if (isset($data['laborCost'])) {
+            if (array_key_exists('laborCost', $data)) {
                 $quote->setLaborCost($data['laborCost']);
             }
             
-            if (isset($data['partsCost'])) {
+            if (array_key_exists('partsCost', $data)) {
                 $quote->setPartsCost($data['partsCost']);
             }
             
-            if (isset($data['taxAmount'])) {
+            if (array_key_exists('taxAmount', $data)) {
                 $quote->setTaxAmount($data['taxAmount']);
             }
             
-            if (isset($data['taxRate'])) {
+            if (array_key_exists('taxRate', $data)) {
                 $quote->setTaxRate($data['taxRate']);
             }
             
-            if (isset($data['notes'])) {
+            if (array_key_exists('notes', $data)) {
                 $quote->setNotes($data['notes']);
             }
 
             // Gérer les lignes du devis
-            if (isset($data['lines']) && is_array($data['lines'])) {
+            if (array_key_exists('lines', $data) && is_array($data['lines'])) {
                 $this->handleLines($quote, $data['lines']);
                 // Recalculer le totalAmount après avoir traité les lignes
                 $quote->recalculateTotalAmount();
@@ -501,9 +523,16 @@ class InterventionQuoteController extends AbstractTenantController
             ]);
 
         } catch (\Exception $e) {
+            error_log("=== UPDATE ERROR ===");
+            error_log("Error message: " . $e->getMessage());
+            error_log("Error trace: " . $e->getTraceAsString());
+            error_log("Error file: " . $e->getFile());
+            error_log("Error line: " . $e->getLine());
+            
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la modification du devis: ' . $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'code' => 500
             ], 500);
         }
@@ -546,8 +575,10 @@ class InterventionQuoteController extends AbstractTenantController
     public function validate(Request $request, int $id): JsonResponse
     {
         try {
+            error_log("=== VALIDATION DEVIS ===");
             $currentTenant = $this->checkAuthAndGetTenant($request);
             $data = json_decode($request->getContent(), true);
+            error_log("Data: " . json_encode($data));
 
             $quote = $this->quoteRepository->find($id);
             if (!$quote || $quote->getIntervention()->getTenant() !== $currentTenant) {
@@ -557,12 +588,17 @@ class InterventionQuoteController extends AbstractTenantController
                     'code' => 404
                 ], 404);
             }
+            error_log("Quote found: " . $quote->getId());
 
             $validatedBy = $data['validatedBy'] ?? $this->getCurrentUser($request);
+            error_log("ValidatedBy: " . $validatedBy);
+            
             $quote->validate($validatedBy);
+            error_log("Quote validated");
             
             // Récupérer l'objet Collaborateur pour la génération d'autorisation
             $collaborateur = $this->entityManager->getRepository(Collaborateur::class)->find($validatedBy);
+            error_log("Collaborateur found: " . ($collaborateur ? $collaborateur->getId() : 'NULL'));
 
             // Mettre à jour le workflow de l'intervention
             $intervention = $quote->getIntervention();
@@ -614,9 +650,16 @@ class InterventionQuoteController extends AbstractTenantController
             ]);
 
         } catch (\Exception $e) {
+            error_log("=== ERREUR VALIDATION ===");
+            error_log("Message: " . $e->getMessage());
+            error_log("File: " . $e->getFile());
+            error_log("Line: " . $e->getLine());
+            error_log("Trace: " . $e->getTraceAsString());
+            
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la validation du devis: ' . $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'code' => 500
             ], 500);
         }
@@ -818,7 +861,11 @@ class InterventionQuoteController extends AbstractTenantController
         // Ajouter les nouvelles lignes
         foreach ($linesData as $lineData) {
             // Vérification stricte des données
-            if (!is_array($lineData) || !isset($lineData['supplyId']) || empty($lineData['supplyId'])) {
+            if (!is_array($lineData)) {
+                continue;
+            }
+            
+            if (!isset($lineData['supplyId']) || empty($lineData['supplyId'])) {
                 continue;
             }
 
@@ -883,11 +930,11 @@ class InterventionQuoteController extends AbstractTenantController
         $this->entityManager->flush();
     }
 
-    private function getCurrentUser(Request $request)
+    private function getCurrentUser(Request $request): ?int
     {
-        // Cette méthode devrait récupérer l'utilisateur actuel depuis le token JWT
-        // Pour l'instant, on retourne null ou on peut implémenter la logique appropriée
-        return null;
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+        return $user ? $user->getId() : null;
     }
 
     private function getReceivedDateSafe(InterventionQuote $quote): ?string

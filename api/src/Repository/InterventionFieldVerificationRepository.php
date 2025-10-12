@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\InterventionFieldVerification;
+use App\Entity\Tenant;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,6 +15,22 @@ class InterventionFieldVerificationRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, InterventionFieldVerification::class);
+    }
+
+    public function findByIdAndTenant(int $id, ?Tenant $tenant): ?InterventionFieldVerification
+    {
+        if (!$tenant) {
+            return null;
+        }
+
+        return $this->createQueryBuilder('ifv')
+            ->innerJoin('ifv.intervention', 'vi')
+            ->where('ifv.id = :id')
+            ->andWhere('vi.tenant = :tenant')
+            ->setParameter('id', $id)
+            ->setParameter('tenant', $tenant)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
     public function save(InterventionFieldVerification $entity, bool $flush = false): void

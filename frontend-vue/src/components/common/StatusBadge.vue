@@ -1,5 +1,5 @@
 <template>
-  <span class="status-badge" :class="`status-${status}`">
+  <span class="status-badge" :class="`status-${normalizeStatus(status)}`">
     <i v-if="showIcon" :class="`fas ${getStatusIcon(status)}`"></i>
     {{ getStatusLabel(status) }}
   </span>
@@ -17,6 +17,10 @@ const props = defineProps({
   }
 })
 
+const normalizeStatus = (status) => {
+  return status.replace(/_/g, '-')
+}
+
 const getStatusLabel = (status) => {
   const labels = {
     // Workflow principal
@@ -31,6 +35,7 @@ const getStatusLabel = (status) => {
     repair_completed: 'Réparation terminée',
     in_reception: 'En réception',
     vehicle_received: 'Véhicule reçu',
+    invoiced: 'Facturé',
     cancelled: 'Annulé',
     // Autres statuts possibles
     pending: 'En attente',
@@ -60,6 +65,7 @@ const getStatusIcon = (status) => {
     repair_completed: 'fa-check-circle',
     in_reception: 'fa-clipboard-list',
     vehicle_received: 'fa-check-double',
+    invoiced: 'fa-file-invoice',
     cancelled: 'fa-times-circle',
     // Autres
     pending: 'fa-clock',
@@ -145,6 +151,11 @@ const getStatusIcon = (status) => {
   &.status-vehicle-received {
     background: #34d399;
     color: #064e3b;
+  }
+
+  &.status-invoiced {
+    background: #a78bfa;
+    color: #5b21b6;
   }
 
   &.status-cancelled {

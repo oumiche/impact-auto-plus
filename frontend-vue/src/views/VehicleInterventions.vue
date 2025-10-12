@@ -112,10 +112,7 @@
     </FilterPanel>
 
     <!-- Loading state -->
-    <div v-if="loading" class="loading-state">
-      <i class="fas fa-spinner fa-spin"></i>
-      <p>Chargement des interventions...</p>
-    </div>
+    <LoadingSpinner v-if="loading" text="Chargement des interventions..." />
 
     <!-- Tableau d'interventions -->
     <div v-else-if="interventions.length > 0" class="table-container">
@@ -123,7 +120,6 @@
         <thead>
           <tr>
             <th>N° Intervention</th>
-            <th>Titre</th>
             <th>Véhicule</th>
             <th>Type</th>
             <th>Priorité</th>
@@ -138,7 +134,6 @@
               <i class="fas fa-wrench"></i>
               {{ intervention.interventionNumber || `INT-${intervention.id}` }}
             </td>
-            <td class="intervention-title">{{ intervention.title }}</td>
             <td>{{ getVehicleLabel(intervention.vehicle) }}</td>
             <td>{{ getInterventionTypeLabel(intervention.interventionType) }}</td>
             <td>
@@ -232,11 +227,11 @@
           </div>
 
           <div class="form-group">
-            <label>Description</label>
+            <label>Resenti utilisateur</label>
             <textarea
               v-model="form.description"
               rows="3"
-              placeholder="Décrivez le problème ou les travaux à effectuer..."
+              placeholder="Décrivez le ressenti de l'utilisateur, les symptômes observés..."
             ></textarea>
           </div>
         </div>
@@ -259,23 +254,16 @@
           </div>
         </div>
 
-        <!-- Type et garage -->
+        <!-- Type d'intervention -->
         <div class="form-section">
-          <h4><i class="fas fa-tools"></i> Type et lieu</h4>
+          <h4><i class="fas fa-tools"></i> Type d'intervention</h4>
           
           <div class="form-row">
-            <SimpleSelector
+            <SearchableSelector
               v-model="form.interventionTypeId"
               api-method="getInterventionTypes"
               label="Type d'intervention"
-              placeholder="Sélectionner un type"
-            />
-
-            <SimpleSelector
-              v-model="form.garageId"
-              api-method="getGarages"
-              label="Garage"
-              placeholder="Sélectionner un garage"
+              placeholder="Rechercher un type..."
             />
           </div>
         </div>
@@ -315,16 +303,6 @@
                 placeholder="Ex: 3"
               />
             </div>
-
-            <div class="form-group">
-              <label>Coût estimé (XOF)</label>
-              <input
-                v-model.number="form.estimatedCost"
-                type="number"
-                min="0"
-                placeholder="Ex: 500000"
-              />
-            </div>
           </div>
         </div>
 
@@ -359,6 +337,21 @@
       <i class="fas fa-exclamation-triangle"></i>
       {{ errorMessage }}
     </div>
+
+    <!-- Modal de confirmation de suppression -->
+    <ConfirmDialog
+      v-model="showDeleteModal"
+      title="Confirmer la suppression"
+      message="Êtes-vous sûr de vouloir supprimer cette intervention ?"
+      warning="Cette action est irréversible."
+      type="danger"
+      confirm-text="Supprimer"
+      cancel-text="Annuler"
+      loading-text="Suppression..."
+      :loading="deleting"
+      @confirm="executeDelete"
+      @cancel="closeDeleteModal"
+    />
   </DefaultLayout>
 </template>
 
@@ -367,14 +360,17 @@ import { ref, computed, onMounted } from 'vue'
 import { useNotification } from '@/composables/useNotification'
 import DefaultLayout from '@/components/layouts/DefaultLayout.vue'
 import Modal from '@/components/common/Modal.vue'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import SearchBar from '@/components/common/SearchBar.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import FilterPanel from '@/components/common/FilterPanel.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import WorkflowProgressBar from '@/components/common/WorkflowProgressBar.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import VehicleSelector from '@/components/common/VehicleSelector.vue'
 import DriverSelector from '@/components/common/DriverSelector.vue'
 import SimpleSelector from '@/components/common/SimpleSelector.vue'
+import SearchableSelector from '@/components/common/SearchableSelector.vue'
 import BrandSelectorSearch from '@/components/common/BrandSelectorSearch.vue'
 import ModelSelector from '@/components/common/ModelSelector.vue'
 import apiService from '@/services/api.service'
@@ -393,6 +389,11 @@ const showModal = ref(false)
 const showFiltersPanel = ref(false)
 const isEditing = ref(false)
 
+// Modal de suppression
+const showDeleteModal = ref(false)
+const itemToDelete = ref(null)
+const deleting = ref(false)
+
 // Formulaire
 const form = ref({
   title: '',
@@ -400,12 +401,10 @@ const form = ref({
   vehicleId: null,
   driverId: null,
   interventionTypeId: null,
-  garageId: null,
   priority: 'medium',
   reportedDate: new Date().toISOString().split('T')[0],
   odometerReading: null,
   estimatedDurationDays: null,
-  estimatedCost: null,
   notes: ''
 })
 
@@ -555,12 +554,10 @@ const openEditModal = (intervention) => {
     vehicleId: intervention.vehicle?.id || null,
     driverId: intervention.driver?.id || null,
     interventionTypeId: intervention.interventionType?.id || null,
-    garageId: intervention.garage?.id || null,
     priority: intervention.priority || 'medium',
-    reportedDate: intervention.reportedDate ? intervention.reportedDate.split('T')[0] : new Date().toISOString().split('T')[0],
+    reportedDate: intervention.reportedDate ? intervention.reportedDate.split(/[T\s]/)[0] : new Date().toISOString().split('T')[0],
     odometerReading: intervention.odometerReading || null,
     estimatedDurationDays: intervention.estimatedDurationDays || null,
-    estimatedCost: intervention.estimatedCost || null,
     notes: intervention.notes || '',
     currentStatus: intervention.currentStatus || 'reported'
   }
@@ -579,7 +576,6 @@ const resetForm = () => {
     vehicleId: null,
     driverId: null,
     interventionTypeId: null,
-    garageId: null,
     priority: 'medium',
     reportedDate: new Date().toISOString().split('T')[0],
     odometerReading: null,
@@ -599,12 +595,10 @@ const handleSubmit = async () => {
       vehicleId: form.value.vehicleId,
       driverId: form.value.driverId || null,
       interventionTypeId: form.value.interventionTypeId || null,
-      garageId: form.value.garageId || null,
       priority: form.value.priority,
       reportedDate: form.value.reportedDate,
       odometerReading: form.value.odometerReading || null,
       estimatedDurationDays: form.value.estimatedDurationDays || null,
-      estimatedCost: form.value.estimatedCost || null,
       notes: form.value.notes || null
     }
 
@@ -630,15 +624,27 @@ const handleSubmit = async () => {
   }
 }
 
-const confirmDelete = async (intervention) => {
-  if (!confirm(`Êtes-vous sûr de vouloir supprimer l'intervention ${intervention.interventionNumber || intervention.title} ?`)) {
-    return
-  }
+const confirmDelete = (intervention) => {
+  itemToDelete.value = intervention
+  showDeleteModal.value = true
+}
 
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+  itemToDelete.value = null
+  deleting.value = false
+}
+
+const executeDelete = async () => {
+  if (!itemToDelete.value) return
+  
+  deleting.value = true
+  
   try {
-    const response = await apiService.deleteVehicleIntervention(intervention.id)
+    const response = await apiService.deleteVehicleIntervention(itemToDelete.value.id)
     if (response.success) {
       success('Intervention supprimée avec succès')
+      closeDeleteModal()
       await loadInterventions()
     } else {
       throw new Error(response.message || 'Erreur lors de la suppression')
@@ -646,6 +652,8 @@ const confirmDelete = async (intervention) => {
   } catch (err) {
     console.error('Error deleting intervention:', err)
     error(err.response?.data?.message || err.message || 'Erreur lors de la suppression')
+  } finally {
+    deleting.value = false
   }
 }
 
@@ -683,12 +691,12 @@ const getPriorityLabel = (priority) => {
 
 const getPriorityIcon = (priority) => {
   const icons = {
-    low: 'fa-arrow-down',
-    medium: 'fa-minus',
-    high: 'fa-arrow-up',
-    urgent: 'fa-exclamation-triangle'
+    low: 'fas fa-arrow-down',
+    medium: 'fas fa-minus',
+    high: 'fas fa-arrow-up',
+    urgent: 'fas fa-exclamation-triangle'
   }
-  return icons[priority] || 'fa-flag'
+  return icons[priority] || 'fas fa-flag'
 }
 
 const formatDate = (dateString) => {
@@ -711,20 +719,13 @@ onMounted(() => {
 @import './crud-styles.scss';
 
 .intervention-number {
-  font-weight: 700;
-  color: #1f2937;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  font-weight: 600;
+  color: #3b82f6;
 
   i {
     color: #3b82f6;
+    margin-right: 0.5rem;
   }
-}
-
-.intervention-title {
-  font-weight: 600;
-  color: #374151;
 }
 
 .priority-badge {

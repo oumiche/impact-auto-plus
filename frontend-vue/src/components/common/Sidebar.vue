@@ -139,9 +139,10 @@ const menuSections = computed(() => {
         { name: 'VehicleInterventions', label: 'Interventions', icon: 'fa-clipboard-list' },
         { name: 'InterventionPrediagnostics', label: 'Prédiagnostics', icon: 'fa-clipboard-check' },
         { name: 'InterventionQuotes', label: 'Devis', icon: 'fa-file-invoice-dollar' },
-        { name: 'InterventionInvoices', label: 'Factures', icon: 'fa-file-invoice' },
-        { name: 'InterventionWorkAuthorizations', label: 'Autorisations', icon: 'fa-file-signature' },
-        { name: 'InterventionReceptionReports', label: 'Réception', icon: 'fa-clipboard' }
+        { name: 'InterventionWorkAuthorizations', label: 'Accord Travaux', icon: 'fa-file-signature' },
+        { name: 'InterventionFieldVerifications', label: 'Vérifications Terrain', icon: 'fa-clipboard-check' },
+        { name: 'InterventionReceptionReports', label: 'Réception', icon: 'fa-clipboard' },
+        { name: 'InterventionInvoices', label: 'Factures', icon: 'fa-file-invoice' }
       ]
     },
     {

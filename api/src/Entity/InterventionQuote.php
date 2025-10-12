@@ -259,7 +259,7 @@ class InterventionQuote
 
     // Méthodes utilitaires
 
-    public function validate(int $validatedBy): self
+    public function validate(?int $validatedBy): self
     {
         $this->isValidated = true;
         $this->validatedBy = $validatedBy;

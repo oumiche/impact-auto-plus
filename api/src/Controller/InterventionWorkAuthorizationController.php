@@ -71,17 +71,29 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
             $logger->info("Authorizations found: " . count($authorizations));
             
             $data = array_map(function($authorization) {
+                $intervention = $authorization->getIntervention();
+                $quote = $authorization->getQuote();
+                
                 return [
                     'id' => $authorization->getId(),
                     'authorizationNumber' => $authorization->getAuthorizationNumber(),
-                    'interventionId' => $authorization->getIntervention()->getId(),
-                    'interventionCode' => $authorization->getIntervention()->getInterventionNumber(),
-                    'quoteId' => $authorization->getQuote() ? $authorization->getQuote()->getId() : null,
-                    'quoteNumber' => $authorization->getQuote() ? $authorization->getQuote()->getQuoteNumber() : null,
+                    'interventionId' => $intervention->getId(),
+                    'intervention' => [
+                        'id' => $intervention->getId(),
+                        'interventionNumber' => $intervention->getInterventionNumber(),
+                        'title' => $intervention->getTitle(),
+                        'currentStatus' => $intervention->getCurrentStatus(),
+                    ],
+                    'quoteId' => $quote ? $quote->getId() : null,
+                    'quote' => $quote ? [
+                        'id' => $quote->getId(),
+                        'quoteNumber' => $quote->getQuoteNumber(),
+                        'totalAmount' => $quote->getTotalAmount(),
+                    ] : null,
                     'vehicle' => [
-                        'brand' => $authorization->getIntervention()->getVehicle()->getBrand() ? $authorization->getIntervention()->getVehicle()->getBrand()->getName() : '',
-                        'model' => $authorization->getIntervention()->getVehicle()->getModel() ? $authorization->getIntervention()->getVehicle()->getModel()->getName() : '',
-                        'plateNumber' => $authorization->getIntervention()->getVehicle()->getPlateNumber(),
+                        'brand' => $intervention->getVehicle()->getBrand() ? $intervention->getVehicle()->getBrand()->getName() : '',
+                        'model' => $intervention->getVehicle()->getModel() ? $intervention->getVehicle()->getModel()->getName() : '',
+                        'plateNumber' => $intervention->getVehicle()->getPlateNumber(),
                     ],
                     'authorizedBy' => $authorization->getAuthorizedBy() ? [
                         'id' => $authorization->getAuthorizedBy()->getId(),
@@ -95,6 +107,7 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
                     'specialInstructions' => $authorization->getSpecialInstructions(),
                     'isValidated' => $authorization->isValidated(),
                     'createdAt' => $authorization->getCreatedAt()->format('Y-m-d H:i:s'),
+                    'lines' => $authorization->getLines()->count(),
                     'linesCount' => $authorization->getLines()->count(),
                     'isExpired' => $authorization->isExpired(),
                     'daysUntilExpiry' => $authorization->getDaysUntilExpiry(),
@@ -284,16 +297,15 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
             // Gérer les lignes si fournies
             if (!empty($data['lines']) && is_array($data['lines'])) {
                 foreach ($data['lines'] as $lineData) {
-                    $line = new InterventionWorkAuthorizationLine();
-                    $workType = $lineData['workType'] ?? '';
+                    if (!is_array($lineData)) {
+                        continue;
+                    }
                     
-                    // Log pour vérifier le workType reçu
-                    error_log("=== BACKEND WORKTYPE PROCESSING (CREATE) ===");
-                    error_log("Received workType: " . json_encode($workType));
-                    error_log("Line data: " . json_encode($lineData));
+                    $line = new InterventionWorkAuthorizationLine();
                     
                     // Validation : toutes les lignes doivent avoir une fourniture
-                    if (empty($lineData['supplyId'])) {
+                    $supplyId = $lineData['supplyId'] ?? null;
+                    if (empty($supplyId)) {
                         return new JsonResponse([
                             'success' => false,
                             'message' => 'Toutes les lignes doivent être associées à une fourniture',
@@ -301,7 +313,7 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
                         ], 400);
                     }
                     
-                    $supply = $this->entityManager->getRepository(Supply::class)->find((int) $lineData['supplyId']);
+                    $supply = $this->entityManager->getRepository(Supply::class)->find((int) $supplyId);
                     if (!$supply) {
                         return new JsonResponse([
                             'success' => false,
@@ -311,17 +323,35 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
                     }
                     $line->setSupply($supply);
                     
-                    // Traiter le workType tel qu'envoyé par le frontend
+                    // Traiter les données de la ligne avec des valeurs par défaut sûres
+                    $workType = isset($lineData['workType']) && is_string($lineData['workType']) ? $lineData['workType'] : 'labor';
                     $line->setWorkType($workType);
-                    error_log("Set workType to: " . $workType);
-                    $line->setLineNumber((int) ($lineData['lineNumber'] ?? 1));
-                    $line->setDescription($lineData['description'] ?? ($lineData['notes'] ?? ''));
-                    $line->setQuantity((string) ($lineData['quantity'] ?? '0'));
-                    $line->setUnitPrice((string) ($lineData['unitPrice'] ?? '0'));
-                    $line->setDiscountPercentage(isset($lineData['discountPercentage']) ? (string) $lineData['discountPercentage'] : null);
-                    $line->setDiscountAmount(isset($lineData['discountAmount']) ? (string) $lineData['discountAmount'] : null);
-                    $line->setTaxRate(isset($lineData['taxRate']) ? (string) $lineData['taxRate'] : null);
-                    $line->setNotes($lineData['notes'] ?? null);
+                    
+                    $lineNumber = isset($lineData['lineNumber']) && is_numeric($lineData['lineNumber']) ? (int) $lineData['lineNumber'] : 1;
+                    $line->setLineNumber($lineNumber);
+                    
+                    $description = isset($lineData['description']) && is_string($lineData['description']) ? $lineData['description'] : 
+                                   (isset($lineData['notes']) && is_string($lineData['notes']) ? $lineData['notes'] : '');
+                    $line->setDescription($description);
+                    
+                    $quantity = isset($lineData['quantity']) && is_numeric($lineData['quantity']) ? (string) $lineData['quantity'] : '0';
+                    $line->setQuantity($quantity);
+                    
+                    $unitPrice = isset($lineData['unitPrice']) && is_numeric($lineData['unitPrice']) ? (string) $lineData['unitPrice'] : '0';
+                    $line->setUnitPrice($unitPrice);
+                    
+                    $discountPercentage = isset($lineData['discountPercentage']) && is_numeric($lineData['discountPercentage']) ? (string) $lineData['discountPercentage'] : null;
+                    $line->setDiscountPercentage($discountPercentage);
+                    
+                    $discountAmount = isset($lineData['discountAmount']) && is_numeric($lineData['discountAmount']) ? (string) $lineData['discountAmount'] : null;
+                    $line->setDiscountAmount($discountAmount);
+                    
+                    $taxRate = isset($lineData['taxRate']) && is_numeric($lineData['taxRate']) ? (string) $lineData['taxRate'] : null;
+                    $line->setTaxRate($taxRate);
+                    
+                    $notes = isset($lineData['notes']) && is_string($lineData['notes']) ? $lineData['notes'] : null;
+                    $line->setNotes($notes);
+                    
                     // Calculer et fixer le total de la ligne
                     $line->setLineTotal($line->calculateLineTotal());
                     $authorization->addLine($line);
@@ -346,21 +376,14 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
             $this->entityManager->flush();
 
             // Générer automatiquement le numéro d'autorisation (système CodeFormat)
-            try {
-                $entityCode = $this->codeGenerationService->generateInterventionWorkAuthorizationCode(
-                    $authorization->getId(),
-                    $currentTenant,
-                    $this->getUser()
-                );
-                $authorizationNumber = $entityCode->getCode();
-                $authorization->setAuthorizationNumber($authorizationNumber);
-                $this->entityManager->flush();
-            } catch (\Exception $e) {
-                // Fallback vers le système séquentiel en cas d'erreur
-                $authorizationNumber = $this->codeGenerationService->generateAuthorizationNumber($currentTenant);
-                $authorization->setAuthorizationNumber($authorizationNumber);
-                $this->entityManager->flush();
-            }
+            $entityCode = $this->codeGenerationService->generateInterventionWorkAuthorizationCode(
+                $authorization->getId(),
+                $currentTenant,
+                $this->getUser()
+            );
+            $authorizationNumber = $entityCode->getCode();
+            $authorization->setAuthorizationNumber($authorizationNumber);
+            $this->entityManager->flush();
 
             return new JsonResponse([
                 'success' => true,
@@ -443,16 +466,15 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
 
                 // Ajouter les nouvelles lignes
                 foreach ($data['lines'] as $lineData) {
-                    $line = new InterventionWorkAuthorizationLine();
-                    $workType = $lineData['workType'] ?? '';
+                    if (!is_array($lineData)) {
+                        continue;
+                    }
                     
-                    // Log pour vérifier le workType reçu
-                    error_log("=== BACKEND WORKTYPE PROCESSING ===");
-                    error_log("Received workType: " . json_encode($workType));
-                    error_log("Line data: " . json_encode($lineData));
+                    $line = new InterventionWorkAuthorizationLine();
                     
                     // Validation : toutes les lignes doivent avoir une fourniture
-                    if (empty($lineData['supplyId'])) {
+                    $supplyId = $lineData['supplyId'] ?? null;
+                    if (empty($supplyId)) {
                         return new JsonResponse([
                             'success' => false,
                             'message' => 'Toutes les lignes doivent être associées à une fourniture',
@@ -460,7 +482,7 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
                         ], 400);
                     }
                     
-                    $supply = $this->entityManager->getRepository(Supply::class)->find((int) $lineData['supplyId']);
+                    $supply = $this->entityManager->getRepository(Supply::class)->find((int) $supplyId);
                     if (!$supply) {
                         return new JsonResponse([
                             'success' => false,
@@ -470,17 +492,35 @@ class InterventionWorkAuthorizationController extends AbstractTenantController
                     }
                     $line->setSupply($supply);
                     
-                    // Traiter le workType tel qu'envoyé par le frontend
+                    // Traiter les données de la ligne avec des valeurs par défaut sûres
+                    $workType = isset($lineData['workType']) && is_string($lineData['workType']) ? $lineData['workType'] : 'labor';
                     $line->setWorkType($workType);
-                    error_log("Set workType to: " . $workType);
-                    $line->setLineNumber((int) ($lineData['lineNumber'] ?? 1));
-                    $line->setDescription($lineData['description'] ?? ($lineData['notes'] ?? ''));
-                    $line->setQuantity((string) ($lineData['quantity'] ?? '0'));
-                    $line->setUnitPrice((string) ($lineData['unitPrice'] ?? '0'));
-                    $line->setDiscountPercentage(isset($lineData['discountPercentage']) ? (string) $lineData['discountPercentage'] : null);
-                    $line->setDiscountAmount(isset($lineData['discountAmount']) ? (string) $lineData['discountAmount'] : null);
-                    $line->setTaxRate(isset($lineData['taxRate']) ? (string) $lineData['taxRate'] : null);
-                    $line->setNotes($lineData['notes'] ?? null);
+                    
+                    $lineNumber = isset($lineData['lineNumber']) && is_numeric($lineData['lineNumber']) ? (int) $lineData['lineNumber'] : 1;
+                    $line->setLineNumber($lineNumber);
+                    
+                    $description = isset($lineData['description']) && is_string($lineData['description']) ? $lineData['description'] : 
+                                   (isset($lineData['notes']) && is_string($lineData['notes']) ? $lineData['notes'] : '');
+                    $line->setDescription($description);
+                    
+                    $quantity = isset($lineData['quantity']) && is_numeric($lineData['quantity']) ? (string) $lineData['quantity'] : '0';
+                    $line->setQuantity($quantity);
+                    
+                    $unitPrice = isset($lineData['unitPrice']) && is_numeric($lineData['unitPrice']) ? (string) $lineData['unitPrice'] : '0';
+                    $line->setUnitPrice($unitPrice);
+                    
+                    $discountPercentage = isset($lineData['discountPercentage']) && is_numeric($lineData['discountPercentage']) ? (string) $lineData['discountPercentage'] : null;
+                    $line->setDiscountPercentage($discountPercentage);
+                    
+                    $discountAmount = isset($lineData['discountAmount']) && is_numeric($lineData['discountAmount']) ? (string) $lineData['discountAmount'] : null;
+                    $line->setDiscountAmount($discountAmount);
+                    
+                    $taxRate = isset($lineData['taxRate']) && is_numeric($lineData['taxRate']) ? (string) $lineData['taxRate'] : null;
+                    $line->setTaxRate($taxRate);
+                    
+                    $notes = isset($lineData['notes']) && is_string($lineData['notes']) ? $lineData['notes'] : null;
+                    $line->setNotes($notes);
+                    
                     $line->setLineTotal($line->calculateLineTotal());
                     $authorization->addLine($line);
                 }
